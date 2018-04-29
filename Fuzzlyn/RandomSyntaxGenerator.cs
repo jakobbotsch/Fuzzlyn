@@ -119,6 +119,40 @@ namespace Fuzzlyn
                 members.ToSyntaxList());
         }
 
+        [Recursive]
+        public InterfaceDeclarationSyntax GenInterfaceDeclaration(
+            List<AttributeListSyntax> attributes,
+            string name,
+            TypeParameterListSyntax typeParams,
+            BaseListSyntax bases,
+            List<TypeParameterConstraintClauseSyntax> constraints,
+            List<MemberDeclarationSyntax> members)
+        {
+            return InterfaceDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                Identifier(name),
+                typeParams,
+                bases,
+                constraints.ToSyntaxList(),
+                members.ToSyntaxList());
+        }
+
+        public EnumDeclarationSyntax GenEnumDeclaration(
+            List<AttributeListSyntax> attributes,
+            string name,
+            BaseListSyntax bases,
+            List<EnumMemberDeclarationSyntax> members)
+        {
+            return EnumDeclaration(attributes.ToSyntaxList(), GenModifiers(), Identifier(name), bases, SeparatedList(members));
+        }
+
+        public EnumMemberDeclarationSyntax GenEnumMemberDeclaration(
+            List<AttributeListSyntax> attributes,
+            string identifier,
+            EqualsValueClauseSyntax equalsValue)
+            => EnumMemberDeclaration(attributes.ToSyntaxList(), Identifier(identifier), equalsValue);
+
         public TypeParameterListSyntax GenTypeParameterList(List<TypeParameterSyntax> parameters)
             => TypeParameterList(SeparatedList(parameters));
 
@@ -197,12 +231,295 @@ namespace Fuzzlyn
             VariableDeclarationSyntax declaration)
             => FieldDeclaration(attributes.ToSyntaxList(), GenModifiers(), declaration);
 
+        public EventDeclarationSyntax GenEventDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            string identifier,
+            AccessorListSyntax accessorList)
+        {
+            return EventDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                type,
+                explicitInterfaceSpecifier,
+                Identifier(identifier),
+                accessorList);
+        }
+
+        public ExplicitInterfaceSpecifierSyntax GenExplicitInterfaceSpecifier(NameSyntax name)
+            => ExplicitInterfaceSpecifier(name);
+
+        public AccessorListSyntax GenAccessorList(List<AccessorDeclarationSyntax> accessorDecls)
+            => AccessorList(accessorDecls.ToSyntaxList());
+
+        public AccessorDeclarationSyntax GenAccessorDecl(List<AttributeListSyntax> attributes, BlockSyntax body)
+            => AccessorDeclaration(GenAccessorKind(), attributes.ToSyntaxList(), GenModifiers(), body);
+
+        public AccessorDeclarationSyntax GenAccessorDecl(List<AttributeListSyntax> attributes, ArrowExpressionClauseSyntax expressionBody)
+            => AccessorDeclaration(GenAccessorKind(), attributes.ToSyntaxList(), GenModifiers(), expressionBody).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
+
+        public BlockSyntax GenBlock()
+            => Block(ExpressionStatement(GenConstant()));
+
+        public ArrowExpressionClauseSyntax GenArrowExpressionClause()
+            => ArrowExpressionClause(GenConstant());
+
+        public IndexerDeclarationSyntax GenIndexerDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            BracketedParameterListSyntax parameterList,
+            AccessorListSyntax accessorList)
+            => IndexerDeclaration(attributes.ToSyntaxList(), GenModifiers(), type, explicitInterfaceSpecifier, parameterList, accessorList);
+
+        public IndexerDeclarationSyntax GenIndexerDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            BracketedParameterListSyntax parameterList,
+            ArrowExpressionClauseSyntax expressionBody)
+            => IndexerDeclaration(attributes.ToSyntaxList(), GenModifiers(), type, explicitInterfaceSpecifier, Token(SyntaxKind.ThisKeyword), parameterList, null, expressionBody, Token(SyntaxKind.SemicolonToken));
+
+        public BracketedParameterListSyntax GenBracketedParameterList(List<ParameterSyntax> parameters)
+            => BracketedParameterList(SeparatedList(parameters));
+
+        public ParameterSyntax GenParameter(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            string identifier,
+            EqualsValueClauseSyntax defaultValue)
+            => Parameter(attributes.ToSyntaxList(), GenModifiers(), type, Identifier(identifier), defaultValue);
+
+        public PropertyDeclarationSyntax GenPropertyDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            string identifier,
+            AccessorListSyntax accessors,
+            EqualsValueClauseSyntax initializer)
+            => PropertyDeclaration(attributes.ToSyntaxList(), GenModifiers(), type, explicitInterfaceSpecifier, Identifier(identifier), accessors, null, initializer);
+
+        public PropertyDeclarationSyntax GenPropertyDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            string identifier,
+            ArrowExpressionClauseSyntax expressionBody)
+            => PropertyDeclaration(attributes.ToSyntaxList(), GenModifiers(), type, explicitInterfaceSpecifier, Identifier(identifier), null, expressionBody, null, Token(SyntaxKind.SemicolonToken));
+
+        public DelegateDeclarationSyntax GenDelegateDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax returnType,
+            string identifier,
+            TypeParameterListSyntax typeParameterList,
+            ParameterListSyntax parameterList,
+            List<TypeParameterConstraintClauseSyntax> constraintClauses)
+        {
+            return DelegateDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                returnType,
+                Identifier(identifier),
+                typeParameterList,
+                parameterList,
+                constraintClauses.ToSyntaxList());
+        }
+
+        public ParameterListSyntax GenParameterList(List<ParameterSyntax> parameters)
+            => ParameterList(SeparatedList(parameters));
+
+        public ConstructorDeclarationSyntax GenConstructorDeclaration(
+            List<AttributeListSyntax> attributes,
+            string identifier,
+            ParameterListSyntax parameters,
+            ConstructorInitializerSyntax initializer,
+            BlockSyntax body)
+        {
+            return ConstructorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                Identifier(identifier),
+                parameters,
+                initializer,
+                body);
+        }
+
+        public ConstructorDeclarationSyntax GenConstructorDeclaration(
+            List<AttributeListSyntax> attributes,
+            string identifier,
+            ParameterListSyntax parameters,
+            ConstructorInitializerSyntax initializer,
+            ArrowExpressionClauseSyntax expressionBody)
+        {
+            return ConstructorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                Identifier(identifier),
+                parameters,
+                initializer,
+                null,
+                expressionBody,
+                Token(SyntaxKind.SemicolonToken));
+        }
+
+        public ConstructorInitializerSyntax GenConstructorInitializer(ArgumentListSyntax args)
+            => ConstructorInitializer(RandomKind(s_constructorInitKinds), args);
+
+        public ArgumentListSyntax GenArgumentList(List<ArgumentSyntax> args)
+            => ArgumentList(SeparatedList(args));
+
+        public DestructorDeclarationSyntax GenDestructorDeclaration(
+            List<AttributeListSyntax> attributes,
+            string identifier,
+            ParameterListSyntax parameters,
+            BlockSyntax body)
+        {
+            return DestructorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                Identifier(identifier),
+                parameters,
+                body);
+        }
+
+        public DestructorDeclarationSyntax GenDestructorDeclaration(
+            List<AttributeListSyntax> attributes,
+            string identifier,
+            ParameterListSyntax parameters,
+            ArrowExpressionClauseSyntax expressionBody)
+        {
+            return DestructorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                Token(SyntaxKind.TildeToken),
+                Identifier(identifier),
+                parameters,
+                expressionBody,
+                Token(SyntaxKind.SemicolonToken));
+        }
+
+        public ConversionOperatorDeclarationSyntax GenConversionOperatorDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ParameterListSyntax parameters,
+            BlockSyntax body)
+        {
+            return ConversionOperatorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                RandomToken(s_conversionOperatorKind),
+                type,
+                parameters,
+                body,
+                null);
+        }
+
+        public ConversionOperatorDeclarationSyntax GenConversionOperatorDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax type,
+            ParameterListSyntax parameters,
+            ArrowExpressionClauseSyntax expressionBody)
+        {
+            return ConversionOperatorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                RandomToken(s_conversionOperatorKind),
+                Token(SyntaxKind.OperatorKeyword),
+                type,
+                parameters,
+                null,
+                expressionBody,
+                Token(SyntaxKind.SemicolonToken));
+        }
+
+        public OperatorDeclarationSyntax GenOperatorDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax returnType,
+            ParameterListSyntax parameters,
+            BlockSyntax body)
+        {
+            return OperatorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                returnType,
+                RandomToken(s_operatorKind),
+                parameters,
+                body,
+                null);
+        }
+
+        public OperatorDeclarationSyntax GenOperatorDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax returnType,
+            ParameterListSyntax parameters,
+            ArrowExpressionClauseSyntax expressionBody)
+        {
+            return OperatorDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                returnType,
+                Token(SyntaxKind.OperatorKeyword),
+                RandomToken(s_operatorKind),
+                parameters,
+                null,
+                expressionBody,
+                Token(SyntaxKind.SemicolonToken));
+        }
+
+        public MethodDeclarationSyntax GenMethodDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax returnType,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            string identifier,
+            TypeParameterListSyntax typeParameterList,
+            ParameterListSyntax parameters,
+            List<TypeParameterConstraintClauseSyntax> constraints,
+            BlockSyntax body)
+        {
+            return MethodDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                returnType,
+                explicitInterfaceSpecifier,
+                Identifier(identifier),
+                typeParameterList,
+                parameters,
+                constraints.ToSyntaxList(),
+                body,
+                null);
+        }
+
+        public MethodDeclarationSyntax GenMethodDeclaration(
+            List<AttributeListSyntax> attributes,
+            TypeSyntax returnType,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            string identifier,
+            TypeParameterListSyntax typeParameterList,
+            ParameterListSyntax parameters,
+            List<TypeParameterConstraintClauseSyntax> constraints,
+            ArrowExpressionClauseSyntax expressionBody)
+        {
+            return MethodDeclaration(
+                attributes.ToSyntaxList(),
+                GenModifiers(),
+                returnType,
+                explicitInterfaceSpecifier,
+                Identifier(identifier),
+                typeParameterList,
+                parameters,
+                constraints.ToSyntaxList(),
+                null,
+                expressionBody,
+                Token(SyntaxKind.SemicolonToken));
+        }
+
         public ExpressionSyntax GenConstant()
             => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(5));
 
         private SyntaxTokenList GenModifiers()
         {
-            int count = _rand.Next(10);
+            int count = _rand.Next(3);
             List<SyntaxToken> tokens = new List<SyntaxToken>();
             for (int i = 0; i < count; i++)
             {
@@ -221,9 +538,13 @@ namespace Fuzzlyn
         private SyntaxToken GenToken() => Token(s_tokens[_rand.Next(s_tokens.Length)]);
         private SyntaxToken GenVarianceKeyword() => RandomToken(s_varianceKeywords);
         private SyntaxToken GenRefKindKeyword() => RandomToken(s_refKindKeywords);
+        private SyntaxKind GenAccessorKind() => RandomKind(s_accessorKeywords);
 
         private SyntaxToken RandomToken(SyntaxKind[] arr)
-            => Token(arr[_rand.Next(arr.Length)]);
+            => Token(RandomKind(arr));
+
+        private SyntaxKind RandomKind(SyntaxKind[] arr)
+            => arr[_rand.Next(arr.Length)];
 
         private static readonly SyntaxKind[] s_modifiers =
         {
@@ -243,8 +564,25 @@ namespace Fuzzlyn
             .Where(sk => sk.ToString().EndsWith("Keyword") || sk.ToString().EndsWith("Token")).ToArray();
 
         private static readonly SyntaxKind[] s_varianceKeywords = { SyntaxKind.InKeyword, SyntaxKind.OutKeyword, SyntaxKind.None };
-
         private static readonly SyntaxKind[] s_refKindKeywords = { SyntaxKind.RefKeyword, SyntaxKind.InKeyword, SyntaxKind.OutKeyword, SyntaxKind.None };
+        private static readonly SyntaxKind[] s_accessorKeywords = { SyntaxKind.GetAccessorDeclaration, SyntaxKind.SetAccessorDeclaration, SyntaxKind.AddAccessorDeclaration, SyntaxKind.RemoveAccessorDeclaration };
+        private static readonly SyntaxKind[] s_constructorInitKinds = { SyntaxKind.BaseConstructorInitializer, SyntaxKind.ThisConstructorInitializer };
+        private static readonly SyntaxKind[] s_conversionOperatorKind = { SyntaxKind.ImplicitKeyword, SyntaxKind.ExplicitKeyword };
+        private static readonly SyntaxKind[] s_operatorKind =
+        {
+            SyntaxKind.PlusToken, SyntaxKind.MinusToken,
+            SyntaxKind.ExclamationToken, SyntaxKind.TildeToken,
+            SyntaxKind.PlusPlusToken, SyntaxKind.MinusMinusToken,
+            SyntaxKind.AsteriskToken, SyntaxKind.SlashToken,
+            SyntaxKind.PercentToken, SyntaxKind.LessThanLessThanToken,
+            SyntaxKind.GreaterThanGreaterThanToken, SyntaxKind.BarToken,
+            SyntaxKind.AmpersandToken, SyntaxKind.CaretToken,
+            SyntaxKind.EqualsEqualsToken, SyntaxKind.ExclamationEqualsToken,
+            SyntaxKind.LessThanToken, SyntaxKind.LessThanEqualsToken,
+            SyntaxKind.GreaterThanToken, SyntaxKind.GreaterThanEqualsToken,
+            SyntaxKind.FalseKeyword, SyntaxKind.TrueKeyword,
+            SyntaxKind.IsKeyword,
+        };
     }
 
     internal static class SyntaxExtensions

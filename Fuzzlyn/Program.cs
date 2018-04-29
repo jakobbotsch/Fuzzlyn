@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -11,18 +12,41 @@ namespace Fuzzlyn
 {
     internal class Program
     {
+        private static Random s_rand = new Random(1234);
         private const int MaxDepth = 10;
 
         private static void Main(string[] args)
         {
             for (int i = 0; ; i++)
             {
-                string program = GenerateProgram();
-                Console.WriteLine(program);
-                var test = SyntaxFactory.ParseCompilationUnit(program);
-                Console.Title = i.ToString();
+                string program = null;
+                try
+                {
+                    program = GenerateProgram();
+                }
+                catch (Exception ex)
+                {
+                    File.AppendAllText("GenerationExceptions.txt", "Iteration " + i + ": " + ex.ToString() + Environment.NewLine);
+                    continue;
+                }
+
+                try
+                {
+                    SyntaxFactory.ParseCompilationUnit(program);
+                }
+                catch (Exception ex)
+                {
+                    string s = string.Format(
+                        "Iteration {0}{1}Program: -------------{1}{2}------------{2}{2}Exception: {3}{2}{2}",
+                        i, Environment.NewLine, program, ex);
+
+                    File.AppendAllText("ParseExceptions.txt", s);
+                    Console.WriteLine("Got exception!");
+                }
+
+                if (i % 100 == 0)
+                    Console.Title = i.ToString();
             }
-            Console.ReadLine();
         }
 
         private static string GenerateProgram()
@@ -41,15 +65,8 @@ namespace Fuzzlyn
 
                 object[] arr = (object[])Array.CreateInstance(innerType, amount);
 
-                try
-                {
-                    for (int i = 0; i < arr.Length; i++)
-                        arr[i] = GenerateProgramPart(generator, innerType, depth + 1);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    return Activator.CreateInstance(type, new object[] { Array.CreateInstance(innerType, 0) });
-                }
+                for (int i = 0; i < arr.Length; i++)
+                    arr[i] = GenerateProgramPart(generator, innerType, depth + 1);
 
                 object o = Activator.CreateInstance(type, new object[] { arr });
                 return o;
@@ -79,7 +96,5 @@ namespace Fuzzlyn
 
             return candidates[s_rand.Next(candidates.Count)];
         }
-
-        private static readonly Random s_rand = new Random();
     }
 }
