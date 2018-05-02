@@ -9,7 +9,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn
 {
-    internal class RandomSyntaxGenerator
+    internal partial class RandomSyntaxGenerator
     {
         private Random _rand;
 
