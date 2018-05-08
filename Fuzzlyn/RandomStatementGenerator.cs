@@ -132,6 +132,25 @@ namespace Fuzzlyn
         public TryStatementSyntax GenTryStatement(BlockSyntax block, List<CatchClauseSyntax> catches, FinallyClauseSyntax finallyClause)
             => TryStatement(block, catches.ToSyntaxList(), finallyClause);
 
+        public CatchClauseSyntax GenCatchClause()
+            => CatchClause();
+
+        public CatchClauseSyntax GenCatchClause(CatchDeclarationSyntax declaration, CatchFilterClauseSyntax filter, BlockSyntax block)
+            => CatchClause(declaration, filter, block);
+
+        public CatchDeclarationSyntax GenCatchDeclaration(TypeSyntax type)
+            => CatchDeclaration(type);
+
+        public CatchDeclarationSyntax GenCatchDeclaration(TypeSyntax type, string identifier)
+            => CatchDeclaration(type, Identifier(identifier));
+
+        public FinallyClauseSyntax GenFinallyClause(BlockSyntax block)
+            => FinallyClause(block);
+
+        [Recursive]
+        public CatchFilterClauseSyntax GenCatchFilterClause(ExpressionSyntax filterExpression)
+            => CatchFilterClause(filterExpression);
+
         [Recursive]
         public UnsafeStatementSyntax GenUnsafeStatement(BlockSyntax block)
             => UnsafeStatement(block);
@@ -180,22 +199,6 @@ namespace Fuzzlyn
         public SwitchLabelSyntax GenSwitchLabel()
             => DefaultSwitchLabel();
 
-        public CatchClauseSyntax GenCatchClause()
-            => CatchClause();
-
-        public CatchClauseSyntax GenCatchClause(CatchDeclarationSyntax declaration, CatchFilterClauseSyntax filter, BlockSyntax block)
-            => CatchClause(declaration, filter, block);
-
-        public CatchDeclarationSyntax GenCatchDeclaration(TypeSyntax type)
-            => CatchDeclaration(type);
-
-        public CatchDeclarationSyntax GenCatchDeclaration(TypeSyntax type, SyntaxToken identifier)
-            => CatchDeclaration(type, identifier);
-
-        [Recursive]
-        public CatchFilterClauseSyntax GenCatchFilterClause(ExpressionSyntax filterExpression)
-            => CatchFilterClause(filterExpression);
-
         [Recursive]
         public PatternSyntax GenPattern(ExpressionSyntax expression)
             => ConstantPattern(expression);
@@ -209,7 +212,7 @@ namespace Fuzzlyn
         public VariableDesignationSyntax GenVariableDesignation(List<VariableDesignationSyntax> designations)
             => ParenthesizedVariableDesignation(SeparatedList(designations));
 
-        public VariableDesignationSyntax GenVariableDesignation(SyntaxToken identifier)
-            => SingleVariableDesignation(identifier);
+        public VariableDesignationSyntax GenVariableDesignation(string identifier)
+            => SingleVariableDesignation(Identifier(identifier));
     }
 }

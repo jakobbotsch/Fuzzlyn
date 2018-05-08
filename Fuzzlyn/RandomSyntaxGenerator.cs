@@ -259,11 +259,8 @@ namespace Fuzzlyn
         public AccessorDeclarationSyntax GenAccessorDecl(List<AttributeListSyntax> attributes, ArrowExpressionClauseSyntax expressionBody)
             => AccessorDeclaration(GenAccessorKind(), attributes.ToSyntaxList(), GenModifiers(), expressionBody).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
-        public BlockSyntax GenBlock()
-            => Block(ExpressionStatement(GenConstant()));
-
-        public ArrowExpressionClauseSyntax GenArrowExpressionClause()
-            => ArrowExpressionClause(GenConstant());
+        public ArrowExpressionClauseSyntax GenArrowExpressionClause(ExpressionSyntax expression)
+            => ArrowExpressionClause(expression);
 
         public IndexerDeclarationSyntax GenIndexerDeclaration(
             List<AttributeListSyntax> attributes,
@@ -513,9 +510,6 @@ namespace Fuzzlyn
                 expressionBody,
                 Token(SyntaxKind.SemicolonToken));
         }
-
-        public ExpressionSyntax GenConstant()
-            => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(5));
 
         private SyntaxTokenList GenModifiers()
         {

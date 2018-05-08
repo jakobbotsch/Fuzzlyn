@@ -37,26 +37,32 @@ namespace Fuzzlyn
         public AnonymousObjectCreationExpressionSyntax GenAnonymousObjectCreationExpression(List<AnonymousObjectMemberDeclaratorSyntax> initializers)
             => AnonymousObjectCreationExpression(SeparatedList(initializers));
 
+        public AnonymousObjectMemberDeclaratorSyntax GetAnonymousObjectMemberDeclarator(NameEqualsSyntax nameEquals, ExpressionSyntax expression)
+            => AnonymousObjectMemberDeclarator(nameEquals, expression);
+
         public ArrayCreationExpressionSyntax GenArrayCreationExpression(ArrayTypeSyntax type)
             => ArrayCreationExpression(type);
 
         public ArrayCreationExpressionSyntax GenArrayCreationExpression(ArrayTypeSyntax type, InitializerExpressionSyntax initializer)
             => ArrayCreationExpression(type, initializer);
 
-        // On the subject of AssignmentExpressions, are we to make a generator for each assignment kind? Also, how many assignments exist?
+        public AssignmentExpressionSyntax GenAssignmentExpression(ExpressionSyntax left, ExpressionSyntax right)
+            => AssignmentExpression(RandomKind(s_assignmentKinds), left, right);
 
         public AwaitExpressionSyntax GenAwaitExpression(ExpressionSyntax expression)
             => AwaitExpression(expression);
 
-        //TODO: Basically this, but for all the other existing kinds of Binops as well
         public BinaryExpressionSyntax GenBinaryExpression(ExpressionSyntax left, ExpressionSyntax right)
-            => BinaryExpression(SyntaxKind.AddExpression, left, right);
+            => BinaryExpression(RandomKind(s_binopKinds), left, right);
 
         public CastExpressionSyntax GenCastExpression(TypeSyntax type, ExpressionSyntax expression)
             => CastExpression(type, expression);
 
         public CheckedExpressionSyntax GenCheckedExpression(ExpressionSyntax expression)
             => CheckedExpression(SyntaxKind.CheckedExpression, expression);
+
+        public CheckedExpressionSyntax GenUncheckedExpression(ExpressionSyntax expression)
+            => CheckedExpression(SyntaxKind.UncheckedExpression, expression);
 
         public ConditionalExpressionSyntax GenConditionalExpression(ExpressionSyntax condition, ExpressionSyntax whenTrue, ExpressionSyntax whenFalse)
             => ConditionalExpression(condition, whenTrue, whenFalse);
@@ -85,18 +91,35 @@ namespace Fuzzlyn
         public ImplicitElementAccessSyntax GenImplicitElementAccess(BracketedArgumentListSyntax arguments)
             => ImplicitElementAccess(arguments);
 
-        // TODO: Which kinds possible?
-        /*public InitializerExpressionSyntax GenInitializerExpression(List<ExpressionSyntax> expressions)
-            => InitializerExpression(null, SeparatedList(expressions));*/
+        public InitializerExpressionSyntax GenInitializerExpression(List<ExpressionSyntax> expressions)
+            => InitializerExpression(RandomKind(s_initializerKinds), SeparatedList(expressions));
 
-        // NOTE: Alternate constructors for the following two ask for a token. Is this an interesting case?
         public BaseExpressionSyntax GenBaseExpression()
             => BaseExpression();
 
         public ThisExpressionSyntax GenThisExpression()
             => ThisExpression();
 
-        // TODO: InterpolatedStringExpressionSyntax. Something about it looks weird.
+        public InterpolatedStringExpressionSyntax GenInterpolatedStringExpression(List<InterpolatedStringContentSyntax> contents)
+            => InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken), contents.ToSyntaxList());
+
+        public InterpolatedStringExpressionSyntax GenInterpolatedVerbatimStringExpression(List<InterpolatedStringContentSyntax> contents)
+            => InterpolatedStringExpression(Token(SyntaxKind.InterpolatedVerbatimStringStartToken), contents.ToSyntaxList());
+
+        public InterpolatedStringTextSyntax GenInterpolatedStringText(string text)
+            => InterpolatedStringText(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, text, text, TriviaList()));
+
+        public InterpolationSyntax GenInterpolation(ExpressionSyntax expression)
+            => Interpolation(expression);
+
+        public InterpolationSyntax GenInterpolation(ExpressionSyntax expression, InterpolationAlignmentClauseSyntax alignment, InterpolationFormatClauseSyntax format)
+            => Interpolation(expression, alignment, format);
+
+        public InterpolationAlignmentClauseSyntax GenInterpolationAlignmentClause(ExpressionSyntax expr)
+            => InterpolationAlignmentClause(Token(SyntaxKind.CommaToken), expr);
+
+        public InterpolationFormatClauseSyntax GenInterpolationFormatClause(string format)
+            => InterpolationFormatClause(Token(SyntaxKind.ColonToken), Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, format, format, TriviaList()));
 
         public InvocationExpressionSyntax GenInvocationExpression(ExpressionSyntax expression)
             => InvocationExpression(expression);
@@ -108,11 +131,17 @@ namespace Fuzzlyn
             => IsPatternExpression(expression, pattern);
 
         //TODO: Making literal expressions is simple, but how do we want to generate them?
+        public LiteralExpressionSyntax GenLiteralInt()
+            => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(_rand.Next()));
 
-        public MakeRefExpressionSyntax GenRefExpressionSyntax(ExpressionSyntax expression)
+        public MakeRefExpressionSyntax GenMakeRefExpression(ExpressionSyntax expression)
             => MakeRefExpression(expression);
 
-        // TODO: MemberAccessExpressionSyntax
+        public MemberAccessExpressionSyntax GenMemberAccessExpression(ExpressionSyntax expr, SimpleNameSyntax name)
+            => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, expr, name);
+
+        public MemberAccessExpressionSyntax GenPointerMemberAccessExpression(ExpressionSyntax expr, SimpleNameSyntax name)
+            => MemberAccessExpression(SyntaxKind.PointerMemberAccessExpression, expr, name);
 
         public MemberBindingExpressionSyntax GenMemberBindingExpression(SimpleNameSyntax name)
             => MemberBindingExpression(name);
@@ -129,13 +158,19 @@ namespace Fuzzlyn
         public ParenthesizedExpressionSyntax GenParenthesizedExpression(ExpressionSyntax expression)
             => ParenthesizedExpression(expression);
 
-        //TODO: PostfixUnaryExpressionSyntax. Not sure I remember all the operators *shrug*
+        public PostfixUnaryExpressionSyntax GenPostfixUnaryExpression(ExpressionSyntax expression)
+            => PostfixUnaryExpression(RandomKind(s_postfixUnaryOperatorKinds), expression);
 
-        //... same for the Prefix version
+        public PrefixUnaryExpressionSyntax GenPrefixUnaryExpression(ExpressionSyntax expression)
+            => PrefixUnaryExpression(RandomKind(s_prefixUnaryOperatorKinds), expression);
 
-        public QueryExpressionSyntax GenQueryExpression(FromClauseSyntax fromClause, QueryBodySyntax body)
+        /*public QueryExpressionSyntax GenQueryExpression(FromClauseSyntax fromClause, QueryBodySyntax body)
             => QueryExpression(fromClause, body);
-        //TODO: Those parameters^
+
+        public FromClauseSyntax GenFromClause(string identifier, ExpressionSyntax expression)
+            => FromClause(identifier, expression);
+
+        public QueryBodySyntax GenQueryBody()*/
 
         public RefExpressionSyntax GenRefExpression(ExpressionSyntax expression)
             => RefExpression(expression);
@@ -172,6 +207,9 @@ namespace Fuzzlyn
         public ArrayTypeSyntax GenArrayType(TypeSyntax elementType, List<ArrayRankSpecifierSyntax> rankSpecifiers)
             => ArrayType(elementType, rankSpecifiers.ToSyntaxList());
 
+        public ArrayRankSpecifierSyntax GenArrayRankSpecifier(List<ExpressionSyntax> ranks)
+            => ArrayRankSpecifier(SeparatedList(ranks));
+
         public NullableTypeSyntax GenNullableType(TypeSyntax type)
             => NullableType(type);
 
@@ -185,6 +223,53 @@ namespace Fuzzlyn
 
         public TupleTypeSyntax GenTupleType(List<TupleElementSyntax> tuples)
             => TupleType(SeparatedList(tuples));
+
+        public TupleElementSyntax GenTupleElement(TypeSyntax type)
+            => TupleElement(type);
+
+        private static readonly SyntaxKind[] s_assignmentKinds =
+        {
+            SyntaxKind.SimpleAssignmentExpression, SyntaxKind.AddAssignmentExpression,
+            SyntaxKind.SubtractAssignmentExpression, SyntaxKind.MultiplyAssignmentExpression,
+            SyntaxKind.DivideAssignmentExpression, SyntaxKind.ModuloAssignmentExpression,
+            SyntaxKind.AndAssignmentExpression, SyntaxKind.ExclusiveOrAssignmentExpression,
+            SyntaxKind.OrAssignmentExpression, SyntaxKind.LeftShiftAssignmentExpression,
+            SyntaxKind.RightShiftAssignmentExpression,
+        };
+
+        private static readonly SyntaxKind[] s_binopKinds =
+        {
+            SyntaxKind.AddExpression, SyntaxKind.SubtractExpression,
+            SyntaxKind.MultiplyExpression, SyntaxKind.DivideExpression,
+            SyntaxKind.ModuloExpression, SyntaxKind.LeftShiftExpression,
+            SyntaxKind.RightShiftExpression, SyntaxKind.LogicalOrExpression,
+            SyntaxKind.LogicalAndExpression, SyntaxKind.BitwiseOrExpression,
+            SyntaxKind.BitwiseAndExpression, SyntaxKind.ExclusiveOrExpression,
+            SyntaxKind.EqualsExpression, SyntaxKind.NotEqualsExpression,
+            SyntaxKind.LessThanExpression, SyntaxKind.LessThanOrEqualExpression,
+            SyntaxKind.GreaterThanExpression, SyntaxKind.GreaterThanOrEqualExpression,
+            SyntaxKind.IsExpression, SyntaxKind.AsExpression,
+            SyntaxKind.CoalesceExpression,
+        };
+
+        private static readonly SyntaxKind[] s_initializerKinds =
+        {
+            SyntaxKind.ObjectInitializerExpression, SyntaxKind.CollectionInitializerExpression,
+            SyntaxKind.ArrayInitializerExpression, SyntaxKind.ComplexElementInitializerExpression
+        };
+
+        private static readonly SyntaxKind[] s_prefixUnaryOperatorKinds =
+        {
+            SyntaxKind.UnaryPlusExpression, SyntaxKind.UnaryMinusExpression,
+            SyntaxKind.BitwiseNotExpression, SyntaxKind.LogicalNotExpression,
+            SyntaxKind.PreIncrementExpression, SyntaxKind.PreDecrementExpression,
+            SyntaxKind.AddressOfExpression, SyntaxKind.PointerIndirectionExpression,
+        };
+
+        private static readonly SyntaxKind[] s_postfixUnaryOperatorKinds =
+        {
+            SyntaxKind.PostIncrementExpression, SyntaxKind.PostDecrementExpression,
+        };
 
         /*
          * Expressionsyntax includes:
