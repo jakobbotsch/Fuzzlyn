@@ -8,22 +8,25 @@ namespace Fuzzlyn
     partial class RandomSyntaxGenerator
     {
         [Recursive]
-        public AnonymousMethodExpressionSyntax GenAnonymousMethodExpression(ParameterListSyntax parameters, CSharpSyntaxNode body)
+        public AnonymousMethodExpressionSyntax GenAnonymousMethodExpression(ParameterListSyntax parameters, BlockSyntax body)
             => AnonymousMethodExpression(parameters, body);
 
-        /*public AnonymousMethodExpressionSyntax GenAnonymousAsyncMethodExpression(ParameterListSyntax parameters, BlockSyntax body)
-            => AnonymousMethodExpression(parameters, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));*/
+        public AnonymousMethodExpressionSyntax GenAnonymousAsyncMethodExpression(ParameterListSyntax parameters, BlockSyntax body)
+            => AnonymousMethodExpression(parameters, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
         [Recursive]
-        public SimpleLambdaExpressionSyntax GenSimpleLambdaExpressionWithBlock(ParameterSyntax parameter, CSharpSyntaxNode body)
+        public SimpleLambdaExpressionSyntax GenSimpleLambdaExpressionWithBlock(ParameterSyntax parameter, BlockSyntax body)
             => SimpleLambdaExpression(parameter, body);
 
         [Recursive]
-        public SimpleLambdaExpressionSyntax GenSimpleAsyncLambdaExpressionWithBlock(ParameterSyntax parameter, CSharpSyntaxNode body)
+        public SimpleLambdaExpressionSyntax GenSimpleAsyncLambdaExpressionWithBlock(ParameterSyntax parameter, BlockSyntax body)
             => SimpleLambdaExpression(parameter, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
-        /*public SimpleLambdaExpressionSyntax GenSimpleLambdaExpressionWithArrow(ParameterSyntax parameter, ArrowExpressionClauseSyntax body)
-            => SimpleLambdaExpression(parameter, body)*/
+        public SimpleLambdaExpressionSyntax GenSimpleLambdaExpressionWithArrow(ParameterSyntax parameter, ArrowExpressionClauseSyntax body)
+            => SimpleLambdaExpression(parameter, body);
+
+        public SimpleLambdaExpressionSyntax GenSimpleAsyncLambdaExpressionWithArrow(ParameterSyntax parameter, ArrowExpressionClauseSyntax body)
+            => SimpleLambdaExpression(parameter, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
         public ParenthesizedLambdaExpressionSyntax GenParenthesizedLambdaExpression(CSharpSyntaxNode body)
             => ParenthesizedLambdaExpression(body);
