@@ -13,7 +13,7 @@ namespace Fuzzlyn
     internal class Program
     {
         private static Random s_rand = new Random(1234);
-        private const int MaxDepth = 10;
+        private const int MaxDepth = 20;
 
         private static void Main(string[] args)
         {
@@ -65,8 +65,15 @@ namespace Fuzzlyn
 
                 object[] arr = (object[])Array.CreateInstance(innerType, amount);
 
-                for (int i = 0; i < arr.Length; i++)
-                    arr[i] = GenerateProgramPart(generator, innerType, depth + 1);
+                try
+                {
+                    for (int i = 0; i < arr.Length; i++)
+                        arr[i] = GenerateProgramPart(generator, innerType, depth + 1);
+                }
+                catch
+                {
+                    return Activator.CreateInstance(type, new object[] { Array.CreateInstance(innerType, 0) });
+                }
 
                 object o = Activator.CreateInstance(type, new object[] { arr });
                 return o;
@@ -80,6 +87,8 @@ namespace Fuzzlyn
             return (SyntaxNode)factory.Invoke(generator, nodes);
         }
 
+        private static readonly HashSet<MethodInfo> s_recursiveFactories = FindRecursiveFactories();
+
         private static MethodInfo FindFactory(Type type, bool allowRecursion)
         {
             Type factory = typeof(RandomSyntaxGenerator);
@@ -88,13 +97,65 @@ namespace Fuzzlyn
             List<MethodInfo> candidates =
                 methods.Where(
                     m => type.IsAssignableFrom(m.ReturnType) &&
-                         (allowRecursion || m.GetCustomAttribute<RecursiveAttribute>() == null))
+                         (allowRecursion || !s_recursiveFactories.Contains(m)))
                        .ToList();
 
             if (candidates.Count == 1)
                 return candidates[0];
 
             return candidates[s_rand.Next(candidates.Count)];
+        }
+
+        private static IEnumerable<MethodInfo> FindCandidates(Type type, Context requiredContext)
+        {
+
+        }
+
+        private static HashSet<MethodInfo> FindRecursiveFactories()
+        {
+            MethodInfo[] methods = typeof(RandomSyntaxGenerator).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            HashSet<MethodInfo> recursiveFactories = new HashSet<MethodInfo>();
+            foreach (MethodInfo mi in methods)
+            {
+                HashSet<Type> hs = new HashSet<Type>();
+                foreach (ParameterInfo parameter in mi.GetParameters())
+                {
+                    if (IsFactoryChainRecursive(parameter.ParameterType, hs))
+                    {
+                        recursiveFactories.Add(mi);
+                        break;
+                    }
+                }
+
+                bool IsFactoryChainRecursive(Type type, HashSet<Type> seen)
+                {
+                    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+                        return IsFactoryChainRecursive(type.GetGenericArguments()[0], seen);
+
+                    if (!seen.Add(type))
+                        return false;
+
+                    foreach (MethodInfo factory in methods)
+                    {
+                        if (!type.IsAssignableFrom(factory.ReturnType))
+                            continue;
+
+                        if (factory == mi)
+                            return true;
+
+                        foreach (ParameterInfo parameter in factory.GetParameters())
+                        {
+                            if (IsFactoryChainRecursive(parameter.ParameterType, seen))
+                                return true;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
+            return recursiveFactories;
         }
     }
 }

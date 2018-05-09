@@ -21,7 +21,9 @@ namespace Fuzzlyn
         public CompilationUnitSyntax GenCompilationUnit(
             List<ExternAliasDirectiveSyntax> externs,
             List<UsingDirectiveSyntax> usings,
+            [RequireContext(Context.Global)]
             List<AttributeListSyntax> attributeLists,
+            [RequireContext(Context.Global)]
             List<MemberDeclarationSyntax> members)
             => CompilationUnit(externs.ToSyntaxList(), usings.ToSyntaxList(), attributeLists.ToSyntaxList(), members.ToSyntaxList());
 
@@ -92,21 +94,27 @@ namespace Fuzzlyn
         public AttributeTargetSpecifierSyntax GenAttributeTargetSpecifier(string target)
             => AttributeTargetSpecifier(Identifier(target));
 
-        [Recursive]
+        [AllowIn(Context.Global)]
+        public AttributeListSyntax GenAssemblyTargetedAttributeList(List<AttributeSyntax> attributes)
+            => AttributeList(AttributeTargetSpecifier(Token(SyntaxKind.AssemblyKeyword)), SeparatedList(attributes));
+
+        [Recursive, AllowIn(Context.Global, Context.Namespace)]
         public NamespaceDeclarationSyntax GenNamespaceDeclaration(
             NameSyntax name,
             List<ExternAliasDirectiveSyntax> externs,
             List<UsingDirectiveSyntax> usings,
+            [RequireContext(Context.Namespace)]
             List<MemberDeclarationSyntax> members)
             => NamespaceDeclaration(name, externs.ToSyntaxList(), usings.ToSyntaxList(), members.ToSyntaxList());
 
-        [Recursive]
+        [Recursive, AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public ClassDeclarationSyntax GenClassDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
             TypeParameterListSyntax typeParams,
             BaseListSyntax bases,
             List<TypeParameterConstraintClauseSyntax> constraints,
+            [RequireContext(Context.Class)]
             List<MemberDeclarationSyntax> members)
         {
             return ClassDeclaration(
@@ -119,13 +127,14 @@ namespace Fuzzlyn
                 members.ToSyntaxList());
         }
 
-        [Recursive]
+        [AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public InterfaceDeclarationSyntax GenInterfaceDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
             TypeParameterListSyntax typeParams,
             BaseListSyntax bases,
             List<TypeParameterConstraintClauseSyntax> constraints,
+            [RequireContext(Context.Interface)]
             List<MemberDeclarationSyntax> members)
         {
             return InterfaceDeclaration(
@@ -138,6 +147,7 @@ namespace Fuzzlyn
                 members.ToSyntaxList());
         }
 
+        [AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public EnumDeclarationSyntax GenEnumDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
@@ -179,13 +189,14 @@ namespace Fuzzlyn
         public ConstructorConstraintSyntax GenConstructorConstraint() => ConstructorConstraint();
         public TypeConstraintSyntax GenTypeConstraint(TypeSyntax type) => TypeConstraint(type);
 
-        [Recursive]
+        [Recursive, AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public StructDeclarationSyntax GenStructDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
             TypeParameterListSyntax typeParams,
             BaseListSyntax bases,
             List<TypeParameterConstraintClauseSyntax> constraints,
+            [RequireContext(Context.Struct)]
             List<MemberDeclarationSyntax> members)
         {
             return StructDeclaration(attributes.ToSyntaxList(),
@@ -197,8 +208,10 @@ namespace Fuzzlyn
                 members.ToSyntaxList());
         }
 
+        [AllowIn(Context.Class, Context.Interface, Context.Struct)]
         public EventFieldDeclarationSyntax GenEventFieldDeclaration(
             List<AttributeListSyntax> attributes,
+            [RequireContext(Context.Interface)]
             VariableDeclarationSyntax declaration)
             => EventFieldDeclaration(attributes.ToSyntaxList(), GenModifiers(), declaration);
 
@@ -220,17 +233,24 @@ namespace Fuzzlyn
         public EqualsValueClauseSyntax GenEqualsValueClause(ExpressionSyntax expr)
             => EqualsValueClause(expr);
 
+        // Interfaces cannot contain initializers, so special case with list of IDs
+        [AllowIn(Context.Interface)]
+        public VariableDeclarationSyntax GenInterfaceEventFieldDeclaration(TypeSyntax type, List<string> identifiers)
+            => VariableDeclaration(type, SeparatedList(identifiers.Select(VariableDeclarator)));
+
         public ArgumentSyntax GenArgument(ExpressionSyntax expr)
             => Argument(expr);
 
         public ArgumentSyntax GenArgument(ExpressionSyntax expr, NameColonSyntax nameColon)
             => Argument(nameColon, GenRefKindKeyword(), expr);
 
+        [AllowIn(Context.Class, Context.Struct)]
         public FieldDeclarationSyntax GenFieldDeclaration(
             List<AttributeListSyntax> attributes,
             VariableDeclarationSyntax declaration)
             => FieldDeclaration(attributes.ToSyntaxList(), GenModifiers(), declaration);
 
+        [AllowIn(Context.Class, Context.Struct)]
         public EventDeclarationSyntax GenEventDeclaration(
             List<AttributeListSyntax> attributes,
             TypeSyntax type,
