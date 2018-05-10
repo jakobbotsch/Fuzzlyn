@@ -7,18 +7,15 @@ namespace Fuzzlyn
 {
     partial class RandomSyntaxGenerator
     {
-        [Recursive]
         public AnonymousMethodExpressionSyntax GenAnonymousMethodExpression(ParameterListSyntax parameters, BlockSyntax body)
             => AnonymousMethodExpression(parameters, body);
 
         public AnonymousMethodExpressionSyntax GenAnonymousAsyncMethodExpression(ParameterListSyntax parameters, BlockSyntax body)
             => AnonymousMethodExpression(parameters, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
-        [Recursive]
         public SimpleLambdaExpressionSyntax GenSimpleLambdaExpressionWithBlock(ParameterSyntax parameter, BlockSyntax body)
             => SimpleLambdaExpression(parameter, body);
 
-        [Recursive]
         public SimpleLambdaExpressionSyntax GenSimpleAsyncLambdaExpressionWithBlock(ParameterSyntax parameter, BlockSyntax body)
             => SimpleLambdaExpression(parameter, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
@@ -28,10 +25,16 @@ namespace Fuzzlyn
         public SimpleLambdaExpressionSyntax GenSimpleAsyncLambdaExpressionWithArrow(ParameterSyntax parameter, ArrowExpressionClauseSyntax body)
             => SimpleLambdaExpression(parameter, body).WithAsyncKeyword(Token(SyntaxKind.AsyncKeyword));
 
-        public ParenthesizedLambdaExpressionSyntax GenParenthesizedLambdaExpression(CSharpSyntaxNode body)
+        public ParenthesizedLambdaExpressionSyntax GenParenthesizedLambdaExpression(BlockSyntax body)
             => ParenthesizedLambdaExpression(body);
 
-        public ParenthesizedLambdaExpressionSyntax GenParenthesizedLambdaExpression(ParameterListSyntax parameterList, CSharpSyntaxNode body)
+        public ParenthesizedLambdaExpressionSyntax GenParenthesizedLambdaExpression(ParameterListSyntax parameterList, BlockSyntax body)
+            => ParenthesizedLambdaExpression(parameterList, body);
+
+        public ParenthesizedLambdaExpressionSyntax GenParenthesizedArrowLambdaExpression(ArrowExpressionClauseSyntax body)
+            => ParenthesizedLambdaExpression(body);
+
+        public ParenthesizedLambdaExpressionSyntax GenParenthesizedArrowLambdaExpression(ParameterListSyntax parameterList, ArrowExpressionClauseSyntax body)
             => ParenthesizedLambdaExpression(parameterList, body);
 
         public AnonymousObjectCreationExpressionSyntax GenAnonymousObjectCreationExpression(List<AnonymousObjectMemberDeclaratorSyntax> initializers)

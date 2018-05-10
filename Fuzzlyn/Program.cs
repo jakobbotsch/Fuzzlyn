@@ -52,11 +52,11 @@ namespace Fuzzlyn
         private static string GenerateProgram()
         {
             RandomSyntaxGenerator generator = new RandomSyntaxGenerator(s_rand);
-            SyntaxNode program = (SyntaxNode)GenerateProgramPart(generator, typeof(CompilationUnitSyntax), 0);
+            SyntaxNode program = (SyntaxNode)GenerateProgramPart(generator, typeof(CompilationUnitSyntax), 0, null);
             return program.NormalizeWhitespace().ToFullString();
         }
 
-        private static object GenerateProgramPart(RandomSyntaxGenerator generator, Type type, int depth)
+        private static object GenerateProgramPart(RandomSyntaxGenerator generator, Type type, int depth, Context? ctx)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
@@ -68,7 +68,7 @@ namespace Fuzzlyn
                 try
                 {
                     for (int i = 0; i < arr.Length; i++)
-                        arr[i] = GenerateProgramPart(generator, innerType, depth + 1);
+                        arr[i] = GenerateProgramPart(generator, innerType, depth + 1, ctx);
                 }
                 catch
                 {
@@ -82,23 +82,32 @@ namespace Fuzzlyn
             if (type == typeof(string))
                 return Helpers.GenerateString(s_rand);
 
-            MethodInfo factory = FindFactory(type, depth <= MaxDepth);
-            object[] nodes = factory.GetParameters().Select(pm => GenerateProgramPart(generator, pm.ParameterType, depth + 1)).ToArray();
+            MethodInfo factory = FindFactory(type, depth <= MaxDepth, ctx);
+            object[] nodes =
+                factory
+                    .GetParameters()
+                    .Select(pm =>
+                        GenerateProgramPart(
+                            generator,
+                            pm.ParameterType,
+                            depth + 1,
+                            pm.GetCustomAttribute<RequireContextAttribute>()?.Context))
+                    .ToArray();
+
             return (SyntaxNode)factory.Invoke(generator, nodes);
         }
 
         private static readonly HashSet<MethodInfo> s_recursiveFactories = FindRecursiveFactories();
 
-        private static MethodInfo FindFactory(Type type, bool allowRecursion)
+        private static MethodInfo FindFactory(Type type, bool allowRecursion, Context? ctx)
         {
             Type factory = typeof(RandomSyntaxGenerator);
             MethodInfo[] methods = factory.GetMethods();
 
             List<MethodInfo> candidates =
-                methods.Where(
-                    m => type.IsAssignableFrom(m.ReturnType) &&
-                         (allowRecursion || !s_recursiveFactories.Contains(m)))
-                       .ToList();
+                FindCandidateFactories(type, ctx)
+                    .Where(m => (allowRecursion || !s_recursiveFactories.Contains(m)))
+                    .ToList();
 
             if (candidates.Count == 1)
                 return candidates[0];
@@ -106,47 +115,59 @@ namespace Fuzzlyn
             return candidates[s_rand.Next(candidates.Count)];
         }
 
-        private static IEnumerable<MethodInfo> FindCandidates(Type type, Context requiredContext)
+        private static IEnumerable<MethodInfo> FindCandidateFactories(Type type, Context? ctx)
         {
+            MethodInfo[] methods = typeof(RandomSyntaxGenerator).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            return methods.Where(mi =>
+            {
+                if (!type.IsAssignableFrom(mi.ReturnType))
+                    return false;
+                if (!ctx.HasValue)
+                    return true;
 
+                AllowInAttribute attrib = mi.GetCustomAttribute<AllowInAttribute>();
+                return attrib != null && attrib.Contexts.Contains(ctx.Value);
+            });
         }
 
         private static HashSet<MethodInfo> FindRecursiveFactories()
         {
             MethodInfo[] methods = typeof(RandomSyntaxGenerator).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
             HashSet<MethodInfo> recursiveFactories = new HashSet<MethodInfo>();
             foreach (MethodInfo mi in methods)
             {
                 HashSet<Type> hs = new HashSet<Type>();
                 foreach (ParameterInfo parameter in mi.GetParameters())
                 {
-                    if (IsFactoryChainRecursive(parameter.ParameterType, hs))
+                    if (IsFactoryChainRecursive(
+                        parameter.ParameterType,
+                        hs,
+                        parameter.GetCustomAttribute<RequireContextAttribute>()?.Context))
                     {
                         recursiveFactories.Add(mi);
                         break;
                     }
                 }
 
-                bool IsFactoryChainRecursive(Type type, HashSet<Type> seen)
+                bool IsFactoryChainRecursive(Type type, HashSet<Type> seen, Context? ctx)
                 {
                     if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-                        return IsFactoryChainRecursive(type.GetGenericArguments()[0], seen);
+                        return IsFactoryChainRecursive(type.GetGenericArguments()[0], seen, ctx);
 
                     if (!seen.Add(type))
                         return false;
 
-                    foreach (MethodInfo factory in methods)
+                    foreach (MethodInfo factory in FindCandidateFactories(type, ctx))
                     {
-                        if (!type.IsAssignableFrom(factory.ReturnType))
-                            continue;
-
                         if (factory == mi)
                             return true;
 
                         foreach (ParameterInfo parameter in factory.GetParameters())
                         {
-                            if (IsFactoryChainRecursive(parameter.ParameterType, seen))
+                            if (IsFactoryChainRecursive(
+                                parameter.ParameterType,
+                                seen,
+                                parameter.GetCustomAttribute<RequireContextAttribute>()?.Context))
                                 return true;
                         }
                     }

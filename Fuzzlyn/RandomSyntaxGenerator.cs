@@ -46,11 +46,9 @@ namespace Fuzzlyn
         public GenericNameSyntax GenGenericName(string identifier)
             => GenericName(identifier);
 
-        [Recursive]
         public GenericNameSyntax GenGenericName(string identifier, TypeArgumentListSyntax types)
             => GenericName(Identifier(identifier), types);
 
-        [Recursive]
         public QualifiedNameSyntax GenQualifiedName(NameSyntax left, SimpleNameSyntax right)
             => QualifiedName(left, right);
 
@@ -98,7 +96,7 @@ namespace Fuzzlyn
         public AttributeListSyntax GenAssemblyTargetedAttributeList(List<AttributeSyntax> attributes)
             => AttributeList(AttributeTargetSpecifier(Token(SyntaxKind.AssemblyKeyword)), SeparatedList(attributes));
 
-        [Recursive, AllowIn(Context.Global, Context.Namespace)]
+        [AllowIn(Context.Global, Context.Namespace)]
         public NamespaceDeclarationSyntax GenNamespaceDeclaration(
             NameSyntax name,
             List<ExternAliasDirectiveSyntax> externs,
@@ -107,7 +105,7 @@ namespace Fuzzlyn
             List<MemberDeclarationSyntax> members)
             => NamespaceDeclaration(name, externs.ToSyntaxList(), usings.ToSyntaxList(), members.ToSyntaxList());
 
-        [Recursive, AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
+        [AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public ClassDeclarationSyntax GenClassDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
@@ -189,7 +187,7 @@ namespace Fuzzlyn
         public ConstructorConstraintSyntax GenConstructorConstraint() => ConstructorConstraint();
         public TypeConstraintSyntax GenTypeConstraint(TypeSyntax type) => TypeConstraint(type);
 
-        [Recursive, AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
+        [AllowIn(Context.Global, Context.Namespace, Context.Class, Context.Struct)]
         public StructDeclarationSyntax GenStructDeclaration(
             List<AttributeListSyntax> attributes,
             string name,
