@@ -32,7 +32,8 @@ namespace Fuzzlyn
 
                 try
                 {
-                    SyntaxFactory.ParseCompilationUnit(program);
+                    CompilationUnitSyntax syntax = SyntaxFactory.ParseCompilationUnit(program);
+                    var diags = syntax.GetDiagnostics().ToList();
                 }
                 catch (Exception ex)
                 {
@@ -122,10 +123,12 @@ namespace Fuzzlyn
             {
                 if (!type.IsAssignableFrom(mi.ReturnType))
                     return false;
-                if (!ctx.HasValue)
-                    return true;
 
                 AllowInAttribute attrib = mi.GetCustomAttribute<AllowInAttribute>();
+
+                if (!ctx.HasValue)
+                    return attrib == null || attrib.Contexts.Contains(Context.None);
+
                 return attrib != null && attrib.Contexts.Contains(ctx.Value);
             });
         }

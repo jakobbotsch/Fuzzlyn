@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -85,9 +86,6 @@ namespace Fuzzlyn
         public ImplicitArrayCreationExpressionSyntax GenImplicitArrayCreationExpression(InitializerExpressionSyntax initializer)
             => ImplicitArrayCreationExpression(initializer);
 
-        public ImplicitArrayCreationExpressionSyntax GenImplicitArrayCreationExpressionWithTokens(InitializerExpressionSyntax initializer)
-            => ImplicitArrayCreationExpression(GenModifiers(), initializer);
-
         public ImplicitElementAccessSyntax GenImplicitElementAccess()
             => ImplicitElementAccess();
 
@@ -134,6 +132,7 @@ namespace Fuzzlyn
             => IsPatternExpression(expression, pattern);
 
         //TODO: Making literal expressions is simple, but how do we want to generate them?
+        [AllowIn(Context.None, Context.AttributeArgument)]
         public LiteralExpressionSyntax GenLiteralInt()
             => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(_rand.Next()));
 
@@ -199,6 +198,7 @@ namespace Fuzzlyn
         public TupleExpressionSyntax GenTupleExpression(List<ArgumentSyntax> arguments)
             => TupleExpression(SeparatedList(arguments));
 
+        [AllowIn(Context.None, Context.AttributeArgument)]
         public TypeOfExpressionSyntax GenTypeOfExpression(TypeSyntax type)
             => TypeOfExpression(type);
 

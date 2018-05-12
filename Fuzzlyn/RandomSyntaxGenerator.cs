@@ -65,37 +65,6 @@ namespace Fuzzlyn
         public TypeArgumentListSyntax GenTypeArgumentList(List<TypeSyntax> types)
             => TypeArgumentList(SeparatedList(types));
 
-        public AttributeListSyntax GenAttributeList(List<AttributeSyntax> attributes)
-            => AttributeList(SeparatedList(attributes));
-
-        public AttributeListSyntax GenAttributeList(AttributeTargetSpecifierSyntax target, List<AttributeSyntax> attributes)
-            => AttributeList(target, SeparatedList(attributes));
-
-        public AttributeSyntax GenAttribute(NameSyntax name)
-            => Attribute(name);
-
-        public AttributeSyntax GenAttribute(NameSyntax name, AttributeArgumentListSyntax args)
-            => Attribute(name, args);
-
-        public AttributeArgumentListSyntax GenAttributeArgumentList(List<AttributeArgumentSyntax> args)
-            => AttributeArgumentList(SeparatedList(args));
-
-        public AttributeArgumentSyntax GenAttributeArgument(ExpressionSyntax expression)
-            => AttributeArgument(expression);
-
-        public AttributeArgumentSyntax GenAttributeArgument(NameEqualsSyntax nameEquals, ExpressionSyntax expression)
-            => AttributeArgument(expression).WithNameEquals(nameEquals);
-
-        public AttributeArgumentSyntax GenAttributeArgument(NameColonSyntax nameColon, ExpressionSyntax expression)
-            => AttributeArgument(expression).WithNameColon(nameColon);
-
-        public AttributeTargetSpecifierSyntax GenAttributeTargetSpecifier(string target)
-            => AttributeTargetSpecifier(Identifier(target));
-
-        [AllowIn(Context.Global)]
-        public AttributeListSyntax GenAssemblyTargetedAttributeList(List<AttributeSyntax> attributes)
-            => AttributeList(AttributeTargetSpecifier(Token(SyntaxKind.AssemblyKeyword)), SeparatedList(attributes));
-
         [AllowIn(Context.Global, Context.Namespace)]
         public NamespaceDeclarationSyntax GenNamespaceDeclaration(
             NameSyntax name,
