@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Fuzzlyn
 {
-    public class Randomizer
+    internal class Randomizer
     {
         public Randomizer(FuzzlynOptions options)
         {
@@ -15,10 +15,16 @@ namespace Fuzzlyn
 
         public FuzzlynOptions Options { get; }
         public ulong Seed { get; }
+
         public Rng Rng { get; }
 
         public bool FlipCoin(double probability)
             => Rng.NextDouble() < probability;
+
+        public int Next(int max) => Rng.Next(max);
+        public int Next(int min, int max) => Rng.Next(min, max);
+        public ulong NextUInt64() => Rng.NextUInt64();
+        public double NextDouble() => Rng.NextDouble();
 
         private ulong GenSeed()
         {

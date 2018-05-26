@@ -4,7 +4,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Types
 {
-    internal class PrimitiveType : FuzzType
+    public class PrimitiveType : FuzzType
     {
         public PrimitiveType(SyntaxKind keyword)
         {

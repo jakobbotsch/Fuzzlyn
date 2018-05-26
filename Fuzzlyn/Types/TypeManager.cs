@@ -1,15 +1,36 @@
-﻿using Fuzzlyn.Types;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fuzzlyn
+namespace Fuzzlyn.Types
 {
     internal class TypeManager
     {
         private readonly List<PrimitiveType> _primitiveTypes = new List<PrimitiveType>();
         private readonly List<AggregateType> _aggTypes = new List<AggregateType>();
+
+        public TypeManager(Randomizer random)
+        {
+            Random = random;
+        }
+
+        public Randomizer Random { get; }
+
+        public FuzzType PickType(Func<FuzzType, bool> filter = null)
+        {
+            FuzzType type;
+            do
+            {
+                int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count);
+                type = num < _primitiveTypes.Count
+                    ? (FuzzType)_primitiveTypes[num]
+                    : _aggTypes[num - _primitiveTypes.Count];
+            } while (filter != null && !filter(type));
+
+            return type;
+        }
 
         public IEnumerable<MemberDeclarationSyntax> OutputTypes()
         {
@@ -17,7 +38,7 @@ namespace Fuzzlyn
                 yield return type.Output();
         }
 
-        public void GenerateTypes(Randomizer random)
+        public void GenerateTypes()
         {
             SyntaxKind[] primitiveTypes =
             {
@@ -31,27 +52,27 @@ namespace Fuzzlyn
 
             _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
 
-            while (random.FlipCoin(random.Options.MoreTypesProbability))
+            int count = Random.Options.MakeAggregateTypeCountDist.Sample(Random.Rng);
+            for (int i = 0; i < count; i++)
             {
-                bool isClass = random.FlipCoin(random.Options.ClassProbability);
+                bool isClass = Random.FlipCoin(Random.Options.MakeClassProb);
                 string name = isClass ? "C" : "S";
                 name += _aggTypes.Count(t => t.IsClass == isClass);
-                _aggTypes.Add(GenerateAggregateType(random, isClass, name));
+                _aggTypes.Add(GenerateAggregateType(isClass, name));
             }
         }
 
-        private AggregateType GenerateAggregateType(Randomizer random, bool isClass, string name)
+        private AggregateType GenerateAggregateType(bool isClass, string name)
         {
-            int max = isClass ? random.Options.MaxClassFields : random.Options.MaxStructFields;
-            int numFields = random.Rng.Next(1, max + 1);
+            int numFields = (isClass ? Random.Options.MaxClassFieldsDist : Random.Options.MaxStructFieldsDist).Sample(Random.Rng);
             List<AggregateField> fields = new List<AggregateField>(numFields);
             for (int i = 0; i < numFields; i++)
             {
                 FuzzType type;
-                if (_aggTypes.Count > 0 && !random.FlipCoin(random.Options.PrimitiveFieldProbability))
-                    type = _aggTypes[random.Rng.Next(_aggTypes.Count)];
+                if (_aggTypes.Count > 0 && !Random.FlipCoin(Random.Options.PrimitiveFieldProb))
+                    type = _aggTypes[Random.Next(_aggTypes.Count)];
                 else
-                    type = _primitiveTypes[random.Rng.Next(_primitiveTypes.Count)];
+                    type = _primitiveTypes[Random.Next(_primitiveTypes.Count)];
 
                 fields.Add(new AggregateField(type, $"F{i}"));
             }

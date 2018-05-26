@@ -7,7 +7,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Fuzzlyn.Types
 {
     // Class or struct type.
-    internal class AggregateType : FuzzType
+    public class AggregateType : FuzzType
     {
         private readonly List<AggregateField> _fields = new List<AggregateField>();
 

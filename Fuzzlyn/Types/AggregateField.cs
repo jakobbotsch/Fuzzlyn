@@ -1,6 +1,6 @@
 ﻿namespace Fuzzlyn.Types
 {
-    internal class AggregateField
+    public class AggregateField
     {
         public AggregateField(FuzzType type, string name)
         {
