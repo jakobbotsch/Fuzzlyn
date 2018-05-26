@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Fuzzlyn.ProbabilityDistributions;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Fuzzlyn.Types
 
         public Randomizer Random { get; }
 
-        public FuzzType PickType(Func<FuzzType, bool> filter = null)
+        public FuzzType PickExistingType(Func<FuzzType, bool> filter = null)
         {
             FuzzType type;
             do
@@ -32,6 +33,16 @@ namespace Fuzzlyn.Types
             return type;
         }
 
+        public FuzzType PickType()
+        {
+            FuzzType type = PickExistingType();
+            int count = Random.Options.MakeArrayCountDist.Sample(Random.Rng);
+            for (int i = 0; i < count; i++)
+                type = type.MakeArrayType(Random.Options.ArrayRankDist.Sample(Random.Rng));
+
+            return type;
+        }
+
         public IEnumerable<MemberDeclarationSyntax> OutputTypes()
         {
             foreach (AggregateType type in _aggTypes)
@@ -40,14 +51,23 @@ namespace Fuzzlyn.Types
 
         public void GenerateTypes()
         {
+            SyntaxKind[] standardAssignments = new SyntaxKind[0];
+
             SyntaxKind[] primitiveTypes =
             {
-                SyntaxKind.BoolKeyword, SyntaxKind.CharKeyword,
-                SyntaxKind.SByteKeyword, SyntaxKind.ByteKeyword,
-                SyntaxKind.ShortKeyword, SyntaxKind.UShortKeyword,
-                SyntaxKind.IntKeyword, SyntaxKind.UIntKeyword,
-                SyntaxKind.LongKeyword, SyntaxKind.ULongKeyword,
+                SyntaxKind.BoolKeyword,
+                SyntaxKind.CharKeyword,
+                SyntaxKind.SByteKeyword,
+                SyntaxKind.ByteKeyword,
+                SyntaxKind.ShortKeyword,
+                SyntaxKind.UShortKeyword,
+                SyntaxKind.IntKeyword,
+                SyntaxKind.UIntKeyword,
+                SyntaxKind.LongKeyword,
+                SyntaxKind.ULongKeyword,
                 // string, floats, IntPtr/UIntPtr?
+
+                // if expanding fix PrimitiveType ctor and GenLiteralInt as well
             };
 
             _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
@@ -70,9 +90,9 @@ namespace Fuzzlyn.Types
             {
                 FuzzType type;
                 if (_aggTypes.Count > 0 && !Random.FlipCoin(Random.Options.PrimitiveFieldProb))
-                    type = _aggTypes[Random.Next(_aggTypes.Count)];
+                    type = Random.NextElement(_aggTypes);
                 else
-                    type = _primitiveTypes[Random.Next(_primitiveTypes.Count)];
+                    type = Random.NextElement(_primitiveTypes);
 
                 fields.Add(new AggregateField(type, $"F{i}"));
             }

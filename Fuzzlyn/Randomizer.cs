@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -25,6 +26,9 @@ namespace Fuzzlyn
         public int Next(int min, int max) => Rng.Next(min, max);
         public ulong NextUInt64() => Rng.NextUInt64();
         public double NextDouble() => Rng.NextDouble();
+
+        public T NextElement<T>(IReadOnlyList<T> list)
+            => list[Next(list.Count)];
 
         private ulong GenSeed()
         {

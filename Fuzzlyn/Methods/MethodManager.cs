@@ -1,5 +1,6 @@
 ﻿using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,9 @@ namespace Fuzzlyn.Methods
 {
     internal class MethodManager
     {
+        private readonly List<FuncGenerator> _funcs = new List<FuncGenerator>();
+        private int _counter;
+
         public MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
         {
             Random = random;
@@ -22,11 +26,22 @@ namespace Fuzzlyn.Methods
 
         internal void GenerateMethods()
         {
+            FuncGenerator gen = new FuncGenerator($"M{_counter++}", Random, Types, Statics);
+            gen.Generate(false);
+            _funcs.Add(gen);
         }
 
         internal IEnumerable<MemberDeclarationSyntax> OutputMethods()
         {
-            yield break;
+            foreach (FuncGenerator gen in _funcs)
+            {
+                yield return
+                    MethodDeclaration(
+                        PredefinedType(
+                            Token(SyntaxKind.VoidKeyword)),
+                        gen.Name)
+                    .WithBody(gen.Body);
+            }
         }
     }
 }

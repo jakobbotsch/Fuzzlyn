@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -21,6 +22,11 @@ namespace Fuzzlyn.Types
         public string Name { get; }
         public IReadOnlyList<AggregateField> Fields => _fields;
         public bool IsClass { get; }
+
+        public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
+
+        public override TypeSyntax GenReferenceTo()
+            => IdentifierName(Name);
 
         public TypeDeclarationSyntax Output()
         {
@@ -59,10 +65,11 @@ namespace Fuzzlyn.Types
                             IdentifierName(f.Name),
                             IdentifierName(f.Name.ToLowerInvariant())))));
 
-            return ConstructorDeclaration(Name).WithParameterList(pms).WithBody(initBlock);
+            return
+                ConstructorDeclaration(Name)
+                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                .WithParameterList(pms)
+                .WithBody(initBlock);
         }
-
-        public override TypeSyntax GenReferenceTo()
-            => IdentifierName(Name);
     }
 }

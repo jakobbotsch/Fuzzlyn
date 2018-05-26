@@ -22,5 +22,11 @@ namespace Fuzzlyn.UnitTests
             ArrayType arr = _int.MakeArrayType(2).MakeArrayType();
             Assert.Equal("int[][,]", arr.GenReferenceTo().ToFullString());
         }
+
+        [Fact]
+        public void TestArrayTypeEquality()
+        {
+            Assert.True(_int.MakeArrayType() == _int.MakeArrayType());
+        }
     }
 }

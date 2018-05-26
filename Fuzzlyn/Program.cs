@@ -76,20 +76,14 @@ namespace Fuzzlyn
             for (int i = 0; i < options.NumPrograms; i++)
             {
                 CodeGenerator gen = new CodeGenerator(options);
-                var dist = new GeometricDistribution(0.25, 1);
-                while (true)
-                {
-                    Console.WriteLine(dist.Sample(gen.Random.Rng));
-                }
+
                 gen.GenerateTypes();
                 gen.GenerateMethods();
-                gen.Statics.GenerateNewField();
+
                 string program = gen.OutputProgram().NormalizeWhitespace().ToFullString();
-                Console.WriteLine(program);
+                //Console.WriteLine(program);
                 options.Seed = null;
             }
-
-            Console.ReadLine();
         }
     }
 }

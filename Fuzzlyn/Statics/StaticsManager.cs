@@ -22,19 +22,28 @@ namespace Fuzzlyn.Statics
 
         public Randomizer Random { get; }
         public TypeManager Types { get; }
+        public IReadOnlyList<StaticField> Fields => _fields;
 
-        public StaticField GenerateNewField()
+        public StaticField PickStatic(FuzzType type = null)
         {
-            FuzzType type = Types.PickType();
-            int count = Random.Options.StaticFieldMakeArrayCountDist.Sample(Random.Rng);
-            for (int i = 0; i < count; i++)
-            {
-                type = type.MakeArrayType(Random.Options.ArrayRankDist.Sample(Random.Rng));
-            }
+            List<StaticField> fields = _fields;
+            if (type != null)
+                fields = _fields.Where(f => f.Var.Type == type).ToList();
+
+            if (!fields.Any() || Random.FlipCoin(Random.Options.CreateNewStaticVarProb))
+                return GenerateNewField(type);
+
+            return Random.NextElement(fields);
+        }
+
+        private StaticField GenerateNewField(FuzzType type)
+        {
+            type = type ?? Types.PickType();
 
             string name = "s_" + (++_counter);
-            _fields.Add(new StaticField(type, name, null));
-            return null;
+            StaticField field = new StaticField(new VariableIdentifier(type, name), null);
+            _fields.Add(field);
+            return field;
         }
 
         public IEnumerable<MemberDeclarationSyntax> OutputStatics()
