@@ -96,7 +96,6 @@ namespace Fuzzlyn.Methods
                 FuzzType type = Types.PickType();
                 string name = $"var{_counter++}";
                 variable = new VariableIdentifier(type, name);
-                _scope.Last().Variables.Add(variable);
             }
             else if (Random.FlipCoin(Random.Options.AssignToStaticVarProb))
             {
@@ -113,7 +112,7 @@ namespace Fuzzlyn.Methods
 
             if (newVar)
             {
-                return
+                LocalDeclarationStatementSyntax decl =
                     LocalDeclarationStatement(
                         VariableDeclaration(
                             variable.Type.GenReferenceTo(),
@@ -122,6 +121,10 @@ namespace Fuzzlyn.Methods
                                 .WithInitializer(
                                     EqualsValueClause(
                                         GenExpressionOfType(variable.Type))))));
+
+                _scope.Last().Variables.Add(variable);
+
+                return decl;
             }
 
             SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
