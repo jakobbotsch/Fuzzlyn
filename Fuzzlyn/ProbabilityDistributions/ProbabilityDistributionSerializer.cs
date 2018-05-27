@@ -27,6 +27,8 @@ namespace Fuzzlyn.ProbabilityDistributions
                     return obj.ToObject<GeometricDistribution>(serializer);
                 case nameof(UniformRangeDistribution):
                     return obj.ToObject<UniformRangeDistribution>(serializer);
+                case nameof(TableDistribution):
+                    return obj.ToObject<TableDistribution>(serializer);
                 default:
                     throw new NotSupportedException();
             }

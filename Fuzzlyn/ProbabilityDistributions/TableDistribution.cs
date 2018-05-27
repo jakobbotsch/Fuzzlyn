@@ -12,6 +12,8 @@ namespace Fuzzlyn.ProbabilityDistributions
 
         public TableDistribution(Dictionary<int, double> pairs)
         {
+            Pairs = pairs;
+
             _keys = new int[pairs.Count];
             _cumulativeProbs = new double[pairs.Count];
 
@@ -29,6 +31,8 @@ namespace Fuzzlyn.ProbabilityDistributions
 
             Trace.Assert(Math.Abs(prob - 1) < 0.0000000001);
         }
+
+        public IReadOnlyDictionary<int, double> Pairs { get; }
 
         internal override int Sample(Rng rng)
         {

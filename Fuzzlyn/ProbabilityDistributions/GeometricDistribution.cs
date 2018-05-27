@@ -12,8 +12,8 @@ namespace Fuzzlyn.ProbabilityDistributions
             BaseValue = baseValue;
         }
 
-        public double SuccessProbability { get; set; }
-        public int BaseValue { get; set; }
+        public double SuccessProbability { get; }
+        public int BaseValue { get; }
 
         internal override int Sample(Rng rng)
         {
