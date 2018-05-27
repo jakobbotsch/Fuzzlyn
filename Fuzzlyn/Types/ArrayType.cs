@@ -25,8 +25,10 @@ namespace Fuzzlyn.Types
 
         public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
 
-        private TypeSyntax _type;
-        public override TypeSyntax GenReferenceTo()
+        public override TypeSyntax GenReferenceTo() => GenReferenceToArrayType();
+
+        private ArrayTypeSyntax _type;
+        public ArrayTypeSyntax GenReferenceToArrayType()
         {
             if (_type != null)
                 return _type;

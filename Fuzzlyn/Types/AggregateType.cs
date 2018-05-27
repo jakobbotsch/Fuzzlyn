@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -27,6 +28,28 @@ namespace Fuzzlyn.Types
 
         public override TypeSyntax GenReferenceTo()
             => IdentifierName(Name);
+
+        /// <summary>
+        /// Count recursively how many primitive fields are in this aggregate type.
+        /// </summary>
+        public int GetTotalNumPrimitiveFields()
+        {
+            int count = 0;
+            foreach (AggregateField field in _fields)
+            {
+                if (field.Type is AggregateType at)
+                {
+                    count += at.GetTotalNumPrimitiveFields();
+                }
+                else
+                {
+                    Debug.Assert(field.Type is PrimitiveType);
+                    count++;
+                }
+            }
+
+            return count;
+        }
 
         public TypeDeclarationSyntax Output()
         {

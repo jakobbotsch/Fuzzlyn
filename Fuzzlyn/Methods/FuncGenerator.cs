@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -160,7 +161,8 @@ namespace Fuzzlyn.Methods
                             ArgumentList(
                                 SeparatedList(agg.Fields.Select(af => Argument(GenConstantOfType(af.Type))))));
                 case ArrayType arr:
-                    return DefaultExpression(type.GenReferenceTo());
+                    List<int> dims = GenArrayDimensions(arr);
+                    return GenArrayCreation(arr, dims);
                 default:
                     throw new Exception("Unreachable");
             }
@@ -190,6 +192,75 @@ namespace Fuzzlyn.Methods
             } while (primType.Info.IsUnsigned && val < 0);
 
             return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(val));
+        }
+
+        private List<int> GenArrayDimensions(ArrayType at)
+        {
+            int dimsRequired = at.Rank;
+            FuzzType elemType = at.ElementType;
+            while (elemType is ArrayType innerArr)
+            {
+                dimsRequired += innerArr.Rank;
+                elemType = innerArr.ElementType;
+            }
+
+            List<int> dimensions = new List<int>(dimsRequired);
+            while (true)
+            {
+                // If we are constructing an aggregate type start out by the number of fields, to limit
+                // the number of constants required here. For now this is just an approximation,
+                int totalSize = elemType is AggregateType elemAgg ? elemAgg.GetTotalNumPrimitiveFields() : 1;
+
+                for (int i = 0; i < dimensions.Capacity; i++)
+                {
+                    int dim = Random.Next(1, Random.Options.MaxArrayLengthPerDimension + 1);
+                    if (totalSize * dim > Random.Options.MaxArrayTotalSize)
+                        break;
+
+                    dimensions.Add(dim);
+                    totalSize *= dim;
+                }
+
+                if (dimensions.Count == dimensions.Capacity)
+                    return dimensions;
+
+                dimensions.Clear();
+            }
+        }
+
+        private ExpressionSyntax GenArrayCreation(ArrayType at, List<int> dimensions)
+        {
+            return ArrayCreationExpression(at.GenReferenceToArrayType())
+                   .WithInitializer(GenArrayInitializer(at, dimensions, 0));
+        }
+
+        private InitializerExpressionSyntax GenArrayInitializer(ArrayType at, List<int> dimensions, int index)
+        {
+            return
+                InitializerExpression(
+                    SyntaxKind.ArrayInitializerExpression,
+                    SeparatedList(
+                        Enumerable.Range(0, dimensions[index]).Select(_ => GenInner())));
+
+            ExpressionSyntax GenInner()
+            {
+                if (index != at.Rank - 1)
+                    return GenArrayInitializer(at, dimensions, index + 1);
+
+                if (at.ElementType is ArrayType innerArr)
+                {
+                    Debug.Assert(index < dimensions.Count - 1);
+                    // If inner type is an array, then randomize its length up to the dimension
+                    // (this means we will create inner arrays of different length)
+                    List<int> restOfDimensions = dimensions.Skip(index + 1).ToList();
+                    restOfDimensions[0] = Random.Next(1, restOfDimensions[0] + 1);
+                    ExpressionSyntax creation = GenArrayCreation(innerArr, restOfDimensions);
+                    return creation;
+                }
+
+                Debug.Assert(index == dimensions.Count - 1);
+                return GenConstantOfType(at.ElementType);
+            }
         }
 
         private ExpressionSyntax GenCall()

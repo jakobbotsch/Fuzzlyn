@@ -83,9 +83,8 @@ namespace Fuzzlyn
                 string program = gen.OutputProgram().NormalizeWhitespace().ToFullString();
                 Console.WriteLine(program);
                 options.Seed = null;
+                Console.ReadLine();
             }
-
-            Console.ReadLine();
         }
     }
 }

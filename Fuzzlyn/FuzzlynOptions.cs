@@ -55,5 +55,8 @@ namespace Fuzzlyn
                 [int.MaxValue - 1] = 0.1,
                 [int.MaxValue] = 0.1,
             });
+
+        public int MaxArrayTotalSize { get; set; } = 300;
+        public int MaxArrayLengthPerDimension { get; set; } = 10;
     }
 }
