@@ -211,7 +211,7 @@ namespace Fuzzlyn.Methods
             while (true)
             {
                 // If we are constructing an aggregate type start out by the number of fields, to limit
-                // the number of constants required here. For now this is just an approximation,
+                // the number of constants required here.
                 int totalSize = elemType is AggregateType elemAgg ? elemAgg.GetTotalNumPrimitiveFields() : 1;
 
                 for (int i = 0; i < dimensions.Capacity; i++)
