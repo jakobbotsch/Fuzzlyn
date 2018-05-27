@@ -137,8 +137,8 @@ namespace Fuzzlyn.Methods
             if (Random.FlipCoin(Random.Options.PickLocalOfTypeProb))
             {
                 List<VariableIdentifier> vars = _scope.SelectMany(s => s.Variables).Where(v => v.Type.Equals(type)).ToList();
-                if (vars.Count == 0)
-                    return GenExpressionOfType(type);
+                if (vars.Count > 0)
+                    return IdentifierName(Random.NextElement(vars).Name);
             }
 
             if (Random.FlipCoin(Random.Options.PickStaticOfTypeProb))
@@ -152,11 +152,10 @@ namespace Fuzzlyn.Methods
             switch (type)
             {
                 case PrimitiveType prim:
-                    return GenLiteralInt(prim);
+                    return GenPrimitiveLiteral(prim);
                 case AggregateType agg:
                     return
-                        ObjectCreationExpression(
-                            type.GenReferenceTo())
+                        ObjectCreationExpression(type.GenReferenceTo())
                         .WithArgumentList(
                             ArgumentList(
                                 SeparatedList(agg.Fields.Select(af => Argument(GenConstantOfType(af.Type))))));
@@ -167,7 +166,7 @@ namespace Fuzzlyn.Methods
             }
         }
 
-        private LiteralExpressionSyntax GenLiteralInt(PrimitiveType primType)
+        private LiteralExpressionSyntax GenPrimitiveLiteral(PrimitiveType primType)
         {
             if (!primType.Info.IsIntegral || !Random.FlipCoin(Random.Options.PickLiteralFromTableProb))
                 return primType.Info.GenRandomLiteral(Random.Rng);
