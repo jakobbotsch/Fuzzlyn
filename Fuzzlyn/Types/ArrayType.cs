@@ -16,8 +16,6 @@ namespace Fuzzlyn.Types
 
             ElementType = elementType;
             Rank = rank;
-
-
         }
 
         public FuzzType ElementType { get; }

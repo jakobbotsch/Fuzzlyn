@@ -214,10 +214,12 @@ namespace Fuzzlyn.Methods
                 // the number of constants required here.
                 int totalSize = elemType is AggregateType elemAgg ? elemAgg.GetTotalNumPrimitiveFields() : 1;
 
+                int maxArrayTotalSize = Math.Max(totalSize, Random.Options.MaxArrayTotalSize);
+
                 for (int i = 0; i < dimensions.Capacity; i++)
                 {
                     int dim = Random.Next(1, Random.Options.MaxArrayLengthPerDimension + 1);
-                    if (totalSize * dim > Random.Options.MaxArrayTotalSize)
+                    if (totalSize * dim > maxArrayTotalSize)
                         break;
 
                     dimensions.Add(dim);

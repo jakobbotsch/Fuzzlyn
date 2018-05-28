@@ -46,7 +46,7 @@ namespace Fuzzlyn.Statics
             return field;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> OutputStatics()
+        public IEnumerable<FieldDeclarationSyntax> OutputStatics()
             => _fields.Select(f => f.Output());
     }
 }

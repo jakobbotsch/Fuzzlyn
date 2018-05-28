@@ -31,26 +31,47 @@ namespace Fuzzlyn
         internal void GenerateTypes() => Types.GenerateTypes();
         internal void GenerateMethods() => Methods.GenerateMethods();
 
-        public CompilationUnitSyntax OutputProgram()
+        public CompilationUnitSyntax OutputProgram(bool includeComments)
         {
             CompilationUnitSyntax unit = CompilationUnit();
 
-            IEnumerable<MemberDeclarationSyntax> members =
+            IEnumerable<MemberDeclarationSyntax> types =
                 Types.OutputTypes();
 
-            // Append 'Program' class containing statics and methods
+            // Append 'Program' class containing statics and methods, followed by main method
             MemberDeclarationSyntax programClass =
                 ClassDeclaration("Program")
-                .WithMembers(
-                    Statics.OutputStatics().Concat(
-                        Methods.OutputMethods()).ToSyntaxList());
+                .WithMembers(OutputProgramMembers().ToSyntaxList());
 
-            members = members.Concat(new[] { programClass });
+            types = types.Concat(new[] { programClass });
 
-            unit = unit.WithMembers(members.ToSyntaxList());
-            unit = unit.WithLeadingTrivia(OutputHeader().Select(Comment));
+            unit = unit.WithMembers(types.ToSyntaxList());
+            if (includeComments)
+                unit = unit.WithLeadingTrivia(OutputHeader().Select(Comment));
 
             return unit;
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers()
+        {
+            foreach (FieldDeclarationSyntax stat in Statics.OutputStatics())
+                yield return stat;
+
+            List<MethodDeclarationSyntax> methods = Methods.OutputMethods().ToList();
+
+            yield return
+                MethodDeclaration(
+                    PredefinedType(Token(SyntaxKind.VoidKeyword)),
+                    "Main")
+                .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
+                .WithBody(
+                    Block(
+                        ExpressionStatement(
+                            InvocationExpression(
+                                IdentifierName(methods[0].Identifier)))));
+
+            foreach (MethodDeclarationSyntax method in methods)
+                yield return method;
         }
 
         private IEnumerable<string> OutputHeader()

@@ -31,7 +31,7 @@ namespace Fuzzlyn.Methods
             _funcs.Add(gen);
         }
 
-        internal IEnumerable<MemberDeclarationSyntax> OutputMethods()
+        internal IEnumerable<MethodDeclarationSyntax> OutputMethods()
         {
             foreach (FuncGenerator gen in _funcs)
             {
@@ -40,6 +40,7 @@ namespace Fuzzlyn.Methods
                         PredefinedType(
                             Token(SyntaxKind.VoidKeyword)),
                         gen.Name)
+                    .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
                     .WithBody(gen.Body);
             }
         }
