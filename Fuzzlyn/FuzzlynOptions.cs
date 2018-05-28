@@ -16,18 +16,15 @@ namespace Fuzzlyn
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
         public double PrimitiveFieldProb { get; set; } = 0.8;
         public double AssignToNewVarProb { get; set; } = 0.3;
-        public double AssignToStaticVarProb { get; set; } = 0.2;
-        public double CreateNewStaticVarProb { get; set; } = 0.1;
+        public double NewVarIsLocalProb { get; set; } = 0.8;
         public double FancyAssignmentProb { get; set; } = 0.1;
-        public double PickLocalOfTypeProb { get; set; } = 0.5;
-        public double PickStaticOfTypeProb { get; set; } = 0.15;
 
-        public ProbabilityDistribution MakeAggregateTypeCountDist { get; set; } = new GeometricDistribution(0.5);
+        public ProbabilityDistribution MakeAggregateTypeCountDist { get; set; } = new GeometricDistribution(0.2);
         public ProbabilityDistribution MaxStructFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
         public ProbabilityDistribution MaxClassFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
         public ProbabilityDistribution MakeArrayCountDist { get; set; } = new GeometricDistribution(0.8);
         public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
-        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.5, 1);
+        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.3, 1);
         public ProbabilityDistribution StatementTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
@@ -39,6 +36,12 @@ namespace Fuzzlyn
                 [(int)StatementKind.NewObject] = 0.2,
                 [(int)StatementKind.If] = 0.2,
                 [(int)StatementKind.Return] = 0.1,
+            });
+        public ProbabilityDistribution ExpressionTypeDist { get; set; }
+            = new TableDistribution(new Dictionary<int, double>
+            {
+                [(int)ExpressionKind.MemberAccess] = 0.7,
+                [(int)ExpressionKind.Literal] = 0.3,
             });
 
         public double PickLiteralFromTableProb { get; set; } = 0.5;

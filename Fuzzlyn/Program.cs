@@ -100,7 +100,6 @@ namespace Fuzzlyn
             Parallel.For(0, options.NumPrograms, po, i =>
             {
                 CodeGenerator gen = new CodeGenerator(options);
-                File.AppendAllText("seeds.txt", gen.Random.Seed + Environment.NewLine);
 
                 gen.GenerateTypes();
                 gen.GenerateMethods();
@@ -130,30 +129,37 @@ namespace Fuzzlyn
         }
 
         private static readonly MetadataReference[] s_references = { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
+        private static readonly CSharpCompilationOptions[] s_optionMatrix =
+        {
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug),
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release),
+        };
         private static void Compile(CodeGenerator gen, CompilationUnitSyntax program)
         {
-            CSharpCompilationOptions opts = new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false);
             CSharpParseOptions parseOpts = new CSharpParseOptions(LanguageVersion.Latest);
             SyntaxTree[] trees = { SyntaxTree(program, parseOpts) };
 
-            CSharpCompilation comp = CSharpCompilation.Create("Random", trees, s_references, opts);
-            try
+            foreach (CSharpCompilationOptions opt in s_optionMatrix)
             {
-                EmitResult result = comp.Emit(Stream.Null);
-                if (!result.Success)
+                CSharpCompilation comp = CSharpCompilation.Create("Random", trees, s_references, opt);
+                try
                 {
-                    IEnumerable<Diagnostic> errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
+                    EmitResult result = comp.Emit(Stream.Null);
+                    if (!result.Success)
+                    {
+                        IEnumerable<Diagnostic> errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
 
-                    string logEntry =
-                        "seed: " + gen.Random.Seed + Environment.NewLine +
-                        string.Join(Environment.NewLine, errors.Select(d => "  " + d));
+                        string logEntry =
+                            "seed: " + gen.Random.Seed + Environment.NewLine +
+                            string.Join(Environment.NewLine, errors.Select(d => "  " + d));
 
-                    File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
+                        File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
+                    }
                 }
-            }
-            catch
-            {
-                File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
+                catch
+                {
+                    File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
+                }
             }
         }
     }

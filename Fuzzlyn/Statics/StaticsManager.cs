@@ -30,13 +30,13 @@ namespace Fuzzlyn.Statics
             if (type != null)
                 fields = _fields.Where(f => f.Var.Type == type).ToList();
 
-            if (!fields.Any() || Random.FlipCoin(Random.Options.CreateNewStaticVarProb))
+            if (!fields.Any())
                 return GenerateNewField(type);
 
             return Random.NextElement(fields);
         }
 
-        private StaticField GenerateNewField(FuzzType type)
+        public StaticField GenerateNewField(FuzzType type)
         {
             type = type ?? Types.PickType();
 

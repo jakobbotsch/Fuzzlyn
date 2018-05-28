@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Methods
@@ -88,70 +89,133 @@ namespace Fuzzlyn.Methods
 
         private StatementSyntax GenAssignmentStatement()
         {
-            VariableIdentifier variable;
+            ExpressionSyntax lhs = null;
+            FuzzType type = null;
+            if (!Random.FlipCoin(Random.Options.AssignToNewVarProb))
+                (lhs, type) = GenMemberAccess(null);
 
-            bool newVar = Random.FlipCoin(Random.Options.AssignToNewVarProb);
-            if (newVar)
+            if (lhs == null)
             {
-                FuzzType type = Types.PickType();
-                string name = $"var{_counter++}";
-                variable = new VariableIdentifier(type, name);
-            }
-            else if (Random.FlipCoin(Random.Options.AssignToStaticVarProb))
-            {
-                variable = Statics.PickStatic().Var;
-            }
-            else
-            {
-                List<VariableIdentifier> allVars = _scope.SelectMany(s => s.Variables).ToList();
-                if (allVars.Count == 0)
-                    return GenAssignmentStatement();
+                type = Types.PickType();
+                if (Random.FlipCoin(Random.Options.NewVarIsLocalProb))
+                {
+                    VariableIdentifier variable = new VariableIdentifier(type, $"var{_counter++}");
 
-                variable = Random.NextElement(allVars);
-            }
+                    LocalDeclarationStatementSyntax decl =
+                        LocalDeclarationStatement(
+                            VariableDeclaration(
+                                variable.Type.GenReferenceTo(),
+                                SingletonSeparatedList(
+                                    VariableDeclarator(variable.Name)
+                                    .WithInitializer(
+                                        EqualsValueClause(
+                                            GenExpressionOfType(variable.Type))))));
 
-            if (newVar)
-            {
-                LocalDeclarationStatementSyntax decl =
-                    LocalDeclarationStatement(
-                        VariableDeclaration(
-                            variable.Type.GenReferenceTo(),
-                            SingletonSeparatedList(
-                                VariableDeclarator(variable.Name)
-                                .WithInitializer(
-                                    EqualsValueClause(
-                                        GenExpressionOfType(variable.Type))))));
+                    _scope.Last().Variables.Add(variable);
 
-                _scope.Last().Variables.Add(variable);
+                    return decl;
+                }
 
-                return decl;
+                StaticField newStatic = Statics.GenerateNewField(type);
+                lhs = IdentifierName(newStatic.Var.Name);
             }
 
             SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
-            if (variable.Type.AllowedAdditionalAssignmentKinds.Length > 0 && Random.FlipCoin(Random.Options.FancyAssignmentProb))
-                assignmentKind = Random.NextElement(variable.Type.AllowedAdditionalAssignmentKinds);
+            if (type.AllowedAdditionalAssignmentKinds.Length > 0 && Random.FlipCoin(Random.Options.FancyAssignmentProb))
+                assignmentKind = Random.NextElement(type.AllowedAdditionalAssignmentKinds);
+
+            if (assignmentKind == SyntaxKind.LeftShiftAssignmentExpression ||
+                assignmentKind == SyntaxKind.RightShiftAssignmentExpression)
+                type = Types.GetPrimitiveType(SyntaxKind.IntKeyword);
 
             return
                 ExpressionStatement(
-                    AssignmentExpression(assignmentKind, IdentifierName(variable.Name), GenExpressionOfType(variable.Type)));
+                    AssignmentExpression(assignmentKind, lhs, GenExpressionOfType(type)));
+        }
+
+        /// <summary>
+        /// Generates an access to a random member:
+        /// * A static variable
+        /// * A local variable
+        /// * An argument
+        /// * A field in one of these, if aggregate type
+        /// * An element in one of these, if array type
+        /// If type is nonnull, generates access to a member of that type.
+        /// </summary>
+        private (ExpressionSyntax expr, FuzzType type) GenMemberAccess(FuzzType type)
+        {
+            List<(ExpressionSyntax, FuzzType)> paths = new List<(ExpressionSyntax, FuzzType)>();
+
+            foreach (ScopeFrame sf in _scope)
+            {
+                foreach (VariableIdentifier variable in sf.Variables)
+                    AddPathsRecursive(IdentifierName(variable.Name), variable.Type);
+            }
+
+            foreach (StaticField stat in Statics.Fields)
+                AddPathsRecursive(IdentifierName(stat.Var.Name), stat.Var.Type);
+
+            if (type != null)
+                paths.RemoveAll(t => !t.Item2.Equals(type));
+
+            return paths.Count > 0 ? Random.NextElement(paths) : (null, null);
+
+            void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType)
+            {
+                paths.Add((curAccess, curType));
+
+                switch (curType)
+                {
+                    case ArrayType arr:
+                        AddPathsRecursive(
+                            ElementAccessExpression(
+                                curAccess,
+                                BracketedArgumentList(
+                                    SeparatedList(
+                                        Enumerable.Repeat(
+                                            Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))),
+                                            arr.Rank)))),
+                            arr.ElementType);
+                        break;
+                    case AggregateType agg:
+                        foreach (AggregateField field in agg.Fields)
+                        {
+                            AddPathsRecursive(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    curAccess,
+                                    IdentifierName(field.Name)),
+                                field.Type);
+                        }
+                        break;
+                }
+            }
         }
 
         private ExpressionSyntax GenExpressionOfType(FuzzType type)
         {
-            if (Random.FlipCoin(Random.Options.PickLocalOfTypeProb))
+            ExpressionSyntax gen;
+            do
             {
-                List<VariableIdentifier> vars = _scope.SelectMany(s => s.Variables).Where(v => v.Type.Equals(type)).ToList();
-                if (vars.Count > 0)
-                    return IdentifierName(Random.NextElement(vars).Name);
+                ExpressionKind kind = (ExpressionKind)Random.Options.ExpressionTypeDist.Sample(Random.Rng);
+                switch (kind)
+                {
+                    case ExpressionKind.MemberAccess:
+                        gen = GenMemberAccess(type).expr;
+                        break;
+                    case ExpressionKind.Literal:
+                        gen = GenLiteralOfType(type);
+                        break;
+                    default:
+                        throw new Exception("Unreachable");
+                }
             }
+            while (gen == null);
 
-            if (Random.FlipCoin(Random.Options.PickStaticOfTypeProb))
-                return IdentifierName(Statics.PickStatic(type).Var.Name);
-
-            return GenConstantOfType(type);
+            return gen;
         }
 
-        private ExpressionSyntax GenConstantOfType(FuzzType type)
+        private ExpressionSyntax GenLiteralOfType(FuzzType type)
         {
             switch (type)
             {
@@ -162,7 +226,7 @@ namespace Fuzzlyn.Methods
                         ObjectCreationExpression(type.GenReferenceTo())
                         .WithArgumentList(
                             ArgumentList(
-                                SeparatedList(agg.Fields.Select(af => Argument(GenConstantOfType(af.Type))))));
+                                SeparatedList(agg.Fields.Select(af => Argument(GenLiteralOfType(af.Type))))));
                 case ArrayType arr:
                     List<int> dims = GenArrayDimensions(arr);
                     return GenArrayCreation(arr, dims);
@@ -264,7 +328,7 @@ namespace Fuzzlyn.Methods
                 }
 
                 Debug.Assert(index == dimensions.Count - 1);
-                return GenConstantOfType(at.ElementType);
+                return GenLiteralOfType(at.ElementType);
             }
         }
 
@@ -304,5 +368,11 @@ namespace Fuzzlyn.Methods
         NewObject,
         If,
         Return,
+    }
+
+    internal enum ExpressionKind
+    {
+        MemberAccess,
+        Literal,
     }
 }

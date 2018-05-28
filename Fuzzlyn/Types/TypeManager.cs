@@ -99,5 +99,7 @@ namespace Fuzzlyn.Types
 
             return new AggregateType(isClass, name, fields);
         }
+
+        internal PrimitiveType GetPrimitiveType(SyntaxKind kind) => _primitiveTypes.First(pt => pt.Keyword == kind);
     }
 }
