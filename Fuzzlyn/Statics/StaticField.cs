@@ -23,8 +23,8 @@ namespace Fuzzlyn.Statics
                     SingletonSeparatedList(
                         VariableDeclarator(
                             Identifier(Var.Name))
-                        /*.WithInitializer(
-                            EqualsValueClause(Initializer))*/)))
+                        .WithInitializer(
+                            EqualsValueClause(Initializer)))))
                .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)));
     }
 }

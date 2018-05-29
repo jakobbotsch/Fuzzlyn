@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -62,6 +63,8 @@ namespace Fuzzlyn
                 optionSet.WriteOptionDescriptions(Console.Out);
                 return;
             }
+
+            int[,][] a = new int[,][] { { new int[] { 1 } }, { new int[] { 2, 3 } } };
 
             if (options == null)
                 options = new FuzzlynOptions();
@@ -134,6 +137,8 @@ namespace Fuzzlyn
             new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug),
             new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release),
         };
+
+        private static readonly object s_fileLock = new object();
         private static void Compile(CodeGenerator gen, CompilationUnitSyntax program)
         {
             CSharpParseOptions parseOpts = new CSharpParseOptions(LanguageVersion.Latest);
@@ -153,12 +158,14 @@ namespace Fuzzlyn
                             "seed: " + gen.Random.Seed + Environment.NewLine +
                             string.Join(Environment.NewLine, errors.Select(d => "  " + d));
 
-                        File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
+                        lock (s_fileLock)
+                            File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
                     }
                 }
                 catch
                 {
-                    File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
+                    lock (s_fileLock)
+                        File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
                 }
             }
         }

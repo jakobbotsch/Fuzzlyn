@@ -36,7 +36,6 @@ namespace Fuzzlyn.Types
             return -303665852 + Keyword.GetHashCode();
         }
 
-
         public static bool operator ==(PrimitiveType type1, PrimitiveType type2)
         {
             return EqualityComparer<PrimitiveType>.Default.Equals(type1, type2);

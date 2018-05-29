@@ -16,25 +16,68 @@ namespace Fuzzlyn.Methods
     internal class FuncGenerator
     {
         private readonly List<ScopeFrame> _scope = new List<ScopeFrame>();
+        private readonly List<FuncGenerator> _funcs;
+        private int _funcIndex;
         private int _counter;
 
-        public FuncGenerator(string name, Randomizer random, TypeManager types, StaticsManager statics)
+        public FuncGenerator(List<FuncGenerator> funcs, Randomizer random, TypeManager types, StaticsManager statics)
         {
+            _funcs = funcs;
             Random = random;
             Types = types;
             Statics = statics;
-            Name = name;
+
+            _funcIndex = funcs.Count;
+            Name = $"M{funcs.Count}";
+
+            funcs.Add(this);
         }
 
         public Randomizer Random { get; }
         public TypeManager Types { get; }
         public StaticsManager Statics { get; }
-        public string Name { get; }
         public BlockSyntax Body { get; private set; }
+        public FuzzType ReturnType { get; private set; }
+        public FuzzType[] ParameterTypes { get; private set; }
+        public string Name { get; }
 
-        public void Generate(bool randomizeSignature)
+        public MethodDeclarationSyntax Output()
         {
-            Body = GenBlock();
+            TypeSyntax retType;
+            if (ReturnType == null)
+                retType = PredefinedType(Token(SyntaxKind.VoidKeyword));
+            else
+                retType = ReturnType.GenReferenceTo();
+
+            ParameterListSyntax parameters =
+                ParameterList(
+                    SeparatedList(
+                        ParameterTypes.Select(
+                            (pt, i) => Parameter(Identifier($"arg{i}")).WithType(pt.GenReferenceTo()))));
+
+            return
+                MethodDeclaration(retType, Name)
+                .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
+                .WithParameterList(parameters)
+                .WithBody(Body);
+        }
+
+        public void Generate(FuzzType returnType, bool randomizeParams)
+        {
+            ReturnType = returnType;
+
+            if (randomizeParams)
+            {
+                int numArgs = Random.Options.MethodParameterCountDist.Sample(Random.Rng);
+                ParameterTypes = Enumerable.Range(0, numArgs).Select(i => Types.PickType()).ToArray();
+            }
+            else
+                ParameterTypes = Array.Empty<FuzzType>();
+
+            _scope.Add(new ScopeFrame());
+            _scope.Last().Variables.AddRange(ParameterTypes.Select((p, i) => new VariableIdentifier(p, $"arg{i}")));
+            Body = GenBlock(ReturnType != null);
+            _scope.RemoveAt(0);
         }
 
         private StatementSyntax GenStatement()
@@ -49,11 +92,11 @@ namespace Fuzzlyn.Methods
                     switch (kind)
                     {
                         case StatementKind.Block:
-                            return GenBlock();
+                            return GenBlock(false);
                         case StatementKind.Assignment:
                             return GenAssignmentStatement();
                         case StatementKind.Call:
-                            return ExpressionStatement(GenCall());
+                            return ExpressionStatement(GenRetrying(() => GenCall(TypeGroup.Any)).expr);
                         case StatementKind.Increment:
                             return ExpressionStatement(GenIncDec(true));
                         case StatementKind.Decrement:
@@ -75,16 +118,24 @@ namespace Fuzzlyn.Methods
             }
         }
 
-        private BlockSyntax GenBlock()
+        private BlockSyntax GenBlock(bool forceReturn)
         {
             int numStatements = Random.Options.BlockStatementCountDist.Sample(Random.Rng);
 
             _scope.Add(new ScopeFrame());
-            BlockSyntax block = Block(
-                Enumerable.Range(0, numStatements).Select(_ => GenStatement()));
+            BlockSyntax block = Block(GenStatements());
             _scope.RemoveAt(_scope.Count - 1);
 
             return block;
+
+            IEnumerable<StatementSyntax> GenStatements()
+            {
+                for (int i = 0; i < numStatements; i++)
+                    yield return GenStatement();
+
+                if (forceReturn)
+                    yield return GenReturn();
+            }
         }
 
         private StatementSyntax GenAssignmentStatement()
@@ -92,7 +143,7 @@ namespace Fuzzlyn.Methods
             ExpressionSyntax lhs = null;
             FuzzType type = null;
             if (!Random.FlipCoin(Random.Options.AssignToNewVarProb))
-                (lhs, type) = GenMemberAccess(null);
+                (lhs, type) = GenMemberAccess(TypeGroup.Any);
 
             if (lhs == null)
             {
@@ -109,7 +160,7 @@ namespace Fuzzlyn.Methods
                                     VariableDeclarator(variable.Name)
                                     .WithInitializer(
                                         EqualsValueClause(
-                                            GenExpressionOfType(variable.Type))))));
+                                            GenExpression(TypeGroup.Single(variable.Type)).expr)))));
 
                     _scope.Last().Variables.Add(variable);
 
@@ -130,7 +181,7 @@ namespace Fuzzlyn.Methods
 
             return
                 ExpressionStatement(
-                    AssignmentExpression(assignmentKind, lhs, GenExpressionOfType(type)));
+                    AssignmentExpression(assignmentKind, lhs, GenExpression(TypeGroup.Single(type)).expr));
         }
 
         /// <summary>
@@ -142,7 +193,7 @@ namespace Fuzzlyn.Methods
         /// * An element in one of these, if array type
         /// If type is nonnull, generates access to a member of that type.
         /// </summary>
-        private (ExpressionSyntax expr, FuzzType type) GenMemberAccess(FuzzType type)
+        private (ExpressionSyntax expr, FuzzType type) GenMemberAccess(TypeGroup group)
         {
             List<(ExpressionSyntax, FuzzType)> paths = new List<(ExpressionSyntax, FuzzType)>();
 
@@ -155,8 +206,8 @@ namespace Fuzzlyn.Methods
             foreach (StaticField stat in Statics.Fields)
                 AddPathsRecursive(IdentifierName(stat.Var.Name), stat.Var.Type);
 
-            if (type != null)
-                paths.RemoveAll(t => !t.Item2.Equals(type));
+            if (group.Kind != TypeGroupKind.Any)
+                paths.RemoveAll(t => !group.Contains(t.Item2));
 
             return paths.Count > 0 ? Random.NextElement(paths) : (null, null);
 
@@ -192,19 +243,26 @@ namespace Fuzzlyn.Methods
             }
         }
 
-        private ExpressionSyntax GenExpressionOfType(FuzzType type)
+        private (ExpressionSyntax expr, FuzzType type) GenExpression(TypeGroup group)
         {
+            if (group.Kind == TypeGroupKind.None)
+                throw new ArgumentException("Cannot generate expression of type None", nameof(group));
+
             ExpressionSyntax gen;
+            FuzzType type;
             do
             {
                 ExpressionKind kind = (ExpressionKind)Random.Options.ExpressionTypeDist.Sample(Random.Rng);
                 switch (kind)
                 {
                     case ExpressionKind.MemberAccess:
-                        gen = GenMemberAccess(type).expr;
+                        (gen, type) = GenMemberAccess(group);
                         break;
                     case ExpressionKind.Literal:
-                        gen = GenLiteralOfType(type);
+                        (gen, type) = GenLiteral(group);
+                        break;
+                    case ExpressionKind.Call:
+                        (gen, type) = GenWithAdapter(GenCall, group);
                         break;
                     default:
                         throw new Exception("Unreachable");
@@ -212,129 +270,73 @@ namespace Fuzzlyn.Methods
             }
             while (gen == null);
 
-            return gen;
+            return (gen, type);
         }
 
-        private ExpressionSyntax GenLiteralOfType(FuzzType type)
+        private (ExpressionSyntax expr, FuzzType type) GenWithAdapter(Func<TypeGroup, (ExpressionSyntax expr, FuzzType type)> generator, TypeGroup group)
         {
-            switch (type)
+            if (group.Kind == TypeGroupKind.Any ||
+                group.Kind == TypeGroupKind.Integral)
+                return generator(group);
+
+            IReadOnlyList<FuzzType> types = Types.GetTypesInGroup(group);
+            if (types.All(ft => ft is PrimitiveType pt && pt.Info.IsIntegral))
             {
-                case PrimitiveType prim:
-                    return GenPrimitiveLiteral(prim);
-                case AggregateType agg:
-                    return
-                        ObjectCreationExpression(type.GenReferenceTo())
-                        .WithArgumentList(
-                            ArgumentList(
-                                SeparatedList(agg.Fields.Select(af => Argument(GenLiteralOfType(af.Type))))));
-                case ArrayType arr:
-                    List<int> dims = GenArrayDimensions(arr);
-                    return GenArrayCreation(arr, dims);
-                default:
-                    throw new Exception("Unreachable");
+                FuzzType type = Random.NextElement(types);
+                var (gen, genType) = generator(TypeGroup.Integral);
+                if (gen == null)
+                    return (null, null);
+
+                return (type.Equals(genType) ? gen : CastExpression(type.GenReferenceTo(), gen), type);
             }
+
+            return generator(group);
         }
 
-        private LiteralExpressionSyntax GenPrimitiveLiteral(PrimitiveType primType)
+        private (ExpressionSyntax expr, FuzzType type) GenRetrying(Func<(ExpressionSyntax expr, FuzzType type)> generator)
         {
-            if (!primType.Info.IsIntegral || !Random.FlipCoin(Random.Options.PickLiteralFromTableProb))
-                return primType.Info.GenRandomLiteral(Random.Rng);
+            ExpressionSyntax expr;
+            FuzzType type;
 
-            object minValue = primType.Info.Type.GetField("MinValue").GetValue(null);
-            object maxValue = primType.Info.Type.GetField("MaxValue").GetValue(null);
-            dynamic val = 0;
             do
             {
-                int num = Random.Options.LiteralDist.Sample(Random.Rng);
+                (expr, type) = generator();
+            } while (expr == null);
 
-                if (num == int.MinValue)
-                    val = minValue;
-                if (num == int.MinValue + 1)
-                    val = (dynamic)minValue + 1;
-
-                if (num == int.MaxValue)
-                    val = maxValue;
-                if (num == int.MaxValue - 1)
-                    val = (dynamic)maxValue - 1;
-            } while (primType.Info.IsUnsigned && val < 0);
-
-            return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(val));
+            return (expr, type);
         }
 
-        private List<int> GenArrayDimensions(ArrayType at)
+        private (ExpressionSyntax expr, FuzzType type) GenLiteral(TypeGroup group)
         {
-            int dimsRequired = at.Rank;
-            FuzzType elemType = at.ElementType;
-            while (elemType is ArrayType innerArr)
+            FuzzType type = Types.GetRandomTypeInGroup(group);
+            return (LiteralGenerator.GenLiteral(Random, type), type);
+        }
+
+        private (ExpressionSyntax expr, FuzzType type) GenCall(TypeGroup group)
+        {
+            FuncGenerator func;
+            if (Random.FlipCoin(Random.Options.GenNewMethodProb))
             {
-                dimsRequired += innerArr.Rank;
-                elemType = innerArr.ElementType;
+                func = new FuncGenerator(_funcs, Random, Types, Statics);
+                func.Generate(Types.GetRandomTypeInGroup(group), true);
+            }
+            else
+            {
+                List<FuncGenerator> funcs = _funcs.Skip(_funcIndex + 1).Where(f => group.Contains(f.ReturnType)).ToList();
+                if (funcs.Count == 0)
+                    return (null, null);
+
+                func = Random.NextElement(funcs);
             }
 
-            List<int> dimensions = new List<int>(dimsRequired);
-            while (true)
-            {
-                // If we are constructing an aggregate type start out by the number of fields, to limit
-                // the number of constants required here.
-                int totalSize = elemType is AggregateType elemAgg ? elemAgg.GetTotalNumPrimitiveFields() : 1;
+            InvocationExpressionSyntax invoc =
+                InvocationExpression(
+                    IdentifierName(func.Name),
+                    ArgumentList(
+                        SeparatedList(
+                            func.ParameterTypes.Select(pt => Argument(GenExpression(TypeGroup.Single(pt)).expr)))));
 
-                int maxArrayTotalSize = Math.Max(totalSize, Random.Options.MaxArrayTotalSize);
-
-                for (int i = 0; i < dimensions.Capacity; i++)
-                {
-                    int dim = Random.Next(1, Random.Options.MaxArrayLengthPerDimension + 1);
-                    if (totalSize * dim > maxArrayTotalSize)
-                        break;
-
-                    dimensions.Add(dim);
-                    totalSize *= dim;
-                }
-
-                if (dimensions.Count == dimensions.Capacity)
-                    return dimensions;
-
-                dimensions.Clear();
-            }
-        }
-
-        private ExpressionSyntax GenArrayCreation(ArrayType at, List<int> dimensions)
-        {
-            return ArrayCreationExpression(at.GenReferenceToArrayType())
-                   .WithInitializer(GenArrayInitializer(at, dimensions, 0));
-        }
-
-        private InitializerExpressionSyntax GenArrayInitializer(ArrayType at, List<int> dimensions, int index)
-        {
-            return
-                InitializerExpression(
-                    SyntaxKind.ArrayInitializerExpression,
-                    SeparatedList(
-                        Enumerable.Range(0, dimensions[index]).Select(_ => GenInner())));
-
-            ExpressionSyntax GenInner()
-            {
-                if (index != at.Rank - 1)
-                    return GenArrayInitializer(at, dimensions, index + 1);
-
-                if (at.ElementType is ArrayType innerArr)
-                {
-                    Debug.Assert(index < dimensions.Count - 1);
-                    // If inner type is an array, then randomize its length up to the dimension
-                    // (this means we will create inner arrays of different length)
-                    List<int> restOfDimensions = dimensions.Skip(index + 1).ToList();
-                    restOfDimensions[0] = Random.Next(1, restOfDimensions[0] + 1);
-                    ExpressionSyntax creation = GenArrayCreation(innerArr, restOfDimensions);
-                    return creation;
-                }
-
-                Debug.Assert(index == dimensions.Count - 1);
-                return GenLiteralOfType(at.ElementType);
-            }
-        }
-
-        private ExpressionSyntax GenCall()
-        {
-            throw new NotImplementedException();
+            return (invoc, func.ReturnType);
         }
 
         private ExpressionSyntax GenIncDec(bool isIncrement)
@@ -354,7 +356,10 @@ namespace Fuzzlyn.Methods
 
         private StatementSyntax GenReturn()
         {
-            throw new NotImplementedException();
+            if (ReturnType == null)
+                return ReturnStatement();
+
+            return ReturnStatement(GenExpression(TypeGroup.Single(ReturnType)).expr);
         }
     }
 
@@ -374,5 +379,13 @@ namespace Fuzzlyn.Methods
     {
         MemberAccess,
         Literal,
+        Binary,
+        Ternary,
+        Assignment,
+        Call,
+        Increment,
+        Decrement,
+        NewObject,
+        Cast,
     }
 }
