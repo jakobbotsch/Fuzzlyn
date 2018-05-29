@@ -95,8 +95,10 @@ namespace Fuzzlyn
 
         private static void GenerateProgram(FuzzlynOptions options)
         {
-            ParallelOptions po = new ParallelOptions();
-            po.MaxDegreeOfParallelism = options.Parallelism;
+            ParallelOptions po = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = options.Parallelism
+            };
 
             StringBuilder sb = new StringBuilder();
             int numGenerated = 0;

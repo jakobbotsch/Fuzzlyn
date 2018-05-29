@@ -43,37 +43,6 @@ namespace Fuzzlyn.Types
             return type;
         }
 
-        public IReadOnlyList<FuzzType> GetTypesInGroup(TypeGroup group)
-        {
-            switch (group.Kind)
-            {
-                case TypeGroupKind.None:
-                    return Array.Empty<FuzzType>();
-                case TypeGroupKind.Single:
-                    return new[] { group.SingleType };
-                case TypeGroupKind.Multiple:
-                    return group.MultipleTypes;
-                case TypeGroupKind.Integral:
-                    return _primitiveTypes.Where(pt => pt.Info.IsIntegral).ToList();
-                default:
-                    throw new ArgumentException("Cannot retrieve types in group of kind " + group.Kind, nameof(group));
-            }
-        }
-
-        public FuzzType GetRandomTypeInGroup(TypeGroup group)
-        {
-            if (group.Kind == TypeGroupKind.None)
-                throw new ArgumentException("Cannot get random type from None TypeGroup", nameof(group));
-
-            if (group.Kind == TypeGroupKind.Any)
-                return PickType();
-
-            if (group.Kind == TypeGroupKind.Single)
-                return group.SingleType;
-
-            return Random.NextElement(GetTypesInGroup(group));
-        }
-
         public IEnumerable<MemberDeclarationSyntax> OutputTypes()
         {
             foreach (AggregateType type in _aggTypes)
