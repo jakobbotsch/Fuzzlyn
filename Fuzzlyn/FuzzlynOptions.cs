@@ -29,21 +29,20 @@ namespace Fuzzlyn
         public ProbabilityDistribution StatementTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)StatementKind.Block] = 0.1,
-                [(int)StatementKind.Assignment] = 0.25,
-                [(int)StatementKind.Call] = 0.1,
-                [(int)StatementKind.Increment] = 0.07,
-                [(int)StatementKind.Decrement] = 0.07,
-                [(int)StatementKind.NewObject] = 0.2,
+                [(int)StatementKind.Assignment] = 0.39,
                 [(int)StatementKind.If] = 0.2,
+                [(int)StatementKind.Block] = 0.1,
+                [(int)StatementKind.Call] = 0.1,
+                [(int)StatementKind.Increment] = 0.1,
+                [(int)StatementKind.Decrement] = 0.1,
                 [(int)StatementKind.Return] = 0.01,
             });
         public ProbabilityDistribution ExpressionTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
                 [(int)ExpressionKind.MemberAccess] = 0.7,
-                [(int)ExpressionKind.Call] = 0.1,
                 [(int)ExpressionKind.Literal] = 0.2,
+                [(int)ExpressionKind.Call] = 0.1,
             });
 
         public double PickLiteralFromTableProb { get; set; } = 0.5;

@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Statics;
+﻿using Fuzzlyn.ProbabilityDistributions;
+using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -101,8 +102,6 @@ namespace Fuzzlyn.Methods
                             return ExpressionStatement(GenIncDec(true).expr);
                         case StatementKind.Decrement:
                             return ExpressionStatement(GenIncDec(false).expr);
-                        case StatementKind.NewObject:
-                            return ExpressionStatement(GenNewObject());
                         case StatementKind.If:
                             return GenIf();
                         case StatementKind.Return:
@@ -371,7 +370,18 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenNewObject()
         {
-            throw new NotImplementedException();
+            AggregateType type = Types.PickAggregateType();
+            if (type == null)
+                return null;
+
+            ObjectCreationExpressionSyntax creation =
+                ObjectCreationExpression(type.GenReferenceTo())
+                .WithArgumentList(
+                    ArgumentList(
+                        SeparatedList(
+                            type.Fields.Select(f => Argument(GenExpression(f.Type))))));
+
+            return creation;
         }
 
         private StatementSyntax GenIf()
@@ -405,7 +415,6 @@ namespace Fuzzlyn.Methods
         Call,
         Increment,
         Decrement,
-        NewObject,
         If,
         Return,
     }

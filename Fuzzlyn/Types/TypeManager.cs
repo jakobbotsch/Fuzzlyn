@@ -19,16 +19,26 @@ namespace Fuzzlyn.Types
 
         public Randomizer Random { get; }
 
-        public FuzzType PickExistingType(Func<FuzzType, bool> filter = null)
+        public AggregateType PickAggregateType()
+            => _aggTypes.Count > 0 ? Random.NextElement(_aggTypes) : null;
+
+        public PrimitiveType PickPrimitiveType(Func<PrimitiveType, bool> filter)
         {
-            FuzzType type;
+            PrimitiveType type;
             do
             {
-                int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count);
-                type = num < _primitiveTypes.Count
-                    ? (FuzzType)_primitiveTypes[num]
-                    : _aggTypes[num - _primitiveTypes.Count];
-            } while (filter != null && !filter(type));
+                type = Random.NextElement(_primitiveTypes);
+            } while (!filter(type));
+
+            return type;
+        }
+
+        public FuzzType PickExistingType()
+        {
+            int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count);
+            FuzzType type = num < _primitiveTypes.Count
+                ? (FuzzType)_primitiveTypes[num]
+                : _aggTypes[num - _primitiveTypes.Count];
 
             return type;
         }
