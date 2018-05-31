@@ -1,5 +1,6 @@
 ﻿using Fuzzlyn.Methods;
 using Fuzzlyn.ProbabilityDistributions;
+using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -61,6 +62,26 @@ namespace Fuzzlyn
                 [int.MaxValue - 1] = 0.1,
                 [int.MaxValue] = 0.1,
             });
+
+        public ProbabilityDistribution BinaryMathDist { get; set; }
+    = new TableDistribution(new Dictionary<int, double>
+    {
+        [(int)SyntaxKind.AddExpression] = 0.2,
+        [(int)SyntaxKind.SubtractExpression] = 0.2,
+        [(int)SyntaxKind.DivideExpression] = 0.2,
+        [(int)SyntaxKind.MultiplyExpression] = 0.2,
+        [(int)SyntaxKind.ModuloExpression] = 0.2,
+    });
+
+        public ProbabilityDistribution BinaryBoolDist { get; set; }
+            = new TableDistribution(new Dictionary<int, double>
+            {
+                [(int)SyntaxKind.LogicalAndExpression] = 0.25,
+                [(int)SyntaxKind.LogicalOrExpression] = 0.25,
+                [(int)SyntaxKind.ExclusiveOrExpression] = 0.25,
+                [(int)SyntaxKind.IsExpression] = 0.25,
+            });
+
 
         public int MaxArrayTotalSize { get; set; } = 300;
         public int MaxArrayLengthPerDimension { get; set; } = 10;

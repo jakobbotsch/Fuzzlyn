@@ -98,9 +98,9 @@ namespace Fuzzlyn.Methods
                         case StatementKind.Call:
                             return ExpressionStatement(GenCall(null));
                         case StatementKind.Increment:
-                            return ExpressionStatement(GenIncDec(true));
+                            return ExpressionStatement(GenIncDec(true).expr);
                         case StatementKind.Decrement:
-                            return ExpressionStatement(GenIncDec(false));
+                            return ExpressionStatement(GenIncDec(false).expr);
                         case StatementKind.NewObject:
                             return ExpressionStatement(GenNewObject());
                         case StatementKind.If:
@@ -258,6 +258,18 @@ namespace Fuzzlyn.Methods
                     case ExpressionKind.Call:
                         gen = GenCall(type);
                         break;
+                    case ExpressionKind.Increment:
+                        gen = GenIncDec(true).expr;
+                        break;
+                    case ExpressionKind.Decrement:
+                        gen = GenIncDec(false).expr;
+                        break;
+                    case ExpressionKind.Binary:
+                        gen = GenBinary(type);
+                        break;
+                    case ExpressionKind.Cast:
+                        gen = GenCast(type);
+                        break;
                     default:
                         throw new Exception("Unreachable");
                 }
@@ -265,6 +277,28 @@ namespace Fuzzlyn.Methods
             while (gen == null);
 
             return gen;
+        }
+
+        private ExpressionSyntax GenCast(FuzzType type)
+        {
+            return CastExpression(type.GenReferenceTo(), GenMemberAccess((x => true)).expr);
+        }
+
+        private ExpressionSyntax GenBinary(FuzzType type)
+        {
+            var leftHandSide = GenMemberAccess(x => x.Equals(type)).expr;
+            var rightHandSide = GenMemberAccess(x => x.Equals(type)).expr;
+            SyntaxKind op;
+
+            if (type.Equals(Types.GetPrimitiveType(SyntaxKind.BoolKeyword)))
+            {
+                op = (SyntaxKind)Random.Options.BinaryBoolDist.Sample(Random.Rng);
+            }
+            else
+            {
+                op = (SyntaxKind)Random.Options.BinaryMathDist.Sample(Random.Rng);
+            }
+            return BinaryExpression(op, leftHandSide, rightHandSide);
         }
 
         private ExpressionSyntax GenLiteral(FuzzType type) => LiteralGenerator.GenLiteral(Random, type);
@@ -309,9 +343,30 @@ namespace Fuzzlyn.Methods
             return CastExpression(type.GenReferenceTo(), invoc);
         }
 
-        private ExpressionSyntax GenIncDec(bool isIncrement)
+        private (ExpressionSyntax expr, FuzzType type) GenIncDec(bool isIncrement)
         {
-            throw new NotImplementedException();
+            ExpressionSyntax gen = null;
+
+            var acceptedTypes =
+            new List<SyntaxKind>{
+                SyntaxKind.UShortKeyword,
+                SyntaxKind.LongKeyword,
+                SyntaxKind.UIntKeyword,
+                SyntaxKind.IntKeyword,
+                SyntaxKind.UShortKeyword,
+                SyntaxKind.ShortKeyword,
+                SyntaxKind.ByteKeyword,
+                SyntaxKind.SByteKeyword,
+                SyntaxKind.CharKeyword
+            };
+
+            var (subject, type) = GenMemberAccess((x) => (acceptedTypes.Select(y => Types.GetPrimitiveType(y)).Contains(x)));
+
+            gen = PostfixUnaryExpression(
+                isIncrement ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression,
+                subject);
+
+            return (gen, type);
         }
 
         private ExpressionSyntax GenNewObject()
@@ -321,7 +376,17 @@ namespace Fuzzlyn.Methods
 
         private StatementSyntax GenIf()
         {
-            throw new NotImplementedException();
+            StatementSyntax gen = null;
+            var subject = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            if (Random.FlipCoin(0.5))
+            {
+                gen = IfStatement(subject, GenBlock(false));
+            }
+            else
+            {
+                gen = IfStatement(subject, GenBlock(false), ElseClause(GenBlock(false)));
+            }
+            return gen;
         }
 
         private StatementSyntax GenReturn()
