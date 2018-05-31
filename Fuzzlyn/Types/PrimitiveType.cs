@@ -150,6 +150,8 @@ namespace Fuzzlyn.Types
                     AllowedAdditionalAssignments = charAssigns,
                     GenRandomLiteral = rng => LiteralExpression(SyntaxKind.CharacterLiteralExpression, Literal((char)rng.Next(32, 127))),
                     Type = typeof(char),
+                    IsIntegral = true,
+                    IsUnsigned = true,
                 },
                 [SyntaxKind.BoolKeyword] = new PrimitiveTypeInfo
                 {

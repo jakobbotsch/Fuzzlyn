@@ -225,14 +225,14 @@ namespace Fuzzlyn.Methods
         private StatementSyntax GenIf()
         {
             StatementSyntax gen = null;
-            var subject = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            ExpressionSyntax guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
             if (Random.FlipCoin(0.5))
             {
-                gen = IfStatement(subject, GenBlock(false));
+                gen = IfStatement(guard, GenBlock(false));
             }
             else
             {
-                gen = IfStatement(subject, GenBlock(false), ElseClause(GenBlock(false)));
+                gen = IfStatement(guard, GenBlock(false), ElseClause(GenBlock(false)));
             }
             return gen;
         }
@@ -266,12 +266,17 @@ namespace Fuzzlyn.Methods
                         gen = GenCall(type, true);
                         break;
                     case ExpressionKind.Increment:
-                        gen = GenIncDec(true).expr;
+                        gen = GenIncDec(type, true);
                         break;
                     case ExpressionKind.Decrement:
-                        gen = GenIncDec(false).expr;
+                        gen = GenIncDec(type, false);
+                        break;
+                    case ExpressionKind.NewObject:
+                        gen = GenNewObject(type);
                         break;
                     case ExpressionKind.Cast:
+                        gen = null;
+                        continue;
                         gen = GenCast(type);
                         break;
                     default:
@@ -347,19 +352,84 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBinary(FuzzType type)
         {
-            var leftHandSide = GenMemberAccess(x => x.Equals(type)).expr;
-            var rightHandSide = GenMemberAccess(x => x.Equals(type)).expr;
-            SyntaxKind op;
+            if (!(type is PrimitiveType pt))
+                return null;
 
-            if (type.Equals(Types.GetPrimitiveType(SyntaxKind.BoolKeyword)))
+            if (pt.Keyword == SyntaxKind.BoolKeyword)
+                return GenBoolProducingBinary();
+
+            return GenIntegralProducingBinary(pt);
+        }
+
+        private ExpressionSyntax GenBoolProducingBinary()
+        {
+            FuzzType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
+            ExpressionSyntax left, right;
+            SyntaxKind op = (SyntaxKind)Random.Options.BinaryBoolDist.Sample(Random.Rng);
+            if (op == SyntaxKind.LogicalAndExpression || op == SyntaxKind.LogicalOrExpression ||
+                op == SyntaxKind.ExclusiveOrExpression || op == SyntaxKind.BitwiseAndExpression ||
+                op == SyntaxKind.BitwiseOrExpression)
             {
-                op = (SyntaxKind)Random.Options.BinaryBoolDist.Sample(Random.Rng);
+                // &&, ||, ^, &, | must be between bools to produce bool
+                left = GenExpression(boolType);
+                right = GenExpression(boolType);
+            }
+            else if (op == SyntaxKind.EqualsExpression || op == SyntaxKind.NotEqualsExpression)
+            {
+                PrimitiveType leftType = Types.PickPrimitiveType(f => true);
+                left = GenExpression(leftType);
+                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+                right = GenExpression(rightType);
             }
             else
             {
-                op = (SyntaxKind)Random.Options.BinaryMathDist.Sample(Random.Rng);
+                Debug.Assert(op == SyntaxKind.LessThanOrEqualExpression || op == SyntaxKind.LessThanExpression ||
+                             op == SyntaxKind.GreaterThanOrEqualExpression || op == SyntaxKind.GreaterThanExpression);
+
+                PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
+                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+                left = GenExpression(leftType);
+                right = GenExpression(rightType);
             }
-            return BinaryExpression(op, leftHandSide, rightHandSide);
+
+            return BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
+        }
+
+        private ExpressionSyntax ParenthesizeIfNecessary(ExpressionSyntax expr)
+        {
+            if (expr is IdentifierNameSyntax ||
+                expr is LiteralExpressionSyntax ||
+                expr is MemberAccessExpressionSyntax ||
+                expr is PostfixUnaryExpressionSyntax ||
+                expr is PrefixUnaryExpressionSyntax ||
+                expr is ElementAccessExpressionSyntax ||
+                expr is InvocationExpressionSyntax)
+            {
+                return expr;
+            }
+
+            return ParenthesizedExpression(expr);
+        }
+
+        private ExpressionSyntax GenIntegralProducingBinary(PrimitiveType type)
+        {
+            Debug.Assert(type.Info.IsIntegral);
+            SyntaxKind op = (SyntaxKind)Random.Options.BinaryIntegralDist.Sample(Random.Rng);
+            if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
+                return GenIntegralProducingBinary(type); // todo: handle. Needs separate table.
+
+            PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
+            PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+            ExpressionSyntax left = GenExpression(leftType);
+            ExpressionSyntax right = GenExpression(rightType);
+            while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
+                right = GenExpression(rightType);
+
+            ExpressionSyntax expr = BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
+            if (BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, rightType.Keyword) != type.Keyword)
+                expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
+
+            return expr;
         }
 
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
@@ -398,12 +468,10 @@ namespace Fuzzlyn.Methods
             return CastExpression(type.GenReferenceTo(), invoc);
         }
 
-        private (ExpressionSyntax expr, FuzzType type) GenIncDec(bool isIncrement)
+        private ExpressionSyntax GenIncDec(FuzzType type, bool isIncrement)
         {
-            ExpressionSyntax gen = null;
-
-            var acceptedTypes =
-            new List<SyntaxKind>{
+            SyntaxKind[] acceptedTypes =
+            {
                 SyntaxKind.UShortKeyword,
                 SyntaxKind.LongKeyword,
                 SyntaxKind.UIntKeyword,
@@ -415,19 +483,23 @@ namespace Fuzzlyn.Methods
                 SyntaxKind.CharKeyword
             };
 
-            var (subject, type) = GenMemberAccess((x) => (acceptedTypes.Select(y => Types.GetPrimitiveType(y)).Contains(x)));
+            if (!(type is PrimitiveType pt) || !acceptedTypes.Contains(pt.Keyword))
+                return null;
 
-            gen = PostfixUnaryExpression(
+            ExpressionSyntax subject = GenMemberAccess(ft => ft.Equals(type)).expr;
+            if (subject == null)
+                return null;
+
+            ExpressionSyntax gen = PostfixUnaryExpression(
                 isIncrement ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression,
                 subject);
 
-            return (gen, type);
+            return gen;
         }
 
-        private ExpressionSyntax GenNewObject()
+        private ExpressionSyntax GenNewObject(FuzzType type)
         {
-            AggregateType type = Types.PickAggregateType();
-            if (type == null)
+            if (!(type is AggregateType at))
                 return null;
 
             ObjectCreationExpressionSyntax creation =
@@ -435,14 +507,14 @@ namespace Fuzzlyn.Methods
                 .WithArgumentList(
                     ArgumentList(
                         SeparatedList(
-                            type.Fields.Select(f => Argument(GenExpression(f.Type))))));
+                            at.Fields.Select(f => Argument(GenExpression(f.Type))))));
 
             return creation;
         }
 
         private ExpressionSyntax GenCast(FuzzType type)
         {
-            return CastExpression(type.GenReferenceTo(), GenMemberAccess((x => true)).expr);
+            return CastExpression(type.GenReferenceTo(), GenExpression(type));
         }
     }
 

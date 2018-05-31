@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fuzzlyn", "Fuzzlyn\Fuzzlyn.csproj", "{19E02E99-EE19-40DB-BDFE-E0B48E274DF0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuzzlyn.UnitTests", "Fuzzlyn.UnitTests\Fuzzlyn.UnitTests.csproj", "{616FF16E-A0F5-4330-B464-F7D9ED5A0513}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fuzzlyn.UnitTests", "Fuzzlyn.UnitTests\Fuzzlyn.UnitTests.csproj", "{616FF16E-A0F5-4330-B464-F7D9ED5A0513}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuzzlyn.TableGen", "Fuzzlyn.TableGen\Fuzzlyn.TableGen.csproj", "{5CF180D6-D389-4E24-829C-FC0E887BAE2E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{616FF16E-A0F5-4330-B464-F7D9ED5A0513}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{616FF16E-A0F5-4330-B464-F7D9ED5A0513}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{616FF16E-A0F5-4330-B464-F7D9ED5A0513}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CF180D6-D389-4E24-829C-FC0E887BAE2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CF180D6-D389-4E24-829C-FC0E887BAE2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CF180D6-D389-4E24-829C-FC0E887BAE2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CF180D6-D389-4E24-829C-FC0E887BAE2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

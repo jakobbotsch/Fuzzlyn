@@ -39,9 +39,14 @@ namespace Fuzzlyn
         public ProbabilityDistribution ExpressionTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)ExpressionKind.MemberAccess] = 0.7,
-                [(int)ExpressionKind.Literal] = 0.2,
+                [(int)ExpressionKind.MemberAccess] = 0.44,
+                [(int)ExpressionKind.Literal] = 0.20,
                 [(int)ExpressionKind.Call] = 0.1,
+                [(int)ExpressionKind.Cast] = 0.1,
+                [(int)ExpressionKind.NewObject] = 0.01,
+                [(int)ExpressionKind.Binary] = 0.05,
+                [(int)ExpressionKind.Increment] = 0.05,
+                [(int)ExpressionKind.Decrement] = 0.05,
             });
 
         // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
@@ -53,7 +58,7 @@ namespace Fuzzlyn
         // The probability is always increasing
         // The probability is never 1.
         public double StatementRejectionLevelParameterN { get; set; } = 3.5;
-        public double StatementRejectionLevelParameterH { get; set; } = 7;
+        public double StatementRejectionLevelParameterH { get; set; } = 4;
 
         public double PickLiteralFromTableProb { get; set; } = 0.5;
         public ProbabilityDistribution LiteralDist { get; set; }
@@ -72,25 +77,36 @@ namespace Fuzzlyn
                 [int.MaxValue] = 0.1,
             });
 
-        public ProbabilityDistribution BinaryMathDist { get; set; }
-    = new TableDistribution(new Dictionary<int, double>
-    {
-        [(int)SyntaxKind.AddExpression] = 0.2,
-        [(int)SyntaxKind.SubtractExpression] = 0.2,
-        [(int)SyntaxKind.DivideExpression] = 0.2,
-        [(int)SyntaxKind.MultiplyExpression] = 0.2,
-        [(int)SyntaxKind.ModuloExpression] = 0.2,
-    });
+        public ProbabilityDistribution BinaryIntegralDist { get; set; }
+            = new TableDistribution(new Dictionary<int, double>
+            {
+                [(int)SyntaxKind.AddExpression] = 0.1,
+                [(int)SyntaxKind.SubtractExpression] = 0.1,
+                [(int)SyntaxKind.DivideExpression] = 0.1,
+                [(int)SyntaxKind.MultiplyExpression] = 0.1,
+                [(int)SyntaxKind.ModuloExpression] = 0.1,
+                [(int)SyntaxKind.LeftShiftExpression] = 0.1,
+                [(int)SyntaxKind.RightShiftExpression] = 0.1,
+                [(int)SyntaxKind.BitwiseAndExpression] = 0.1,
+                [(int)SyntaxKind.BitwiseOrExpression] = 0.1,
+                [(int)SyntaxKind.ExclusiveOrExpression] = 0.1,
+            });
 
         public ProbabilityDistribution BinaryBoolDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)SyntaxKind.LogicalAndExpression] = 0.25,
-                [(int)SyntaxKind.LogicalOrExpression] = 0.25,
-                [(int)SyntaxKind.ExclusiveOrExpression] = 0.25,
-                [(int)SyntaxKind.IsExpression] = 0.25,
+                [(int)SyntaxKind.EqualsExpression] = 0.15,
+                [(int)SyntaxKind.NotEqualsExpression] = 0.15,
+                [(int)SyntaxKind.LogicalAndExpression] = 0.12,
+                [(int)SyntaxKind.LogicalOrExpression] = 0.12,
+                [(int)SyntaxKind.LessThanOrEqualExpression] = 0.10,
+                [(int)SyntaxKind.LessThanExpression] = 0.10,
+                [(int)SyntaxKind.GreaterThanOrEqualExpression] = 0.10,
+                [(int)SyntaxKind.GreaterThanExpression] = 0.10,
+                [(int)SyntaxKind.ExclusiveOrExpression] = 0.02,
+                [(int)SyntaxKind.BitwiseAndExpression] = 0.02,
+                [(int)SyntaxKind.BitwiseOrExpression] = 0.02,
             });
-
 
         public int MaxArrayTotalSize { get; set; } = 300;
         public int MaxArrayLengthPerDimension { get; set; } = 10;
