@@ -98,10 +98,6 @@ namespace Fuzzlyn.Methods
                             return GenAssignmentStatement();
                         case StatementKind.Call:
                             return ExpressionStatement(GenCall(null));
-                        case StatementKind.Increment:
-                            return ExpressionStatement(GenIncDec(true).expr);
-                        case StatementKind.Decrement:
-                            return ExpressionStatement(GenIncDec(false).expr);
                         case StatementKind.If:
                             return GenIf();
                         case StatementKind.Return:
@@ -173,6 +169,18 @@ namespace Fuzzlyn.Methods
             SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
             if (type.AllowedAdditionalAssignmentKinds.Length > 0 && Random.FlipCoin(Random.Options.FancyAssignmentProb))
                 assignmentKind = Random.NextElement(type.AllowedAdditionalAssignmentKinds);
+
+            if (assignmentKind == SyntaxKind.PreIncrementExpression ||
+                assignmentKind == SyntaxKind.PreDecrementExpression)
+            {
+                return ExpressionStatement(PrefixUnaryExpression(assignmentKind, lhs));
+            }
+
+            if (assignmentKind == SyntaxKind.PostIncrementExpression ||
+                assignmentKind == SyntaxKind.PostDecrementExpression)
+            {
+                return ExpressionStatement(PostfixUnaryExpression(assignmentKind, lhs));
+            }
 
             if (assignmentKind == SyntaxKind.LeftShiftAssignmentExpression ||
                 assignmentKind == SyntaxKind.RightShiftAssignmentExpression)
@@ -413,8 +421,6 @@ namespace Fuzzlyn.Methods
         Block,
         Assignment,
         Call,
-        Increment,
-        Decrement,
         If,
         Return,
     }

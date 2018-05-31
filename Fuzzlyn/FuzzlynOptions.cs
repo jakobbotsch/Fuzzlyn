@@ -19,6 +19,7 @@ namespace Fuzzlyn
         public double AssignToNewVarProb { get; set; } = 0.3;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double FancyAssignmentProb { get; set; } = 0.1;
+        public double IncDecAssignmentStatementProb { get; set; } = 0.1;
 
         public ProbabilityDistribution MakeAggregateTypeCountDist { get; set; } = new GeometricDistribution(0.4);
         public ProbabilityDistribution MaxStructFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
@@ -29,12 +30,10 @@ namespace Fuzzlyn
         public ProbabilityDistribution StatementTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)StatementKind.Assignment] = 0.39,
+                [(int)StatementKind.Assignment] = 0.59,
                 [(int)StatementKind.If] = 0.2,
                 [(int)StatementKind.Block] = 0.1,
                 [(int)StatementKind.Call] = 0.1,
-                [(int)StatementKind.Increment] = 0.1,
-                [(int)StatementKind.Decrement] = 0.1,
                 [(int)StatementKind.Return] = 0.01,
             });
         public ProbabilityDistribution ExpressionTypeDist { get; set; }

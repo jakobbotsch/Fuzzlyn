@@ -62,6 +62,18 @@ namespace Fuzzlyn.Types
                 SyntaxKind.OrAssignmentExpression,
                 SyntaxKind.LeftShiftAssignmentExpression,
                 SyntaxKind.RightShiftAssignmentExpression,
+                SyntaxKind.PreIncrementExpression,
+                SyntaxKind.PostIncrementExpression,
+                SyntaxKind.PreDecrementExpression,
+                SyntaxKind.PostDecrementExpression,
+            };
+
+            SyntaxKind[] charAssigns =
+            {
+                SyntaxKind.PreIncrementExpression,
+                SyntaxKind.PostIncrementExpression,
+                SyntaxKind.PreDecrementExpression,
+                SyntaxKind.PostDecrementExpression,
             };
 
             SyntaxKind[] boolAssigns =
@@ -70,8 +82,6 @@ namespace Fuzzlyn.Types
                 SyntaxKind.ExclusiveOrAssignmentExpression,
                 SyntaxKind.OrAssignmentExpression,
             };
-
-            SyntaxKind[] noAssigns = new SyntaxKind[0];
 
             s_infoTable = new Dictionary<SyntaxKind, PrimitiveTypeInfo>
             {
@@ -137,7 +147,7 @@ namespace Fuzzlyn.Types
                 },
                 [SyntaxKind.CharKeyword] = new PrimitiveTypeInfo
                 {
-                    AllowedAdditionalAssignments = noAssigns,
+                    AllowedAdditionalAssignments = charAssigns,
                     GenRandomLiteral = rng => LiteralExpression(SyntaxKind.CharacterLiteralExpression, Literal((char)rng.Next(32, 127))),
                     Type = typeof(char),
                 },
