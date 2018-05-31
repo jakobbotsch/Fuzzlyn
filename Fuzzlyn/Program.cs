@@ -64,8 +64,6 @@ namespace Fuzzlyn
                 return;
             }
 
-            int[,][] a = new int[,][] { { new int[] { 1 } }, { new int[] { 2, 3 } } };
-
             if (options == null)
                 options = new FuzzlynOptions();
 
