@@ -208,6 +208,81 @@ namespace Fuzzlyn.Methods
                     AssignmentExpression(assignmentKind, lhs, GenExpression(type)));
         }
 
+        private StatementSyntax GenCallStatement(bool tryExisting)
+        {
+            // If we are supposed to try existing first, then do not allow new
+            ExpressionSyntax call = GenCall(null, allowNew: !tryExisting);
+
+            while (call == null)
+            {
+                // There are no existing, so allow new until we get a new one
+                call = GenCall(null, true);
+            }
+
+            return ExpressionStatement(call);
+        }
+
+        private StatementSyntax GenIf()
+        {
+            StatementSyntax gen = null;
+            var subject = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            if (Random.FlipCoin(0.5))
+            {
+                gen = IfStatement(subject, GenBlock(false));
+            }
+            else
+            {
+                gen = IfStatement(subject, GenBlock(false), ElseClause(GenBlock(false)));
+            }
+            return gen;
+        }
+
+        private StatementSyntax GenReturn()
+        {
+            if (ReturnType == null)
+                return ReturnStatement();
+
+            return ReturnStatement(GenExpression(ReturnType));
+        }
+
+        private ExpressionSyntax GenExpression(FuzzType type)
+        {
+            ExpressionSyntax gen;
+            do
+            {
+                ExpressionKind kind = (ExpressionKind)Random.Options.ExpressionTypeDist.Sample(Random.Rng);
+                switch (kind)
+                {
+                    case ExpressionKind.MemberAccess:
+                        gen = GenMemberAccess(ft => ft.Equals(type)).expr;
+                        break;
+                    case ExpressionKind.Literal:
+                        gen = GenLiteral(type);
+                        break;
+                    case ExpressionKind.Binary:
+                        gen = GenBinary(type);
+                        break;
+                    case ExpressionKind.Call:
+                        gen = GenCall(type, true);
+                        break;
+                    case ExpressionKind.Increment:
+                        gen = GenIncDec(true).expr;
+                        break;
+                    case ExpressionKind.Decrement:
+                        gen = GenIncDec(false).expr;
+                        break;
+                    case ExpressionKind.Cast:
+                        gen = GenCast(type);
+                        break;
+                    default:
+                        throw new Exception("Unreachable");
+                }
+            }
+            while (gen == null);
+
+            return gen;
+        }
+
         /// <summary>
         /// Generates an access to a random member:
         /// * A static variable
@@ -265,47 +340,9 @@ namespace Fuzzlyn.Methods
             }
         }
 
-        private ExpressionSyntax GenExpression(FuzzType type)
+        private ExpressionSyntax GenLiteral(FuzzType type)
         {
-            ExpressionSyntax gen;
-            do
-            {
-                ExpressionKind kind = (ExpressionKind)Random.Options.ExpressionTypeDist.Sample(Random.Rng);
-                switch (kind)
-                {
-                    case ExpressionKind.MemberAccess:
-                        gen = GenMemberAccess(ft => ft.Equals(type)).expr;
-                        break;
-                    case ExpressionKind.Literal:
-                        gen = GenLiteral(type);
-                        break;
-                    case ExpressionKind.Call:
-                        gen = GenCall(type, true);
-                        break;
-                    case ExpressionKind.Increment:
-                        gen = GenIncDec(true).expr;
-                        break;
-                    case ExpressionKind.Decrement:
-                        gen = GenIncDec(false).expr;
-                        break;
-                    case ExpressionKind.Binary:
-                        gen = GenBinary(type);
-                        break;
-                    case ExpressionKind.Cast:
-                        gen = GenCast(type);
-                        break;
-                    default:
-                        throw new Exception("Unreachable");
-                }
-            }
-            while (gen == null);
-
-            return gen;
-        }
-
-        private ExpressionSyntax GenCast(FuzzType type)
-        {
-            return CastExpression(type.GenReferenceTo(), GenMemberAccess((x => true)).expr);
+            return LiteralGenerator.GenLiteral(Random, type);
         }
 
         private ExpressionSyntax GenBinary(FuzzType type)
@@ -323,22 +360,6 @@ namespace Fuzzlyn.Methods
                 op = (SyntaxKind)Random.Options.BinaryMathDist.Sample(Random.Rng);
             }
             return BinaryExpression(op, leftHandSide, rightHandSide);
-        }
-
-        private ExpressionSyntax GenLiteral(FuzzType type) => LiteralGenerator.GenLiteral(Random, type);
-
-        private StatementSyntax GenCallStatement(bool tryExisting)
-        {
-            // If we are supposed to try existing first, then do not allow new
-            ExpressionSyntax call = GenCall(null, allowNew: !tryExisting);
-
-            while (call == null)
-            {
-                // There are no existing, so allow new until we get a new one
-                call = GenCall(null, true);
-            }
-
-            return ExpressionStatement(call);
         }
 
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
@@ -419,27 +440,9 @@ namespace Fuzzlyn.Methods
             return creation;
         }
 
-        private StatementSyntax GenIf()
+        private ExpressionSyntax GenCast(FuzzType type)
         {
-            StatementSyntax gen = null;
-            var subject = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
-            if (Random.FlipCoin(0.5))
-            {
-                gen = IfStatement(subject, GenBlock(false));
-            }
-            else
-            {
-                gen = IfStatement(subject, GenBlock(false), ElseClause(GenBlock(false)));
-            }
-            return gen;
-        }
-
-        private StatementSyntax GenReturn()
-        {
-            if (ReturnType == null)
-                return ReturnStatement();
-
-            return ReturnStatement(GenExpression(ReturnType));
+            return CastExpression(type.GenReferenceTo(), GenMemberAccess((x => true)).expr);
         }
     }
 
