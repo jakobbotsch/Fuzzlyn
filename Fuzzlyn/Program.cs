@@ -128,7 +128,9 @@ namespace Fuzzlyn
             });
 
             Console.Write(sb.ToString());
+#if DEBUG
             Console.ReadLine();
+#endif
         }
 
         private static readonly MetadataReference[] s_references = { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };

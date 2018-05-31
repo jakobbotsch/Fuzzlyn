@@ -20,6 +20,7 @@ namespace Fuzzlyn.Methods
         private readonly List<FuncGenerator> _funcs;
         private readonly int _funcIndex;
         private int _counter;
+        private int _level;
 
         public FuncGenerator(List<FuncGenerator> funcs, Randomizer random, TypeManager types, StaticsManager statics)
         {
@@ -75,6 +76,7 @@ namespace Fuzzlyn.Methods
             else
                 ParameterTypes = Array.Empty<FuzzType>();
 
+            _level = -1;
             _scope.Add(new ScopeFrame());
             _scope.Last().Variables.AddRange(ParameterTypes.Select((p, i) => new VariableIdentifier(p, $"arg{i}")));
             Body = GenBlock(ReturnType != null);
@@ -90,6 +92,10 @@ namespace Fuzzlyn.Methods
                     StatementKind kind =
                         (StatementKind)Random.Options.StatementTypeDist.Sample(Random.Rng);
 
+                    if ((kind == StatementKind.Block || kind == StatementKind.If) &&
+                        ShouldRejectRecursion())
+                        continue;
+
                     switch (kind)
                     {
                         case StatementKind.Block:
@@ -97,7 +103,7 @@ namespace Fuzzlyn.Methods
                         case StatementKind.Assignment:
                             return GenAssignmentStatement();
                         case StatementKind.Call:
-                            return ExpressionStatement(GenCall(null));
+                            return GenCallStatement(tryExisting: ShouldRejectRecursion());
                         case StatementKind.If:
                             return GenIf();
                         case StatementKind.Return:
@@ -113,13 +119,24 @@ namespace Fuzzlyn.Methods
             }
         }
 
+        private bool ShouldRejectRecursion()
+        {
+            double rand = Random.NextDouble();
+            double n = Random.Options.StatementRejectionLevelParameterN;
+            double h = Random.Options.StatementRejectionLevelParameterH;
+            double levelPow = Math.Pow(_level, n);
+            return rand < levelPow / (levelPow + Math.Pow(h, n));
+        }
+
         private BlockSyntax GenBlock(bool forceReturn)
         {
             int numStatements = Random.Options.BlockStatementCountDist.Sample(Random.Rng);
 
+            _level++;
             _scope.Add(new ScopeFrame());
             BlockSyntax block = Block(GenStatements());
             _scope.RemoveAt(_scope.Count - 1);
+            _level--;
 
             return block;
 
@@ -263,7 +280,7 @@ namespace Fuzzlyn.Methods
                         gen = GenLiteral(type);
                         break;
                     case ExpressionKind.Call:
-                        gen = GenCall(type);
+                        gen = GenCall(type, true);
                         break;
                     case ExpressionKind.Increment:
                         gen = GenIncDec(true).expr;
@@ -310,10 +327,24 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenLiteral(FuzzType type) => LiteralGenerator.GenLiteral(Random, type);
 
-        private ExpressionSyntax GenCall(FuzzType type)
+        private StatementSyntax GenCallStatement(bool tryExisting)
+        {
+            // If we are supposed to try existing first, then do not allow new
+            ExpressionSyntax call = GenCall(null, allowNew: !tryExisting);
+
+            while (call == null)
+            {
+                // There are no existing, so allow new until we get a new one
+                call = GenCall(null, true);
+            }
+
+            return ExpressionStatement(call);
+        }
+
+        private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
         {
             FuncGenerator func;
-            if (Random.FlipCoin(Random.Options.GenNewMethodProb))
+            if (allowNew && Random.FlipCoin(Random.Options.GenNewMethodProb))
             {
                 type = type ?? Types.PickType();
 
@@ -328,11 +359,7 @@ namespace Fuzzlyn.Methods
 
                 List<FuncGenerator> list = funcs.ToList();
                 if (list.Count == 0)
-                {
-                    // If we had no type this is purely because no functions exist, so simply retry
-                    // until we create one.
-                    return type != null ? null : GenCall(null);
-                }
+                    return null;
 
                 func = Random.NextElement(list);
                 type = type ?? func.ReturnType;

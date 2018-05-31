@@ -44,6 +44,17 @@ namespace Fuzzlyn
                 [(int)ExpressionKind.Call] = 0.1,
             });
 
+        // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
+        // A recursive statement will be rejected if rand < level^n / (level^n + h^n).
+        // This equation is taken from https://math.stackexchange.com/a/2324218.
+        // Properties:
+        // For level = 0, the probability is 0%
+        // For level = h, the probability is 50%
+        // The probability is always increasing
+        // The probability is never 1.
+        public double StatementRejectionLevelParameterN { get; set; } = 3.5;
+        public double StatementRejectionLevelParameterH { get; set; } = 7;
+
         public double PickLiteralFromTableProb { get; set; } = 0.5;
         public ProbabilityDistribution LiteralDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
