@@ -26,7 +26,11 @@ namespace Fuzzlyn.Execution
         private byte[] _buffer = new byte[0];
         public void Checksum<T>(string id, T val)
         {
-            Values.Add(id + ": " + val);
+            if (typeof(T) == typeof(char))
+                Values.Add(id + ": " + (int)(char)(object)val);
+            else
+                Values.Add(id + ": " + val);
+
             if (Unsafe.SizeOf<T>() > _buffer.Length)
                 _buffer = new byte[Unsafe.SizeOf<T>()];
 
