@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.ProbabilityDistributions;
+﻿using Fuzzlyn.Execution;
+using Fuzzlyn.ProbabilityDistributions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -32,6 +33,7 @@ namespace Fuzzlyn
             bool dumpOptions = false;
             bool? output = null;
             bool? executePrograms = null;
+            bool? enableChecksumming = null;
             OptionSet optionSet = new OptionSet
             {
                 { "seed=|s=", (ulong v) => seed = v },
@@ -45,6 +47,7 @@ namespace Fuzzlyn
                 { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
                 { "output-programs", "Output programs instead of feeding them directly to Roslyn", v => output = v != null },
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
+                { "checksum", v => enableChecksumming = v != null },
                 { "help|h", v => help = v != null }
             };
 
@@ -83,6 +86,8 @@ namespace Fuzzlyn
                 options.Parallelism = parallelism.Value;
             if (output.HasValue)
                 options.Output = output.Value;
+            if (enableChecksumming.HasValue)
+                options.EnableChecksumming = enableChecksumming.Value;
 
             if (options.NumPrograms > 1 && options.Seed.HasValue)
             {
@@ -143,11 +148,16 @@ namespace Fuzzlyn
 #endif
         }
 
-        private static readonly MetadataReference[] s_references = { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
+        private static readonly MetadataReference[] s_references =
+        {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location),
+        };
+
         private static readonly CSharpCompilationOptions[] s_optionMatrix =
         {
-            new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug),
-            new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release),
         };
 
         private static readonly object s_fileLock = new object();
@@ -217,8 +227,10 @@ namespace Fuzzlyn
             for (int i = 0; i < results.Count; i++)
             {
                 ProgramPairResults result = results[i];
-                if (result.Result1.ExceptionType != result.Result2.ExceptionType ||
-                    (result.Result1.ExceptionType != null && result.Result1.ExceptionType != typeof(DivideByZeroException).FullName))
+                bool checksumMismatch = result.Result1.Checksum != result.Result2.Checksum;
+                bool exceptionMismatch = result.Result1.ExceptionType != result.Result2.ExceptionType;
+
+                if (checksumMismatch || exceptionMismatch)
                 {
                     File.AppendAllText(
                         "Execution_Mismatch.txt",

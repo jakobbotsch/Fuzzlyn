@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Fuzzlyn
+namespace Fuzzlyn.Execution
 {
     internal static class ProgramExecutor
     {
@@ -21,21 +21,46 @@ namespace Fuzzlyn
         {
             ProgramResult result1 = RunAndGetResult(pair.Program1);
             ProgramResult result2 = RunAndGetResult(pair.Program2);
+            string unmatch1 = null;
+            string unmatch2 = null;
 
-            return new ProgramPairResults(result1, result2);
+            if (result1.Checksum != result2.Checksum)
+            {
+                int index;
+                for (index = 0; index < Math.Min(result1.Values.Count, result2.Values.Count); index++)
+                {
+                    var val1 = result1.Values[index];
+                    var val2 = result2.Values[index];
+                    if (val1 != val2)
+                        break;
+                }
+
+                if (index < result1.Values.Count)
+                    unmatch1 = result1.Values[index];
+                if (index < result2.Values.Count)
+                    unmatch2 = result2.Values[index];
+            }
+
+            return new ProgramPairResults(result1, result2, unmatch1, unmatch2);
 
             ProgramResult RunAndGetResult(byte[] bytes)
             {
                 Assembly asm = Assembly.Load(bytes);
-                Action entryPoint = (Action)Delegate.CreateDelegate(typeof(Action), asm.EntryPoint);
-                try
+                MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
+                Action<IRuntime> entryPoint = (Action<IRuntime>)Delegate.CreateDelegate(typeof(Action<IRuntime>), mainMethodInfo);
+                using (var runtime = new Runtime())
                 {
-                    entryPoint();
-                    return new ProgramResult(null, null, null);
-                }
-                catch (Exception ex)
-                {
-                    return new ProgramResult(ex.GetType().FullName, ex.ToString(), ex.StackTrace);
+                    Exception ex = null;
+                    try
+                    {
+                        entryPoint(runtime);
+                    }
+                    catch (Exception caughtEx)
+                    {
+                        ex = caughtEx;
+                    }
+
+                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, runtime.Values);
                 }
             }
         }
@@ -43,9 +68,6 @@ namespace Fuzzlyn
         // Launches a new instance of Fuzzlyn to run the specified programs in.
         public static List<ProgramPairResults> RunSeparately(List<ProgramPair> programs)
         {
-            string tempPath = Path.GetTempFileName();
-            File.WriteAllText(tempPath, JsonConvert.SerializeObject(programs));
-
             string dotnet;
             using (Process proc = Process.GetCurrentProcess())
             using (ProcessModule mm = proc.MainModule)
@@ -91,27 +113,37 @@ namespace Fuzzlyn
 
     internal class ProgramPairResults
     {
-        public ProgramPairResults(ProgramResult result1, ProgramResult result2)
+        public ProgramPairResults(
+            ProgramResult result1, ProgramResult result2,
+            string firstUnmatch1, string firstUnmatch2)
         {
             Result1 = result1;
             Result2 = result2;
+            FirstUnmatch1 = firstUnmatch1;
+            FirstUnmatch2 = firstUnmatch2;
         }
 
         public ProgramResult Result1 { get; }
         public ProgramResult Result2 { get; }
+        public string FirstUnmatch1 { get; }
+        public string FirstUnmatch2 { get; }
     }
 
     internal class ProgramResult
     {
-        public ProgramResult(string exceptionType, string exceptionText, string exceptionStackTrace)
+        public ProgramResult(string checksum, string exceptionType, string exceptionText, string exceptionStackTrace, List<string> values)
         {
+            Checksum = checksum;
             ExceptionType = exceptionType;
             ExceptionText = exceptionText;
             ExceptionStackTrace = exceptionStackTrace;
+            Values = values;
         }
 
+        public string Checksum { get; }
         public string ExceptionType { get; }
         public string ExceptionText { get; }
         public string ExceptionStackTrace { get; }
+        public List<string> Values { get; }
     }
 }

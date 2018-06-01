@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace Fuzzlyn
@@ -32,11 +33,9 @@ namespace Fuzzlyn
 
         private ulong GenSeed()
         {
-            byte[] bytes = new byte[8];
-            using (var rng = RandomNumberGenerator.Create())
-                rng.GetBytes(bytes);
-
-            return BitConverter.ToUInt64(bytes, 0);
+            Span<byte> bytes = stackalloc byte[8];
+            RandomNumberGenerator.Fill(bytes);
+            return Unsafe.ReadUnaligned<ulong>(ref bytes[0]);
         }
     }
 }

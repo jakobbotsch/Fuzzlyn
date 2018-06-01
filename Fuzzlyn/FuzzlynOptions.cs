@@ -12,6 +12,7 @@ namespace Fuzzlyn
         public int NumPrograms { get; set; } = 1;
         public int Parallelism { get; set; } = 1;
         public bool Output { get; set; } = false;
+        public bool EnableChecksumming { get; set; } = true;
         // Probability that we pick a class when generating a new type. Otherwise we make a struct.
         public double MakeClassProb { get; set; } = 0.5;
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.

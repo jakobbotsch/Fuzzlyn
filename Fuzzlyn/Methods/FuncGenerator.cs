@@ -77,10 +77,7 @@ namespace Fuzzlyn.Methods
                 ParameterTypes = Array.Empty<FuzzType>();
 
             _level = -1;
-            _scope.Add(new ScopeFrame());
-            _scope.Last().Variables.AddRange(ParameterTypes.Select((p, i) => new VariableIdentifier(p, $"arg{i}")));
             Body = GenBlock(ReturnType != null);
-            _scope.RemoveAt(0);
         }
 
         private StatementSyntax GenStatement()
@@ -128,13 +125,20 @@ namespace Fuzzlyn.Methods
             return rand < levelPow / (levelPow + Math.Pow(h, n));
         }
 
-        private BlockSyntax GenBlock(bool forceReturn)
+        private BlockSyntax GenBlock(bool root)
         {
             int numStatements = Random.Options.BlockStatementCountDist.Sample(Random.Rng);
 
             _level++;
-            _scope.Add(new ScopeFrame());
+
+            ScopeFrame scope = new ScopeFrame();
+            _scope.Add(scope);
+
+            if (root)
+                scope.Variables.AddRange(ParameterTypes.Select((p, i) => new VariableIdentifier(p, $"arg{i}")));
+
             BlockSyntax block = Block(GenStatements());
+
             _scope.RemoveAt(_scope.Count - 1);
             _level--;
 
@@ -142,11 +146,30 @@ namespace Fuzzlyn.Methods
 
             IEnumerable<StatementSyntax> GenStatements()
             {
+                StatementSyntax retStmt = null;
                 for (int i = 0; i < numStatements; i++)
-                    yield return GenStatement();
+                {
+                    StatementSyntax stmt = GenStatement();
+                    if (stmt is ReturnStatementSyntax)
+                    {
+                        retStmt = stmt;
+                        break;
+                    }
 
-                if (forceReturn)
-                    yield return GenReturn();
+                    yield return stmt;
+                }
+
+                if (root && retStmt == null)
+                    retStmt = GenReturn();
+
+                if (Random.Options.EnableChecksumming)
+                {
+                    foreach (StatementSyntax stmt in GenChecksumming(scope.Variables))
+                        yield return stmt;
+                }
+
+                if (retStmt != null)
+                    yield return retStmt;
             }
         }
 
@@ -203,9 +226,21 @@ namespace Fuzzlyn.Methods
                 assignmentKind == SyntaxKind.RightShiftAssignmentExpression)
                 type = Types.GetPrimitiveType(SyntaxKind.IntKeyword);
 
-            return
-                ExpressionStatement(
-                    AssignmentExpression(assignmentKind, lhs, GenExpression(type)));
+            ExpressionSyntax right = GenExpression(type);
+            if (assignmentKind == SyntaxKind.ModuloAssignmentExpression ||
+                assignmentKind == SyntaxKind.DivideAssignmentExpression)
+            {
+                right =
+                    CastExpression(
+                        type.GenReferenceTo(),
+                        ParenthesizedExpression(
+                            BinaryExpression(
+                                SyntaxKind.BitwiseOrExpression,
+                                ParenthesizeIfNecessary(right),
+                                LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(1)))));
+            }
+
+            return ExpressionStatement(AssignmentExpression(assignmentKind, lhs, right));
         }
 
         private StatementSyntax GenCallStatement(bool tryExisting)
@@ -304,13 +339,19 @@ namespace Fuzzlyn.Methods
             foreach (ScopeFrame sf in _scope)
             {
                 foreach (VariableIdentifier variable in sf.Variables)
-                    AddPathsRecursive(IdentifierName(variable.Name), variable.Type);
+                    CollectVariablePaths(paths, variable, filter);
             }
 
             foreach (StaticField stat in Statics.Fields)
-                AddPathsRecursive(IdentifierName(stat.Var.Name), stat.Var.Type);
+                CollectVariablePaths(paths, stat.Var, filter);
 
             return paths.Count > 0 ? Random.NextElement(paths) : (null, null);
+
+        }
+
+        private static void CollectVariablePaths(List<(ExpressionSyntax, FuzzType)> paths, VariableIdentifier var, Func<FuzzType, bool> filter)
+        {
+            AddPathsRecursive(IdentifierName(var.Name), var.Type);
 
             void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType)
             {
@@ -403,7 +444,8 @@ namespace Fuzzlyn.Methods
                 expr is PostfixUnaryExpressionSyntax ||
                 expr is PrefixUnaryExpressionSyntax ||
                 expr is ElementAccessExpressionSyntax ||
-                expr is InvocationExpressionSyntax)
+                expr is InvocationExpressionSyntax ||
+                expr is CastExpressionSyntax)
             {
                 return expr;
             }
@@ -424,6 +466,17 @@ namespace Fuzzlyn.Methods
             ExpressionSyntax right = GenExpression(rightType);
             while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
                 right = GenExpression(rightType);
+
+            if (op == SyntaxKind.ModuloExpression || op == SyntaxKind.DivideExpression)
+            {
+                right = CastExpression(
+                    rightType.GenReferenceTo(),
+                    ParenthesizedExpression(
+                        BinaryExpression(
+                            SyntaxKind.BitwiseOrExpression,
+                            ParenthesizeIfNecessary(right),
+                            LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(1)))));
+            }
 
             ExpressionSyntax expr = BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
             if (BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, rightType.Keyword) != type.Keyword)
@@ -515,6 +568,32 @@ namespace Fuzzlyn.Methods
         private ExpressionSyntax GenCast(FuzzType type)
         {
             return CastExpression(type.GenReferenceTo(), GenExpression(type));
+        }
+
+        internal static IEnumerable<StatementSyntax> GenChecksumming(IEnumerable<VariableIdentifier> variables)
+        {
+            List<(ExpressionSyntax, FuzzType)> paths = new List<(ExpressionSyntax, FuzzType)>();
+            foreach (VariableIdentifier variable in variables)
+                CollectVariablePaths(paths, variable, ft => ft is PrimitiveType);
+
+            foreach (var (pathExpr, pathType) in paths)
+            {
+                LiteralExpressionSyntax id =
+                    LiteralExpression(
+                        SyntaxKind.StringLiteralExpression,
+                        Literal(pathExpr.ToString()));
+
+                yield return
+                    ExpressionStatement(
+                        InvocationExpression(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("s_rt"),
+                                IdentifierName("Checksum")))
+                        .WithArgumentList(
+                            ArgumentList(
+                                SeparatedList(new[] { Argument(id), Argument(pathExpr) }))));
+            }
         }
     }
 
