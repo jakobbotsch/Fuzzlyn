@@ -36,9 +36,9 @@ namespace Fuzzlyn.Execution
                 }
 
                 if (index < result1.Values.Count)
-                    unmatch1 = result1.Values[index];
+                    unmatch1 = result1.Values[index] + $" ({index})";
                 if (index < result2.Values.Count)
-                    unmatch2 = result2.Values[index];
+                    unmatch2 = result2.Values[index] + $" ({index})";
             }
 
             return new ProgramPairResults(result1, result2, unmatch1, unmatch2);
