@@ -10,7 +10,7 @@ namespace Fuzzlyn.Execution
     {
         private readonly HashAlgorithm _hash = SHA256.Create();
 
-        public List<string> Values { get; } = new List<string>();
+        public List<ChecksumSite> ChecksumSites { get; } = new List<ChecksumSite>();
 
         public string FinishHashCode()
         {
@@ -26,10 +26,11 @@ namespace Fuzzlyn.Execution
         private byte[] _buffer = new byte[0];
         public void Checksum<T>(string id, T val)
         {
+            // Some characters mess up the JSON, so write them as ints.
             if (typeof(T) == typeof(char))
-                Values.Add(id + ": " + (int)(char)(object)val);
+                ChecksumSites.Add(new ChecksumSite(id, ((int)(char)(object)val).ToString()));
             else
-                Values.Add(id + ": " + val);
+                ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
 
             if (Unsafe.SizeOf<T>() > _buffer.Length)
                 _buffer = new byte[Unsafe.SizeOf<T>()];

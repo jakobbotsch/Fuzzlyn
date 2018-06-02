@@ -13,6 +13,8 @@ namespace Fuzzlyn
 {
     internal class CodeGenerator
     {
+        private int checksumSiteId;
+
         public CodeGenerator(FuzzlynOptions options)
         {
             Options = options;
@@ -29,7 +31,7 @@ namespace Fuzzlyn
         public MethodManager Methods { get; }
 
         internal void GenerateTypes() => Types.GenerateTypes();
-        internal void GenerateMethods() => Methods.GenerateMethods();
+        internal void GenerateMethods() => Methods.GenerateMethods(GenerateChecksumSiteId);
 
         public CompilationUnitSyntax OutputProgram(bool includeComments)
         {
@@ -112,11 +114,13 @@ namespace Fuzzlyn
 
                 if (Options.EnableChecksumming)
                 {
-                    foreach (StatementSyntax checksumStatement in FuncGenerator.GenChecksumming(Statics.Fields.Select(s => s.Var)))
+                    foreach (StatementSyntax checksumStatement in FuncGenerator.GenChecksumming(Statics.Fields.Select(s => s.Var), GenerateChecksumSiteId))
                         yield return checksumStatement;
                 }
             }
         }
+
+        private string GenerateChecksumSiteId() => $"c_{checksumSiteId++}";
 
         private IEnumerable<string> OutputHeader()
         {

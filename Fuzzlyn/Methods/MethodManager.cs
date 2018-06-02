@@ -24,9 +24,9 @@ namespace Fuzzlyn.Methods
         public TypeManager Types { get; }
         public StaticsManager Statics { get; }
 
-        internal void GenerateMethods()
+        internal void GenerateMethods(Func<string> genChecksumSiteId)
         {
-            FuncGenerator gen = new FuncGenerator(_funcs, Random, Types, Statics);
+            FuncGenerator gen = new FuncGenerator(_funcs, Random, Types, Statics, genChecksumSiteId);
             gen.Generate(null, false);
         }
 

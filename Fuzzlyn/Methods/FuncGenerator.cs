@@ -19,15 +19,22 @@ namespace Fuzzlyn.Methods
         private readonly List<ScopeFrame> _scope = new List<ScopeFrame>();
         private readonly List<FuncGenerator> _funcs;
         private readonly int _funcIndex;
-        private int _counter;
+        private int _varCounter;
         private int _level;
+        private readonly Func<string> _genChecksumSiteId;
 
-        public FuncGenerator(List<FuncGenerator> funcs, Randomizer random, TypeManager types, StaticsManager statics)
+        public FuncGenerator(
+            List<FuncGenerator> funcs,
+            Randomizer random,
+            TypeManager types,
+            StaticsManager statics,
+            Func<string> genChecksumSiteId)
         {
             _funcs = funcs;
             Random = random;
             Types = types;
             Statics = statics;
+            _genChecksumSiteId = genChecksumSiteId;
 
             _funcIndex = funcs.Count;
             Name = $"M{funcs.Count}";
@@ -157,7 +164,7 @@ namespace Fuzzlyn.Methods
 
                 if (Options.EnableChecksumming)
                 {
-                    foreach (StatementSyntax stmt in GenChecksumming(scope.Variables))
+                    foreach (StatementSyntax stmt in GenChecksumming(scope.Variables, _genChecksumSiteId))
                         yield return stmt;
                 }
 
@@ -178,7 +185,7 @@ namespace Fuzzlyn.Methods
                 type = Types.PickType();
                 if (Random.FlipCoin(Options.NewVarIsLocalProb))
                 {
-                    VariableIdentifier variable = new VariableIdentifier(type, $"var{_counter++}");
+                    VariableIdentifier variable = new VariableIdentifier(type, $"var{_varCounter++}");
 
                     LocalDeclarationStatementSyntax decl =
                         LocalDeclarationStatement(
@@ -485,7 +492,7 @@ namespace Fuzzlyn.Methods
             {
                 type = type ?? Types.PickType();
 
-                func = new FuncGenerator(_funcs, Random, Types, Statics);
+                func = new FuncGenerator(_funcs, Random, Types, Statics, _genChecksumSiteId);
                 func.Generate(type, true);
             }
             else
@@ -563,7 +570,7 @@ namespace Fuzzlyn.Methods
             return CastExpression(type.GenReferenceTo(), GenExpression(type));
         }
 
-        internal static IEnumerable<StatementSyntax> GenChecksumming(IEnumerable<VariableIdentifier> variables)
+        internal static IEnumerable<StatementSyntax> GenChecksumming(IEnumerable<VariableIdentifier> variables, Func<string> siteIdGenerator)
         {
             List<(ExpressionSyntax, FuzzType)> paths = new List<(ExpressionSyntax, FuzzType)>();
             foreach (VariableIdentifier variable in variables)
@@ -571,12 +578,13 @@ namespace Fuzzlyn.Methods
 
             foreach (var (pathExpr, pathType) in paths)
             {
+                string checksumSiteId = siteIdGenerator();
                 LiteralExpressionSyntax id =
                     LiteralExpression(
                         SyntaxKind.StringLiteralExpression,
-                        Literal(pathExpr.ToString()));
+                        Literal(checksumSiteId));
 
-                yield return
+                ExpressionStatementSyntax stmt = 
                     ExpressionStatement(
                         InvocationExpression(
                             MemberAccessExpression(
@@ -586,6 +594,8 @@ namespace Fuzzlyn.Methods
                         .WithArgumentList(
                             ArgumentList(
                                 SeparatedList(new[] { Argument(id), Argument(pathExpr) }))));
+
+                yield return stmt.WithAdditionalAnnotations(new SyntaxAnnotation("ChecksumSiteId", checksumSiteId));
             }
         }
     }

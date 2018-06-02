@@ -21,24 +21,24 @@ namespace Fuzzlyn.Execution
         {
             ProgramResult result1 = RunAndGetResult(pair.Program1);
             ProgramResult result2 = RunAndGetResult(pair.Program2);
-            string unmatch1 = null;
-            string unmatch2 = null;
+            ChecksumSite unmatch1 = null;
+            ChecksumSite unmatch2 = null;
 
             if (result1.Checksum != result2.Checksum)
             {
                 int index;
-                for (index = 0; index < Math.Min(result1.Values.Count, result2.Values.Count); index++)
+                for (index = 0; index < Math.Min(result1.ChecksumSites.Count, result2.ChecksumSites.Count); index++)
                 {
-                    var val1 = result1.Values[index];
-                    var val2 = result2.Values[index];
+                    ChecksumSite val1 = result1.ChecksumSites[index];
+                    ChecksumSite val2 = result2.ChecksumSites[index];
                     if (val1 != val2)
                         break;
                 }
 
-                if (index < result1.Values.Count)
-                    unmatch1 = result1.Values[index] + $" ({index})";
-                if (index < result2.Values.Count)
-                    unmatch2 = result2.Values[index] + $" ({index})";
+                if (index < result1.ChecksumSites.Count)
+                    unmatch1 = result1.ChecksumSites[index];
+                if (index < result2.ChecksumSites.Count)
+                    unmatch2 = result2.ChecksumSites[index];
             }
 
             return new ProgramPairResults(result1, result2, unmatch1, unmatch2);
@@ -60,7 +60,7 @@ namespace Fuzzlyn.Execution
                         ex = caughtEx;
                     }
 
-                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, runtime.Values);
+                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, runtime.ChecksumSites);
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace Fuzzlyn.Execution
     {
         public ProgramPairResults(
             ProgramResult result1, ProgramResult result2,
-            string firstUnmatch1, string firstUnmatch2)
+            ChecksumSite firstUnmatch1, ChecksumSite firstUnmatch2)
         {
             Result1 = result1;
             Result2 = result2;
@@ -125,25 +125,31 @@ namespace Fuzzlyn.Execution
 
         public ProgramResult Result1 { get; }
         public ProgramResult Result2 { get; }
-        public string FirstUnmatch1 { get; }
-        public string FirstUnmatch2 { get; }
+        public ChecksumSite FirstUnmatch1 { get; }
+        public ChecksumSite FirstUnmatch2 { get; }
     }
 
     internal class ProgramResult
     {
-        public ProgramResult(string checksum, string exceptionType, string exceptionText, string exceptionStackTrace, List<string> values)
+        public ProgramResult(
+            string checksum,
+            string exceptionType,
+            string exceptionText,
+            string exceptionStackTrace,
+            List<ChecksumSite> checksumSites)
         {
             Checksum = checksum;
             ExceptionType = exceptionType;
             ExceptionText = exceptionText;
             ExceptionStackTrace = exceptionStackTrace;
-            Values = values;
+            ChecksumSites = checksumSites;
         }
 
         public string Checksum { get; }
         public string ExceptionType { get; }
         public string ExceptionText { get; }
         public string ExceptionStackTrace { get; }
-        public List<string> Values { get; }
+        [JsonIgnore]
+        public List<ChecksumSite> ChecksumSites { get; }
     }
 }
