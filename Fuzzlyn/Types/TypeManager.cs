@@ -18,6 +18,7 @@ namespace Fuzzlyn.Types
         }
 
         public Randomizer Random { get; }
+        public FuzzlynOptions Options => Random.Options;
 
         public AggregateType PickAggregateType()
             => _aggTypes.Count > 0 ? Random.NextElement(_aggTypes) : null;
@@ -46,9 +47,9 @@ namespace Fuzzlyn.Types
         public FuzzType PickType()
         {
             FuzzType type = PickExistingType();
-            int count = Random.Options.MakeArrayCountDist.Sample(Random.Rng);
+            int count = Options.MakeArrayCountDist.Sample(Random.Rng);
             for (int i = 0; i < count; i++)
-                type = type.MakeArrayType(Random.Options.ArrayRankDist.Sample(Random.Rng));
+                type = type.MakeArrayType(Options.ArrayRankDist.Sample(Random.Rng));
 
             return type;
         }
@@ -82,10 +83,10 @@ namespace Fuzzlyn.Types
 
             _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
 
-            int count = Random.Options.MakeAggregateTypeCountDist.Sample(Random.Rng);
+            int count = Options.MakeAggregateTypeCountDist.Sample(Random.Rng);
             for (int i = 0; i < count; i++)
             {
-                bool isClass = Random.FlipCoin(Random.Options.MakeClassProb);
+                bool isClass = Random.FlipCoin(Options.MakeClassProb);
                 string name = isClass ? "C" : "S";
                 name += _aggTypes.Count(t => t.IsClass == isClass);
                 _aggTypes.Add(GenerateAggregateType(isClass, name));
@@ -94,12 +95,12 @@ namespace Fuzzlyn.Types
 
         private AggregateType GenerateAggregateType(bool isClass, string name)
         {
-            int numFields = (isClass ? Random.Options.MaxClassFieldsDist : Random.Options.MaxStructFieldsDist).Sample(Random.Rng);
+            int numFields = (isClass ? Options.MaxClassFieldsDist : Options.MaxStructFieldsDist).Sample(Random.Rng);
             List<AggregateField> fields = new List<AggregateField>(numFields);
             for (int i = 0; i < numFields; i++)
             {
                 FuzzType type;
-                if (_aggTypes.Count > 0 && !Random.FlipCoin(Random.Options.PrimitiveFieldProb))
+                if (_aggTypes.Count > 0 && !Random.FlipCoin(Options.PrimitiveFieldProb))
                     type = Random.NextElement(_aggTypes);
                 else
                     type = Random.NextElement(_primitiveTypes);

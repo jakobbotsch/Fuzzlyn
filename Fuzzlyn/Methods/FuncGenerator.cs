@@ -36,6 +36,7 @@ namespace Fuzzlyn.Methods
         }
 
         public Randomizer Random { get; }
+        public FuzzlynOptions Options => Random.Options;
         public TypeManager Types { get; }
         public StaticsManager Statics { get; }
         public BlockSyntax Body { get; private set; }
@@ -70,7 +71,7 @@ namespace Fuzzlyn.Methods
 
             if (randomizeParams)
             {
-                int numArgs = Random.Options.MethodParameterCountDist.Sample(Random.Rng);
+                int numArgs = Options.MethodParameterCountDist.Sample(Random.Rng);
                 ParameterTypes = Enumerable.Range(0, numArgs).Select(i => Types.PickType()).ToArray();
             }
             else
@@ -84,34 +85,27 @@ namespace Fuzzlyn.Methods
         {
             while (true)
             {
-                try
+                StatementKind kind =
+                    (StatementKind)Options.StatementTypeDist.Sample(Random.Rng);
+
+                if ((kind == StatementKind.Block || kind == StatementKind.If) &&
+                    ShouldRejectRecursion())
+                    continue;
+
+                switch (kind)
                 {
-                    StatementKind kind =
-                        (StatementKind)Random.Options.StatementTypeDist.Sample(Random.Rng);
-
-                    if ((kind == StatementKind.Block || kind == StatementKind.If) &&
-                        ShouldRejectRecursion())
-                        continue;
-
-                    switch (kind)
-                    {
-                        case StatementKind.Block:
-                            return GenBlock(false);
-                        case StatementKind.Assignment:
-                            return GenAssignmentStatement();
-                        case StatementKind.Call:
-                            return GenCallStatement(tryExisting: ShouldRejectRecursion());
-                        case StatementKind.If:
-                            return GenIf();
-                        case StatementKind.Return:
-                            return GenReturn();
-                        default:
-                            throw new Exception("Unreachable");
-                    }
-                }
-                catch (NotImplementedException)
-                {
-
+                    case StatementKind.Block:
+                        return GenBlock(false);
+                    case StatementKind.Assignment:
+                        return GenAssignmentStatement();
+                    case StatementKind.Call:
+                        return GenCallStatement(tryExisting: ShouldRejectRecursion());
+                    case StatementKind.If:
+                        return GenIf();
+                    case StatementKind.Return:
+                        return GenReturn();
+                    default:
+                        throw new Exception("Unreachable");
                 }
             }
         }
@@ -119,16 +113,14 @@ namespace Fuzzlyn.Methods
         private bool ShouldRejectRecursion()
         {
             double rand = Random.NextDouble();
-            double n = Random.Options.StatementRejectionLevelParameterN;
-            double h = Random.Options.StatementRejectionLevelParameterH;
+            double n = Options.StatementRejectionLevelParameterN;
+            double h = Options.StatementRejectionLevelParameterH;
             double levelPow = Math.Pow(_level, n);
             return rand < levelPow / (levelPow + Math.Pow(h, n));
         }
 
         private BlockSyntax GenBlock(bool root)
         {
-            int numStatements = Random.Options.BlockStatementCountDist.Sample(Random.Rng);
-
             _level++;
 
             ScopeFrame scope = new ScopeFrame();
@@ -146,6 +138,7 @@ namespace Fuzzlyn.Methods
 
             IEnumerable<StatementSyntax> GenStatements()
             {
+                int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
                 StatementSyntax retStmt = null;
                 for (int i = 0; i < numStatements; i++)
                 {
@@ -162,7 +155,7 @@ namespace Fuzzlyn.Methods
                 if (root && retStmt == null)
                     retStmt = GenReturn();
 
-                if (Random.Options.EnableChecksumming)
+                if (Options.EnableChecksumming)
                 {
                     foreach (StatementSyntax stmt in GenChecksumming(scope.Variables))
                         yield return stmt;
@@ -177,13 +170,13 @@ namespace Fuzzlyn.Methods
         {
             ExpressionSyntax lhs = null;
             FuzzType type = null;
-            if (!Random.FlipCoin(Random.Options.AssignToNewVarProb))
+            if (!Random.FlipCoin(Options.AssignToNewVarProb))
                 (lhs, type) = GenMemberAccess(ft => true);
 
             if (lhs == null)
             {
                 type = Types.PickType();
-                if (Random.FlipCoin(Random.Options.NewVarIsLocalProb))
+                if (Random.FlipCoin(Options.NewVarIsLocalProb))
                 {
                     VariableIdentifier variable = new VariableIdentifier(type, $"var{_counter++}");
 
@@ -207,7 +200,7 @@ namespace Fuzzlyn.Methods
             }
 
             SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
-            if (type.AllowedAdditionalAssignmentKinds.Length > 0 && Random.FlipCoin(Random.Options.FancyAssignmentProb))
+            if (type.AllowedAdditionalAssignmentKinds.Length > 0 && Random.FlipCoin(Options.FancyAssignmentProb))
                 assignmentKind = Random.NextElement(type.AllowedAdditionalAssignmentKinds);
 
             if (assignmentKind == SyntaxKind.PreIncrementExpression ||
@@ -285,7 +278,7 @@ namespace Fuzzlyn.Methods
             ExpressionSyntax gen;
             do
             {
-                ExpressionKind kind = (ExpressionKind)Random.Options.ExpressionTypeDist.Sample(Random.Rng);
+                ExpressionKind kind = (ExpressionKind)Options.ExpressionTypeDist.Sample(Random.Rng);
                 switch (kind)
                 {
                     case ExpressionKind.MemberAccess:
@@ -406,7 +399,7 @@ namespace Fuzzlyn.Methods
         {
             FuzzType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
             ExpressionSyntax left, right;
-            SyntaxKind op = (SyntaxKind)Random.Options.BinaryBoolDist.Sample(Random.Rng);
+            SyntaxKind op = (SyntaxKind)Options.BinaryBoolDist.Sample(Random.Rng);
             if (op == SyntaxKind.LogicalAndExpression || op == SyntaxKind.LogicalOrExpression ||
                 op == SyntaxKind.ExclusiveOrExpression || op == SyntaxKind.BitwiseAndExpression ||
                 op == SyntaxKind.BitwiseOrExpression)
@@ -456,7 +449,7 @@ namespace Fuzzlyn.Methods
         private ExpressionSyntax GenIntegralProducingBinary(PrimitiveType type)
         {
             Debug.Assert(type.Info.IsIntegral);
-            SyntaxKind op = (SyntaxKind)Random.Options.BinaryIntegralDist.Sample(Random.Rng);
+            SyntaxKind op = (SyntaxKind)Options.BinaryIntegralDist.Sample(Random.Rng);
             if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
                 return GenIntegralProducingBinary(type); // todo: handle. Needs separate table.
 
@@ -488,7 +481,7 @@ namespace Fuzzlyn.Methods
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
         {
             FuncGenerator func;
-            if (allowNew && Random.FlipCoin(Random.Options.GenNewMethodProb))
+            if (allowNew && Random.FlipCoin(Options.GenNewMethodProb))
             {
                 type = type ?? Types.PickType();
 
