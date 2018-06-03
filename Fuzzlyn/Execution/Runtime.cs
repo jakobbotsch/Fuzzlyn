@@ -26,11 +26,7 @@ namespace Fuzzlyn.Execution
         private byte[] _buffer = new byte[0];
         public void Checksum<T>(string id, T val)
         {
-            // Some characters mess up the JSON, so write them as ints.
-            if (typeof(T) == typeof(char))
-                ChecksumSites.Add(new ChecksumSite(id, ((int)(char)(object)val).ToString()));
-            else
-                ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
+            ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
 
             if (Unsafe.SizeOf<T>() > _buffer.Length)
                 _buffer = new byte[Unsafe.SizeOf<T>()];

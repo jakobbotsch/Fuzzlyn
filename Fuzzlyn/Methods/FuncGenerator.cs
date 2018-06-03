@@ -575,6 +575,11 @@ namespace Fuzzlyn.Methods
                         SyntaxKind.StringLiteralExpression,
                         Literal(checksumSiteId));
 
+                // Checksum chars as ints since they can be unprintable and we convert them to strings
+                ExpressionSyntax expr = pathExpr;
+                if (pathType is PrimitiveType pt && pt.Keyword == SyntaxKind.CharKeyword)
+                    expr = CastExpression(PredefinedType(Token(SyntaxKind.IntKeyword)), expr);
+
                 ExpressionStatementSyntax stmt = 
                     ExpressionStatement(
                         InvocationExpression(
@@ -584,7 +589,7 @@ namespace Fuzzlyn.Methods
                                 IdentifierName("Checksum")))
                         .WithArgumentList(
                             ArgumentList(
-                                SeparatedList(new[] { Argument(id), Argument(pathExpr) }))));
+                                SeparatedList(new[] { Argument(id), Argument(expr) }))));
 
                 yield return stmt.WithAdditionalAnnotations(new SyntaxAnnotation("ChecksumSiteId", checksumSiteId));
             }
