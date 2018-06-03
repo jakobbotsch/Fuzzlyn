@@ -688,6 +688,58 @@ namespace Fuzzlyn.Reduction
             return Block(local, newIf);
         }
 
+        // Combine code like "ulong var0; var0 = 123" to "ulong var0 = 123"
+        [Simplifier]
+        private SyntaxNode CombineLocalAssignmentInBlock(SyntaxNode node)
+        {
+            if (!(node is BlockSyntax block))
+                return node;
+
+            List<(LocalDeclarationStatementSyntax local, ExpressionSyntax exp)> candidates
+                = new List<(LocalDeclarationStatementSyntax local, ExpressionSyntax exp)>();
+
+            for (int i = 0; i < block.Statements.Count - 1; i++)
+            {
+                StatementSyntax s1 = block.Statements[i];
+                StatementSyntax s2 = block.Statements[i+1];
+
+                if (!(s1 is LocalDeclarationStatementSyntax local) ||
+                    local.Declaration.Variables.Count != 1 ||
+                    local.Declaration.Variables[0].Initializer != null)
+                    continue;
+
+                if (!(s2 is ExpressionStatementSyntax expStmt) ||
+                    !(expStmt.Expression is AssignmentExpressionSyntax asgn) ||
+                    !(asgn.Left is IdentifierNameSyntax id) ||
+                    id.Identifier.Text != local.Declaration.Variables[0].Identifier.Text)
+                    continue;
+
+                candidates.Add((local, asgn.Right));
+            }
+
+            if (candidates.Count <= 0)
+                return node;
+
+            var candidate = candidates[_rng.Next(candidates.Count)];
+            LocalDeclarationStatementSyntax newLocal =
+                candidate.local
+                .WithDeclaration(
+                    candidate.local.Declaration.WithVariables(
+                        SingletonSeparatedList(
+                            candidate.local.Declaration.Variables[0].WithInitializer(
+                                EqualsValueClause(candidate.exp)))));
+
+            int index = block.Statements.IndexOf(candidate.local);
+            BlockSyntax newBlock =
+                block.WithStatements(
+                    block.Statements
+                    .RemoveAt(index) // local
+                    .RemoveAt(index) // assignment
+                    .Insert(index, newLocal)); // new local
+
+            return newBlock;
+        }
+
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
         {
             string name = MakeLocalName();
