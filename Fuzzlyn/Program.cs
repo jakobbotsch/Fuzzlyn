@@ -48,7 +48,7 @@ namespace Fuzzlyn
                     s => options = JsonConvert.DeserializeObject<FuzzlynOptions>(File.ReadAllText(s))
                 },
                 { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
-                { "output-programs", "Output programs instead of feeding them directly to Roslyn", v => output = v != null },
+                { "output-source", "Output program source instead of feeding them directly to Roslyn", v => output = v != null },
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
                 { "checksum", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
@@ -95,15 +95,21 @@ namespace Fuzzlyn
             if (reduce.HasValue)
                 options.Reduce = reduce.Value;
 
-            if (options.NumPrograms > 1 && options.Seed.HasValue)
+            if (options.NumPrograms != 1 && options.Seed.HasValue)
             {
-                Console.WriteLine("Warning: Specifying more than one program is incompatible with a starting seed. Removing starting seed.");
-                options.Seed = null;
+                Console.WriteLine("Error: Must specify exactly 1 program if a seed is specified.");
+                return;
+            }
+
+            if (options.NumPrograms != 1 && options.Output)
+            {
+                Console.WriteLine("Error: Must specify exactly 1 program if output is desired.");
+                return;
             }
 
             if (options.Reduce && !options.Seed.HasValue)
             {
-                Console.WriteLine("Error: Cannot reduce without a seed");
+                Console.WriteLine("Error: Cannot reduce without a seed.");
                 return;
             }
 
@@ -139,7 +145,6 @@ namespace Fuzzlyn
                 MaxDegreeOfParallelism = options.Parallelism
             };
 
-            StringBuilder sb = new StringBuilder();
             int numGenerated = 0;
             Parallel.For(0, options.NumPrograms, po, i =>
             {
@@ -148,10 +153,7 @@ namespace Fuzzlyn
                 if (options.Output)
                 {
                     string asString = unit.NormalizeWhitespace().ToFullString();
-                    lock (sb)
-                    {
-                        sb.AppendLine(asString);
-                    }
+                    Console.Write(asString);
                 }
                 else
                 {
@@ -163,8 +165,6 @@ namespace Fuzzlyn
                     Console.Title = $"{numGen}/{options.NumPrograms} programs generated";
 
             });
-
-            Console.Write(sb.ToString());
 
             ExecuteQueue();
         }
