@@ -355,24 +355,22 @@ namespace Fuzzlyn.Reduction
             Debug.Assert(target != null);
 
             List<StatementSyntax> finalStatements = new List<StatementSyntax>();
-            // For cases like
-            // char a = '0';
-            // M(a);
-            // where M is void M(uint b) { }
-            // we need to replace usages of b with (uint)a, not just a.
-            Dictionary<string, SyntaxNode> argReplacements =
-                target.ParameterList.Parameters
-                .Zip(invoc.ArgumentList.Arguments, (param, arg) => (param, arg))
-                .ToDictionary(
-                    t => t.param.Identifier.Text,
-                    t => (SyntaxNode)CastExpression(t.param.Type, IdentifierName(((IdentifierNameSyntax)t.arg.Expression).Identifier.Text)));
+            Dictionary<string, string> idReplacements = new Dictionary<string, string>();
+            // Since we may assign to arguments, we need to introduce a local for each argument.
+            // We also need to do this because a variable may go through an implicit conversion when
+            // being passed as an arg, so the assignments here replicate that as well.
+            foreach (var (param, arg) in target.ParameterList.Parameters.Zip(invoc.ArgumentList.Arguments, (p, a) => (p, a)))
+            {
+                var (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+                finalStatements.Add(argLocal);
+                idReplacements.Add(param.Identifier.Text, argLocalName);
+            }
 
-            // Give locals new names
-            Dictionary<string, string> localReplacements = new Dictionary<string, string>();
+            // Rename locals to avoid clashes
             foreach (VariableDeclaratorSyntax varDecl in
                 target.Body.DescendantNodes().OfType<VariableDeclaratorSyntax>())
             {
-                localReplacements.Add(varDecl.Identifier.Text, MakeLocalName());
+                idReplacements.Add(varDecl.Identifier.Text, MakeLocalName());
             }
 
             string valueName = null;
@@ -380,17 +378,10 @@ namespace Fuzzlyn.Reduction
             {
                 IEnumerable<SyntaxToken> tokens =
                     stmt.DescendantTokens()
-                        .Where(t => t.IsKind(SyntaxKind.IdentifierToken) && localReplacements.ContainsKey(t.Text));
+                        .Where(t => t.IsKind(SyntaxKind.IdentifierToken) && idReplacements.ContainsKey(t.Text));
 
                 StatementSyntax newStmt =
-                    stmt.ReplaceTokens(tokens, (orig, _) => Identifier(localReplacements[orig.Text]));
-
-                newStmt =
-                    newStmt.ReplaceNodes(
-                        newStmt.DescendantNodes()
-                        .OfType<IdentifierNameSyntax>()
-                        .Where(id => argReplacements.ContainsKey(id.Identifier.Text)),
-                        (orig, _) => argReplacements[orig.Identifier.Text]);
+                    stmt.ReplaceTokens(tokens, (orig, _) => Identifier(idReplacements[orig.Text]));
 
                 if (newStmt is ReturnStatementSyntax ret)
                 {

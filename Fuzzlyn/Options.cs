@@ -342,7 +342,7 @@ namespace NDesk.Options {
 		protected static T Parse<T> (string value, OptionContext c)
 		{
 			TypeConverter conv = TypeDescriptor.GetConverter (typeof (T));
-			T t = default (T);
+            T t = default;
 			try {
 				if (value != null)
 					t = (T) conv.ConvertFromString (value);
