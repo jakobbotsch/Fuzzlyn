@@ -743,7 +743,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyIfExtractCondition(SyntaxNode node)
         {
-            if (!(node is IfStatementSyntax @if))
+            if (!(node is IfStatementSyntax @if) || @if.Condition is IdentifierNameSyntax)
                 return node;
 
             var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
