@@ -474,8 +474,11 @@ namespace Fuzzlyn.Reduction
             if (!(node is ParenthesizedExpressionSyntax p))
                 return node;
 
-            if (Helpers.RequiresParentheses(p.Expression))
+            if (Helpers.RequiresParentheses(p.Expression) &&
+                !(node.Parent is EqualsValueClauseSyntax))
+            {
                 return node;
+            }
 
             return p.Expression;
         }
