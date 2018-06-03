@@ -283,20 +283,104 @@ namespace Fuzzlyn.Reduction
 
         // Inline calls. We only do this late since it is better to reduce each call before inlining.
         [Simplifier(Late = true)]
-        private SyntaxNode SimplifyInvocationInline(SyntaxNode node)
+        private SyntaxNode InlineCall(SyntaxNode node)
         {
-            if (!(node is ExpressionStatementSyntax statement) ||
-                !(statement.Expression is InvocationExpressionSyntax invoc) ||
-                !(invoc.Expression is IdentifierNameSyntax methodName))
+            if (!(node is ClassDeclarationSyntax cls))
                 return node;
 
-            MethodDeclarationSyntax target =
-                Reduced
-                .DescendantNodes()
-                .OfType<MethodDeclarationSyntax>()
-                .Single(m => m.Identifier.Text == methodName.Identifier.Text);
+            // We require invocations to be on the form
+            // M(var1, var2, ...)
+            // so we can simply replace parameters with those variables. We have other simplifications that rewrite
+            // invocations to that form.
+            List<InvocationExpressionSyntax> invocs =
+                cls.DescendantNodes()
+                .OfType<InvocationExpressionSyntax>()
+                .Where(i => i.Expression is IdentifierNameSyntax && i.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax))
+                .ToList();
 
-            return Block(target.Body.Statements.TakeWhile(s => !(s is ReturnStatementSyntax)));
+            if (invocs.Count <= 0)
+                return node;
+
+            InvocationExpressionSyntax invoc = invocs[_rng.Next(invocs.Count)];
+
+            MethodDeclarationSyntax target =
+                cls.DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
+
+            // Cannot yet inline functions that have multiple returns, or returns in different position than last...
+            int numReturns = target.Body.Statements.Count(s => s is ReturnStatementSyntax);
+            if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
+                return node;
+
+            Debug.Assert(target != null);
+
+            List<StatementSyntax> finalStatements = new List<StatementSyntax>();
+            // For cases like
+            // char a = '0';
+            // M(a);
+            // where M is void M(uint b) { }
+            // we need to replace usages of b with (uint)a, not just a.
+            Dictionary<string, SyntaxNode> argReplacements =
+                target.ParameterList.Parameters
+                .Zip(invoc.ArgumentList.Arguments, (param, arg) => (param, arg))
+                .ToDictionary(
+                    t => t.param.Identifier.Text,
+                    t => (SyntaxNode)CastExpression(t.param.Type, IdentifierName(((IdentifierNameSyntax)t.arg.Expression).Identifier.Text)));
+
+            // Give locals new names
+            Dictionary<string, string> localReplacements = new Dictionary<string, string>();
+            foreach (VariableDeclaratorSyntax varDecl in
+                target.Body.DescendantNodes().OfType<VariableDeclaratorSyntax>())
+            {
+                localReplacements.Add(varDecl.Identifier.Text, MakeLocalName());
+            }
+
+            string valueName = null;
+            foreach (StatementSyntax stmt in target.Body.Statements)
+            {
+                IEnumerable<SyntaxToken> tokens =
+                    stmt.DescendantTokens()
+                        .Where(t => t.IsKind(SyntaxKind.IdentifierToken) && localReplacements.ContainsKey(t.Text));
+
+                StatementSyntax newStmt =
+                    stmt.ReplaceTokens(tokens, (orig, _) => Identifier(localReplacements[orig.Text]));
+
+                newStmt =
+                    newStmt.ReplaceNodes(
+                        newStmt.DescendantNodes()
+                        .OfType<IdentifierNameSyntax>()
+                        .Where(id => argReplacements.ContainsKey(id.Identifier.Text)),
+                        (orig, _) => argReplacements[orig.Identifier.Text]);
+
+                if (newStmt is ReturnStatementSyntax ret)
+                {
+                    if (ret.Expression == null)
+                        continue;
+
+                    (newStmt, valueName) = MakeLocalDecl(ret.Expression, target.ReturnType);
+                }
+
+                finalStatements.Add(newStmt);
+            }
+
+            bool replaceUsage = !(invoc.Parent is ExpressionStatementSyntax);
+            Debug.Assert(!replaceUsage || valueName != null, "We need to replace usage but no return statement was found");
+
+            StatementSyntax containingInvoc = invoc.FirstAncestorOrSelf<StatementSyntax>();
+            if (replaceUsage)
+            {
+                finalStatements.Add(containingInvoc.ReplaceNode(invoc, IdentifierName(valueName)));
+            }
+
+            BlockSyntax containingBlock = invoc.FirstAncestorOrSelf<BlockSyntax>();
+            SyntaxNode newNode =
+                node.ReplaceNode(
+                    containingBlock,
+                    containingBlock.WithStatements(
+                        containingBlock.Statements.ReplaceRange(containingInvoc, finalStatements)));
+
+            return newNode;
         }
 
         // Remove statements
@@ -552,17 +636,7 @@ namespace Fuzzlyn.Reduction
                     continue;
                 }
 
-                string name = $"vr{_varCounter++}";
-                LocalDeclarationStatementSyntax local =
-                    LocalDeclarationStatement(
-                        VariableDeclaration(
-                            IdentifierName("var"),
-                            SingletonSeparatedList(
-                                VariableDeclarator(name)
-                                .WithInitializer(
-                                    EqualsValueClause(
-                                        arg.Expression)))));
-
+                var (local, name) = MakeLocalDecl(arg.Expression);
                 newVars.Add(local);
                 newArgs.Add(Argument(IdentifierName(name)));
             }
@@ -571,6 +645,25 @@ namespace Fuzzlyn.Reduction
             newBlock = newBlock.WithStatements(newBlock.Statements.InsertRange(statementIndex, newVars));
             return newBlock;
         }
+
+        private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
+        {
+            string name = MakeLocalName();
+
+            LocalDeclarationStatementSyntax local =
+                LocalDeclarationStatement(
+                    VariableDeclaration(
+                        type ?? IdentifierName("var"),
+                        SingletonSeparatedList(
+                            VariableDeclarator(name)
+                            .WithInitializer(
+                                EqualsValueClause(
+                                    expr)))));
+
+            return (local, name);
+        }
+
+        private string MakeLocalName() => $"vr{_varCounter++}";
 
         [AttributeUsage(AttributeTargets.Method)]
         private class SimplifierAttribute : Attribute
