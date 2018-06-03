@@ -43,11 +43,11 @@ namespace Fuzzlyn.Reduction
                 throw new InvalidOperationException("Program has compile errors: " + Environment.NewLine + errorString);
             }
 
-            Func<CompilationUnitSyntax, bool> isBad;
+            Func<CompilationUnitSyntax, bool> isInteresting;
             if (debug.RoslynException != null || release.RoslynException != null)
             {
                 CSharpCompilationOptions opts = debug.RoslynException != null ? Compiler.DebugOptions : Compiler.ReleaseOptions;
-                isBad = program => Compiler.Compile(program, opts).RoslynException != null;
+                isInteresting = program => Compiler.Compile(program, opts).RoslynException != null;
             }
             else
             {
@@ -59,20 +59,12 @@ namespace Fuzzlyn.Reduction
                     throw new InvalidOperationException("Program has no errors");
                 }
 
-                isBad = prog =>
+                isInteresting = prog =>
                 {
-                    CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
-                    CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
-
-                    //Debug.Assert(progDebug.Assembly != null && progRelease.Assembly != null);
-                    if (progDebug.Assembly == null || progRelease.Assembly == null)
+                    ProgramPairResults results = CompileAndRun(prog);
+                    if (results == null)
                         return false;
 
-                    ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
-                    if (pair == null)
-                        return false;
-
-                    ProgramPairResults results = ProgramExecutor.RunPair(pair);
                     // Do exceptions first because they will almost always change checksum
                     if (origResults.DebugResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
                     {
@@ -138,7 +130,7 @@ namespace Fuzzlyn.Reduction
                         foreach (SyntaxNode candidateNode in simplifiedNodes)
                         {
                             CompilationUnitSyntax candidate = Reduced.ReplaceNode(node, candidateNode);
-                            if (isBad(candidate))
+                            if (isInteresting(candidate))
                             {
                                 Reduced = candidate;
                                 return true;
@@ -152,14 +144,61 @@ namespace Fuzzlyn.Reduction
                 }
             }
 
+            List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
+
             SimplifyRuntime();
             double oldSizeKB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
             double newSizeKB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
             SyntaxTriviaList newTrivia =
-                originalTrivia.Add(Comment(FormattableString.Invariant($"// Reduced from {oldSizeKB:F1} KB to {newSizeKB:F1} KB")));
+                originalTrivia.Add(Comment(FormattableString.Invariant($"// Reduced from {oldSizeKB:F1} KB to {newSizeKB:F1} KB")))
+                              .AddRange(outputComments);
+
             Reduced = Reduced.WithLeadingTrivia(newTrivia);
 
             return Reduced;
+        }
+
+        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog)
+        {
+            CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
+            CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
+
+            if (progDebug.Assembly == null || progRelease.Assembly == null)
+                return null;
+
+            ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
+            ProgramPairResults results = ProgramExecutor.RunPair(pair);
+            return results;
+        }
+
+        private IEnumerable<string> GetOutputComments(CompileResult ogDebugCompile, CompileResult ogRelCompile)
+        {
+            if (ogDebugCompile.RoslynException != null)
+            {
+                yield return $"// Roslyn throws '{ogDebugCompile.RoslynException.GetType()}' when compiling in debug";
+                yield break;
+            }
+            if (ogRelCompile.RoslynException != null)
+            {
+                yield return $"// Roslyn throws '{ogRelCompile.RoslynException.GetType()}' when compiling in release";
+                yield break;
+            }
+
+            ProgramPairResults results = CompileAndRun(Reduced);
+
+            yield return $"// Debug: {FormatResult(results.DebugResult, results.DebugFirstUnmatch)}";
+            yield return $"// Release: {FormatResult(results.ReleaseResult, results.ReleaseFirstUnmatch)}";
+
+            string FormatResult(ProgramResult result, ChecksumSite unmatch)
+            {
+                if (result.ExceptionType != null)
+                    return $"Throws '{result.ExceptionType}'";
+
+                if (unmatch != null)
+                    return $"Outputs '{unmatch.Value}'";
+
+                return "Runs successfully";
+            }
         }
 
         /// <summary>
