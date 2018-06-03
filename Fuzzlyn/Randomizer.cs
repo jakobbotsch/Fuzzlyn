@@ -11,7 +11,7 @@ namespace Fuzzlyn
         public Randomizer(FuzzlynOptions options)
         {
             Options = options;
-            Seed = options.Seed ?? GenSeed();
+            Seed = options.Seed ?? Rng.GenSeed();
             Rng = Rng.FromSplitMix64Seed(Seed);
         }
 
@@ -30,12 +30,5 @@ namespace Fuzzlyn
 
         public T NextElement<T>(IReadOnlyList<T> list)
             => list[Next(list.Count)];
-
-        private ulong GenSeed()
-        {
-            Span<byte> bytes = stackalloc byte[8];
-            RandomNumberGenerator.Fill(bytes);
-            return Unsafe.ReadUnaligned<ulong>(ref bytes[0]);
-        }
     }
 }

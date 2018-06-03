@@ -438,19 +438,10 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax ParenthesizeIfNecessary(ExpressionSyntax expr)
         {
-            if (expr is IdentifierNameSyntax ||
-                expr is LiteralExpressionSyntax ||
-                expr is MemberAccessExpressionSyntax ||
-                expr is PostfixUnaryExpressionSyntax ||
-                expr is PrefixUnaryExpressionSyntax ||
-                expr is ElementAccessExpressionSyntax ||
-                expr is InvocationExpressionSyntax ||
-                expr is CastExpressionSyntax)
-            {
-                return expr;
-            }
+            if (Helpers.RequiresParentheses(expr))
+                return ParenthesizedExpression(expr);
 
-            return ParenthesizedExpression(expr);
+            return expr;
         }
 
         private ExpressionSyntax GenIntegralProducingBinary(PrimitiveType type)

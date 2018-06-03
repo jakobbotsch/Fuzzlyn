@@ -30,10 +30,17 @@ namespace Fuzzlyn
         public StaticsManager Statics { get; }
         public MethodManager Methods { get; }
 
-        internal void GenerateTypes() => Types.GenerateTypes();
-        internal void GenerateMethods() => Methods.GenerateMethods(GenerateChecksumSiteId);
+        private void GenerateTypes() => Types.GenerateTypes();
+        private void GenerateMethods() => Methods.GenerateMethods(GenerateChecksumSiteId);
 
-        public CompilationUnitSyntax OutputProgram(bool includeComments)
+        public CompilationUnitSyntax GenerateProgram(bool includeComments)
+        {
+            GenerateTypes();
+            GenerateMethods();
+            return OutputProgram(includeComments);
+        }
+
+        private CompilationUnitSyntax OutputProgram(bool includeComments)
         {
             CompilationUnitSyntax unit = CompilationUnit();
 

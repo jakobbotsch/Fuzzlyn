@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 namespace Fuzzlyn
 {
@@ -47,6 +48,13 @@ namespace Fuzzlyn
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong Rotl(ulong x, int k)
             => (x << k) | (x >> (64 - k));
+
+        internal static ulong GenSeed()
+        {
+            Span<byte> bytes = stackalloc byte[8];
+            RandomNumberGenerator.Fill(bytes);
+            return Unsafe.ReadUnaligned<ulong>(ref bytes[0]);
+        }
 
         public static Rng FromSplitMix64Seed(ulong seed)
         {

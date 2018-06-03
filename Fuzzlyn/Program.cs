@@ -1,5 +1,6 @@
 ﻿using Fuzzlyn.Execution;
 using Fuzzlyn.ProbabilityDistributions;
+using Fuzzlyn.Reduction;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,6 +16,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -34,6 +36,7 @@ namespace Fuzzlyn
             bool? output = null;
             bool? executePrograms = null;
             bool? enableChecksumming = null;
+            bool? reduce = null;
             OptionSet optionSet = new OptionSet
             {
                 { "seed=|s=", (ulong v) => seed = v },
@@ -48,6 +51,7 @@ namespace Fuzzlyn
                 { "output-programs", "Output programs instead of feeding them directly to Roslyn", v => output = v != null },
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
                 { "checksum", v => enableChecksumming = v != null },
+                { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "help|h", v => help = v != null }
             };
 
@@ -88,11 +92,19 @@ namespace Fuzzlyn
                 options.Output = output.Value;
             if (enableChecksumming.HasValue)
                 options.EnableChecksumming = enableChecksumming.Value;
+            if (reduce.HasValue)
+                options.Reduce = reduce.Value;
 
             if (options.NumPrograms > 1 && options.Seed.HasValue)
             {
                 Console.WriteLine("Warning: Specifying more than one program is incompatible with a starting seed. Removing starting seed.");
                 options.Seed = null;
+            }
+
+            if (options.Reduce && !options.Seed.HasValue)
+            {
+                Console.WriteLine("Error: Cannot reduce without a seed");
+                return;
             }
 
             if (dumpOptions)
@@ -101,7 +113,23 @@ namespace Fuzzlyn
                 return;
             }
 
-            GenerateProgram(options);
+            if (options.Reduce)
+                ReduceProgram(options);
+            else
+                GenerateProgram(options);
+
+#if DEBUG
+            Console.ReadLine();
+#endif
+        }
+
+        private static void ReduceProgram(FuzzlynOptions options)
+        {
+            var cg = new CodeGenerator(options);
+            CompilationUnitSyntax original = cg.GenerateProgram(true);
+            Reducer reducer = new Reducer(original, options.Seed.Value);
+            CompilationUnitSyntax reduced = reducer.Reduce();
+            Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
         }
 
         private static void GenerateProgram(FuzzlynOptions options)
@@ -116,11 +144,7 @@ namespace Fuzzlyn
             Parallel.For(0, options.NumPrograms, po, i =>
             {
                 CodeGenerator gen = new CodeGenerator(options);
-
-                gen.GenerateTypes();
-                gen.GenerateMethods();
-
-                CompilationUnitSyntax unit = gen.OutputProgram(options.Output);
+                CompilationUnitSyntax unit = gen.GenerateProgram(options.Output);
                 if (options.Output)
                 {
                     string asString = unit.NormalizeWhitespace().ToFullString();
@@ -143,73 +167,50 @@ namespace Fuzzlyn
             Console.Write(sb.ToString());
 
             ExecuteQueue();
-#if DEBUG
-            Console.ReadLine();
-#endif
         }
-
-        private static readonly MetadataReference[] s_references =
-        {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location),
-        };
-
-        private static readonly CSharpCompilationOptions[] s_optionMatrix =
-        {
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug),
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release),
-        };
 
         private static readonly object s_fileLock = new object();
         private static readonly List<(ulong, byte[], byte[])> s_programQueue = new List<(ulong, byte[], byte[])>();
         private static void Compile(CodeGenerator gen, CompilationUnitSyntax program)
         {
-            CSharpParseOptions parseOpts = new CSharpParseOptions(LanguageVersion.Latest);
-            SyntaxTree[] trees = { SyntaxTree(program, parseOpts) };
+            byte[] debug = DoCompilation(Compiler.DebugOptions);
+            byte[] release = DoCompilation(Compiler.ReleaseOptions);
 
-            List<byte[]> programs = new List<byte[]>();
-            foreach (CSharpCompilationOptions opt in s_optionMatrix)
-            {
-                CSharpCompilation comp = CSharpCompilation.Create("Random", trees, s_references, opt);
-                try
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        EmitResult result = comp.Emit(ms);
-
-                        if (result.Success)
-                        {
-                            programs.Add(ms.ToArray());
-                        }
-                        else
-                        {
-                            IEnumerable<Diagnostic> errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
-
-                            string logEntry =
-                                "seed: " + gen.Random.Seed + Environment.NewLine +
-                                string.Join(Environment.NewLine, errors.Select(d => "  " + d));
-
-                            lock (s_fileLock)
-                                File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
-                        }
-                    }
-                }
-                catch
-                {
-                    lock (s_fileLock)
-                        File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
-                }
-            }
-
-            if (programs.Count == 2)
+            if (debug != null && release != null)
             {
                 lock (s_programQueue)
                 {
-                    s_programQueue.Add((gen.Random.Seed, programs[0], programs[1]));
+                    s_programQueue.Add((gen.Random.Seed, debug, release));
 
                     if (s_programQueue.Count >= 100)
                         ExecuteQueue();
                 }
+            }
+
+            byte[] DoCompilation(CSharpCompilationOptions opts)
+            {
+                CompileResult comp = Compiler.Compile(program, opts);
+                if (comp.RoslynException != null)
+                {
+                    lock (s_fileLock)
+                        File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
+
+                    return null;
+                }
+
+                if (comp.CompileDiagnostics.Length > 0)
+                {
+                    IEnumerable<Diagnostic> errors = comp.CompileDiagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
+                    string logEntry =
+                        "seed: " + gen.Random.Seed + Environment.NewLine +
+                        string.Join(Environment.NewLine, errors.Select(d => "  " + d));
+                    lock (s_fileLock)
+                        File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
+
+                    return null;
+                }
+
+                return comp.Assembly;
             }
         }
 
@@ -227,8 +228,8 @@ namespace Fuzzlyn
             for (int i = 0; i < results.Count; i++)
             {
                 ProgramPairResults result = results[i];
-                bool checksumMismatch = result.Result1.Checksum != result.Result2.Checksum;
-                bool exceptionMismatch = result.Result1.ExceptionType != result.Result2.ExceptionType;
+                bool checksumMismatch = result.DebugResult.Checksum != result.ReleaseResult.Checksum;
+                bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
                 {

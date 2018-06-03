@@ -17,31 +17,31 @@ namespace Fuzzlyn.Execution
             Console.Write(JsonConvert.SerializeObject(results));
         }
 
-        private static ProgramPairResults RunPair(ProgramPair pair)
+        internal static ProgramPairResults RunPair(ProgramPair pair)
         {
-            ProgramResult result1 = RunAndGetResult(pair.Program1);
-            ProgramResult result2 = RunAndGetResult(pair.Program2);
+            ProgramResult debugResult = RunAndGetResult(pair.Debug);
+            ProgramResult releaseResult = RunAndGetResult(pair.Release);
             ChecksumSite unmatch1 = null;
             ChecksumSite unmatch2 = null;
 
-            if (result1.Checksum != result2.Checksum)
+            if (debugResult.Checksum != releaseResult.Checksum)
             {
                 int index;
-                for (index = 0; index < Math.Min(result1.ChecksumSites.Count, result2.ChecksumSites.Count); index++)
+                for (index = 0; index < Math.Min(debugResult.ChecksumSites.Count, releaseResult.ChecksumSites.Count); index++)
                 {
-                    ChecksumSite val1 = result1.ChecksumSites[index];
-                    ChecksumSite val2 = result2.ChecksumSites[index];
+                    ChecksumSite val1 = debugResult.ChecksumSites[index];
+                    ChecksumSite val2 = releaseResult.ChecksumSites[index];
                     if (val1 != val2)
                         break;
                 }
 
-                if (index < result1.ChecksumSites.Count)
-                    unmatch1 = result1.ChecksumSites[index];
-                if (index < result2.ChecksumSites.Count)
-                    unmatch2 = result2.ChecksumSites[index];
+                if (index < debugResult.ChecksumSites.Count)
+                    unmatch1 = debugResult.ChecksumSites[index];
+                if (index < releaseResult.ChecksumSites.Count)
+                    unmatch2 = releaseResult.ChecksumSites[index];
             }
 
-            return new ProgramPairResults(result1, result2, unmatch1, unmatch2);
+            return new ProgramPairResults(debugResult, releaseResult, unmatch1, unmatch2);
 
             ProgramResult RunAndGetResult(byte[] bytes)
             {
@@ -101,32 +101,32 @@ namespace Fuzzlyn.Execution
 
     internal class ProgramPair
     {
-        public ProgramPair(byte[] program1, byte[] program2)
+        public ProgramPair(byte[] debug, byte[] release)
         {
-            Program1 = program1;
-            Program2 = program2;
+            Debug = debug;
+            Release = release;
         }
 
-        public byte[] Program1 { get; }
-        public byte[] Program2 { get; }
+        public byte[] Debug { get; }
+        public byte[] Release { get; }
     }
 
     internal class ProgramPairResults
     {
         public ProgramPairResults(
-            ProgramResult result1, ProgramResult result2,
-            ChecksumSite firstUnmatch1, ChecksumSite firstUnmatch2)
+            ProgramResult debugResult, ProgramResult releaseResult,
+            ChecksumSite debugFirstUnmatch, ChecksumSite releaseFirstUnmatch)
         {
-            Result1 = result1;
-            Result2 = result2;
-            FirstUnmatch1 = firstUnmatch1;
-            FirstUnmatch2 = firstUnmatch2;
+            DebugResult = debugResult;
+            ReleaseResult = releaseResult;
+            DebugFirstUnmatch = debugFirstUnmatch;
+            ReleaseFirstUnmatch = releaseFirstUnmatch;
         }
 
-        public ProgramResult Result1 { get; }
-        public ProgramResult Result2 { get; }
-        public ChecksumSite FirstUnmatch1 { get; }
-        public ChecksumSite FirstUnmatch2 { get; }
+        public ProgramResult DebugResult { get; }
+        public ProgramResult ReleaseResult { get; }
+        public ChecksumSite DebugFirstUnmatch { get; }
+        public ChecksumSite ReleaseFirstUnmatch { get; }
     }
 
     internal class ProgramResult
