@@ -760,6 +760,39 @@ namespace Fuzzlyn.Reduction
             return newBlock;
         }
 
+        // Inlines locals of the form
+        // var a = b;
+        // All occurences of a are replaced by b.
+        [Simplifier]
+        private SyntaxNode InlineLocal(SyntaxNode node)
+        {
+            if (!(node is BlockSyntax block))
+                return node;
+
+            List<LocalDeclarationStatementSyntax> candidates =
+                block.Statements.OfType<LocalDeclarationStatementSyntax>()
+                .Where(l => l.Declaration.Variables.Count == 1 &&
+                            l.Declaration.Variables[0].Initializer?.Value is IdentifierNameSyntax)
+                .ToList();
+
+            if (candidates.Count <= 0)
+                return node;
+
+            LocalDeclarationStatementSyntax local = candidates[_rng.Next(candidates.Count)];
+            string toReplace = local.Declaration.Variables[0].Identifier.Text;
+            string replaceWith = ((IdentifierNameSyntax)local.Declaration.Variables[0].Initializer.Value).Identifier.Text;
+
+            BlockSyntax newNode =
+                block.WithStatements(block.Statements.Remove(local));
+
+            newNode =
+                newNode.ReplaceNodes(
+                    newNode.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id => id.Identifier.Text == toReplace),
+                    (orig, _) => IdentifierName(replaceWith));
+
+            return newNode;
+        }
+
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
         {
             string name = MakeLocalName();
