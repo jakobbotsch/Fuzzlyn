@@ -119,6 +119,11 @@ namespace Fuzzlyn.Reduction
                         Console.Title = $"Simplifying {name}. Iter: {i}";
 
                         SyntaxNode node = list[_rng.Next(list.Count)];
+                        // Do not optimize checksum args and call itself.
+                        // We still want to remove these statements, however, so we focus on the expression only.
+                        InvocationExpressionSyntax invocParent = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+                        if (invocParent != null && IsChecksumCall(invocParent))
+                            continue;
 
                         // If we fail at creating a new bad example, then we want to be able to restore the state
                         // so the reducer will not blow these up unnecessarily.
@@ -245,8 +250,7 @@ namespace Fuzzlyn.Reduction
                 }
 
                 // Convert s_rt.Checksum() calls to System.Console.WriteLine
-                if (expStmt.Expression is InvocationExpressionSyntax invoc && invoc.Expression is MemberAccessExpressionSyntax mem &&
-                    mem.Name.Identifier.Text == "Checksum")
+                if (expStmt.Expression is InvocationExpressionSyntax invoc && IsChecksumCall(invoc))
                 {
                     ArgumentSyntax arg = invoc.ArgumentList.Arguments[1];
                     ExpressionStatementSyntax newCall =
@@ -261,6 +265,12 @@ namespace Fuzzlyn.Reduction
             }
 
             Reduced = Reduced.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+        }
+
+        private bool IsChecksumCall(InvocationExpressionSyntax invoc)
+        {
+            return invoc.Expression is MemberAccessExpressionSyntax mem &&
+                   mem.Name.Identifier.Text == "Checksum";
         }
 
         private readonly List<(bool late, Func<SyntaxNode, SyntaxNode> simp)> _simplifiers =
@@ -620,6 +630,20 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyInvocationExtractArgs(SyntaxNode node)
         {
+            return SimplifyInvocationExtractArgsCore(node, false);
+        }
+
+        // Simplify an invocation by extracting only a single arg. In some cases
+        // we get rid of the interesting behavior by extracting all args, so we can
+        // fall back to this in that case (which is also why this is marked late).
+        [Simplifier(Late = true)]
+        private SyntaxNode SimplifyInvocationExtractArg(SyntaxNode node)
+        {
+            return SimplifyInvocationExtractArgsCore(node, true);
+        }
+
+        private SyntaxNode SimplifyInvocationExtractArgsCore(SyntaxNode node, bool single)
+        {
             // Simplify a random invocation in a block from
             // M(expr1, expr2)
             // or
@@ -630,35 +654,46 @@ namespace Fuzzlyn.Reduction
             // var arg1 = expr1;
             // var arg2 = expr2;
             // [var a = ] M(arg1, arg2)
+            // If 'single' is specified, only extract one random arg
 
             if (!(node is BlockSyntax block))
                 return node;
 
             List<InvocationExpressionSyntax> invocs = new List<InvocationExpressionSyntax>();
-            foreach (StatementSyntax stmt in block.Statements)
+            if (single)
             {
-                if (stmt is ExpressionStatementSyntax expStmt)
+                invocs.AddRange(
+                    block.DescendantNodes()
+                    .OfType<InvocationExpressionSyntax>()
+                    .Where(i => i.FirstAncestorOrSelf<BlockSyntax>() == block));
+            }
+            else
+            {
+                foreach (StatementSyntax stmt in block.Statements)
                 {
-                    if (expStmt.Expression is InvocationExpressionSyntax inv1)
-                        invocs.Add(inv1);
-                    else if (expStmt.Expression is AssignmentExpressionSyntax asgn &&
-                             asgn.Right is InvocationExpressionSyntax inv2)
+                    if (stmt is ExpressionStatementSyntax expStmt)
                     {
-                        invocs.Add(inv2);
+                        if (expStmt.Expression is InvocationExpressionSyntax inv1)
+                            invocs.Add(inv1);
+                        else if (expStmt.Expression is AssignmentExpressionSyntax asgn &&
+                                 asgn.Right is InvocationExpressionSyntax inv2)
+                        {
+                            invocs.Add(inv2);
+                        }
                     }
-                }
-                else if (stmt is LocalDeclarationStatementSyntax local &&
-                         local.Declaration.Variables.Count == 1 &&
-                         local.Declaration.Variables[0].Initializer?.Value is InvocationExpressionSyntax inv3)
-                {
-                    invocs.Add(inv3);
+                    else if (stmt is LocalDeclarationStatementSyntax local &&
+                             local.Declaration.Variables.Count == 1 &&
+                             local.Declaration.Variables[0].Initializer?.Value is InvocationExpressionSyntax inv3)
+                    {
+                        invocs.Add(inv3);
+                    }
                 }
             }
 
             // Remove ones that already have only variables as arguments, including ones with 0 arguments.
             invocs.RemoveAll(inv => inv.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax));
             // Remove checksums
-            invocs.RemoveAll(inv => inv.Expression is MemberAccessExpressionSyntax mem && mem.Name.Identifier.Text == "Checksum");
+            invocs.RemoveAll(IsChecksumCall);
 
             if (invocs.Count <= 0)
                 return node;
@@ -667,12 +702,28 @@ namespace Fuzzlyn.Reduction
             int statementIndex =
                 block.Statements.Select((s, i) => (s, i)).Single(t => t.s.Contains(invoc)).i;
 
+            int simplifyIndex = -1;
+            if (single)
+            {
+                List<int> simplifiableArgIndices =
+                    invoc.ArgumentList.Arguments
+                    .Select((a, i) => (a, i))
+                    .Where(t => !(t.a.Expression is IdentifierNameSyntax))
+                    .Select(t => t.i)
+                    .ToList();
+                if (simplifiableArgIndices.Count <= 0)
+                    return node;
+
+                simplifyIndex = simplifiableArgIndices[_rng.Next(simplifiableArgIndices.Count)];
+            }
+
             List<StatementSyntax> newVars = new List<StatementSyntax>();
             List<ArgumentSyntax> newArgs = new List<ArgumentSyntax>();
 
-            foreach (ArgumentSyntax arg in invoc.ArgumentList.Arguments)
+            for (int i = 0; i < invoc.ArgumentList.Arguments.Count; i++)
             {
-                if (arg.Expression is IdentifierNameSyntax id)
+                ArgumentSyntax arg = invoc.ArgumentList.Arguments[i];
+                if (arg.Expression is IdentifierNameSyntax id || (single && simplifyIndex != i))
                 {
                     newArgs.Add(arg);
                     continue;
