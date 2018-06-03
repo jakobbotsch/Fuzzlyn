@@ -646,6 +646,18 @@ namespace Fuzzlyn.Reduction
             return newBlock;
         }
 
+        // Extract a condition in an 'if' into a local variable.
+        [Simplifier]
+        private SyntaxNode SimplifyIfExtractCondition(SyntaxNode node)
+        {
+            if (!(node is IfStatementSyntax @if))
+                return node;
+
+            var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
+            IfStatementSyntax newIf = @if.WithCondition(IdentifierName(name));
+            return Block(local, newIf);
+        }
+
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
         {
             string name = MakeLocalName();
