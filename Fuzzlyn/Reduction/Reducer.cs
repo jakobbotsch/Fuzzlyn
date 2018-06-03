@@ -110,7 +110,10 @@ namespace Fuzzlyn.Reduction
 
                 while (true)
                 {
-                    if (!SimplifyOne("Members", Reduced.DescendantNodes().Where(n => n is MemberDeclarationSyntax).ToList()))
+                    List<SyntaxNode> members =
+                        Reduced.DescendantNodesAndSelf().Where(n => n is MemberDeclarationSyntax || n is CompilationUnitSyntax).ToList();
+
+                    if (!SimplifyOne("Members", members))
                         break;
                     any = true;
                 }
@@ -433,41 +436,56 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode RemoveMethodArgument(SyntaxNode node)
         {
-            if (!(node is ClassDeclarationSyntax cls))
+            if (!(node is CompilationUnitSyntax unit))
                 return node;
 
             List<(ParameterSyntax pm, int index)> methodParams =
-                cls.Members.OfType<MethodDeclarationSyntax>()
-                .Where(m => m.Identifier.Text != "Main").SelectMany(
-                    m => m.ParameterList.Parameters.Select((p, i) => (p, i))).ToList();
+                unit.DescendantNodes().OfType<BaseMethodDeclarationSyntax>()
+                .Where(m => !(m is MethodDeclarationSyntax normalMethod) || normalMethod.Identifier.Text != "Main")
+                .SelectMany(m => m.ParameterList.Parameters.Select((p, i) => (p, i))).ToList();
 
             if (methodParams.Count == 0)
                 return node;
 
             var (parameter, index) = methodParams[_rng.Next(methodParams.Count)];
-            MethodDeclarationSyntax method = (MethodDeclarationSyntax)parameter.Parent.Parent;
-            MethodDeclarationSyntax methodWithoutParam =
-                method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
+            BaseMethodDeclarationSyntax method = (BaseMethodDeclarationSyntax)parameter.Parent.Parent;
+            Func<SyntaxNode, bool> isInvoc;
+            Func<SyntaxNode, ArgumentListSyntax> getInvocArgs;
+            if (method is MethodDeclarationSyntax)
+            {
+                isInvoc = n => n is InvocationExpressionSyntax invoc &&
+                          invoc.Expression is IdentifierNameSyntax id &&
+                          id.Identifier.Text == ((MethodDeclarationSyntax)method).Identifier.Text;
+                getInvocArgs = n => ((InvocationExpressionSyntax)n).ArgumentList;
+            }
+            else if (method is ConstructorDeclarationSyntax)
+            {
+                isInvoc = n => n is ObjectCreationExpressionSyntax creation &&
+                               creation.Type is IdentifierNameSyntax id &&
+                               id.Identifier.Text == ((ConstructorDeclarationSyntax)method).Identifier.Text;
+                getInvocArgs = n => ((ObjectCreationExpressionSyntax)n).ArgumentList;
+            }
+            else
+                return node;
 
-            SyntaxNode newNode = cls.ReplaceNode(method, methodWithoutParam);
+            SyntaxNode methodWithoutParam =
+                method.ReplaceNode(
+                    method.ParameterList,
+                    method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
+
+            SyntaxNode newNode = unit.ReplaceNode(method, methodWithoutParam);
             while (true)
             {
-                InvocationExpressionSyntax invoc =
-                    newNode.DescendantNodes().OfType<InvocationExpressionSyntax>().FirstOrDefault(
-                        i =>
-                        {
-                            if (!(i.Expression is IdentifierNameSyntax id) || id.Identifier.Text != method.Identifier.Text)
-                                return false;
-
-                            return i.ArgumentList.Arguments.Count == method.ParameterList.Parameters.Count;
-                        });
+                SyntaxNode invoc =
+                    newNode.DescendantNodes().FirstOrDefault(
+                        i => isInvoc(i) && getInvocArgs(i).Arguments.Count == method.ParameterList.Parameters.Count);
 
                 if (invoc == null)
                     break;
 
-                ArgumentListSyntax newArgs =
-                    invoc.ArgumentList.WithArguments(invoc.ArgumentList.Arguments.RemoveAt(index));
-                newNode = newNode.ReplaceNode(invoc, invoc.WithArgumentList(newArgs));
+                ArgumentListSyntax args = getInvocArgs(invoc);
+                ArgumentListSyntax newArgs = args.WithArguments(args.Arguments.RemoveAt(index));
+                newNode = newNode.ReplaceNode(args, newArgs);
             }
 
             return newNode;
