@@ -701,20 +701,24 @@ namespace Fuzzlyn.Reduction
             for (int i = 0; i < block.Statements.Count - 1; i++)
             {
                 StatementSyntax s1 = block.Statements[i];
-                StatementSyntax s2 = block.Statements[i+1];
 
                 if (!(s1 is LocalDeclarationStatementSyntax local) ||
                     local.Declaration.Variables.Count != 1 ||
                     local.Declaration.Variables[0].Initializer != null)
                     continue;
 
-                if (!(s2 is ExpressionStatementSyntax expStmt) ||
-                    !(expStmt.Expression is AssignmentExpressionSyntax asgn) ||
-                    !(asgn.Left is IdentifierNameSyntax id) ||
-                    id.Identifier.Text != local.Declaration.Variables[0].Identifier.Text)
-                    continue;
+                for (int j = i + 1; j < block.Statements.Count; j++)
+                {
+                    StatementSyntax s2 = block.Statements[j];
+                    if (!(s2 is ExpressionStatementSyntax expStmt) ||
+                        !(expStmt.Expression is AssignmentExpressionSyntax asgn) ||
+                        !(asgn.Left is IdentifierNameSyntax id) ||
+                        id.Identifier.Text != local.Declaration.Variables[0].Identifier.Text)
+                        continue;
 
-                candidates.Add((local, asgn.Right));
+                    candidates.Add((local, asgn.Right));
+                    break;
+                }
             }
 
             if (candidates.Count <= 0)
@@ -729,13 +733,17 @@ namespace Fuzzlyn.Reduction
                             candidate.local.Declaration.Variables[0].WithInitializer(
                                 EqualsValueClause(candidate.exp)))));
 
-            int index = block.Statements.IndexOf(candidate.local);
+            StatementSyntax asgnStmt = (StatementSyntax)candidate.exp.Parent.Parent;
+            int localIndex = block.Statements.IndexOf(candidate.local);
+
             BlockSyntax newBlock =
                 block.WithStatements(
                     block.Statements
-                    .RemoveAt(index) // local
-                    .RemoveAt(index) // assignment
-                    .Insert(index, newLocal)); // new local
+                    .Replace(asgnStmt, newLocal)
+                    // for some reason this does not work with Remove(candidate.local)
+                    // I think the node changes with the parent for some reason.
+                    .RemoveAt(localIndex) 
+                    );
 
             return newBlock;
         }
