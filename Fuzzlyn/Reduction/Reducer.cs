@@ -191,13 +191,22 @@ namespace Fuzzlyn.Reduction
 
             string FormatResult(ProgramResult result, ChecksumSite unmatch)
             {
-                if (result.ExceptionType != null)
-                    return $"Throws '{result.ExceptionType}'";
+                if (results.DebugResult.ExceptionType != null ||
+                    results.ReleaseResult.ExceptionType != null)
+                {
+                    if (result.ExceptionType != null)
+                        return $"Throws '{result.ExceptionType}'";
+
+                    return "Runs successfully";
+                }
+
+                if (results.DebugResult.ChecksumSites.Count != results.ReleaseResult.ChecksumSites.Count)
+                    return $"Prints {result.ChecksumSites.Count} line(s)";
 
                 if (unmatch != null)
-                    return $"Outputs '{unmatch.Value}'";
+                    return $"Outputs {unmatch.Value}";
 
-                return "Runs successfully";
+                return "";
             }
         }
 
