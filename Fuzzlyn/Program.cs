@@ -39,8 +39,8 @@ namespace Fuzzlyn
             bool? reduce = null;
             OptionSet optionSet = new OptionSet
             {
-                { "seed=|s=", (ulong v) => seed = v },
-                { "parallelism=", "Number of cores to use.", (int? p) => parallelism = p },
+                { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
+                { "parallelism=", "Number of cores to use", (int? p) => parallelism = p },
                 { "num-programs=|n=", "Number of programs to generate", (int v) => numPrograms = v },
                 {
                     "options=",
@@ -48,20 +48,29 @@ namespace Fuzzlyn
                     s => options = JsonConvert.DeserializeObject<FuzzlynOptions>(File.ReadAllText(s))
                 },
                 { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
-                { "output-source", "Output program source instead of feeding them directly to Roslyn", v => output = v != null },
+                { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
-                { "checksum", v => enableChecksumming = v != null },
+                { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "help|h", v => help = v != null }
             };
 
+
+            string error = null;
             try
             {
-                optionSet.Parse(args);
+                List<string> leftover = optionSet.Parse(args);
+                if (leftover.Any())
+                    error = "Unknown arguments: " + string.Join(" ", leftover);
             }
             catch (OptionException ex)
             {
-                Console.WriteLine("Fuzzlyn: {0}", ex.Message);
+                error = ex.Message;
+            }
+
+            if (error != null)
+            {
+                Console.WriteLine("Fuzzlyn: {0}", error);
                 Console.WriteLine("Use --help for help.");
                 return;
             }
@@ -123,10 +132,6 @@ namespace Fuzzlyn
                 ReduceProgram(options);
             else
                 GenerateProgram(options);
-
-#if DEBUG
-            Console.ReadLine();
-#endif
         }
 
         private static void ReduceProgram(FuzzlynOptions options)
