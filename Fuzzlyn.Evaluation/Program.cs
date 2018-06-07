@@ -53,10 +53,12 @@ namespace Fuzzlyn.Evaluation
             stopwatch.Stop();
 
             var msPerProgram = stopwatch.ElapsedMilliseconds / iterations;
+            var avgSize = genTimes.Average(t => t.size);
 
             Console.WriteLine("DONE");
             Console.WriteLine($"Iterations: {iterations}");
             Console.WriteLine($"Average time: {msPerProgram} ms");
+            Console.WriteLine($"Average size: {avgSize} KiB");
 
             StringBuilder mathematicaData = new StringBuilder();
 
