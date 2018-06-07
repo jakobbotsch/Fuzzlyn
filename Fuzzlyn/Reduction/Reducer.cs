@@ -152,10 +152,10 @@ namespace Fuzzlyn.Reduction
             List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
 
             SimplifyRuntime();
-            double oldSizeKB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
-            double newSizeKB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
+            double oldSizeKiB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
+            double newSizeKiB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
             SyntaxTriviaList newTrivia =
-                originalTrivia.Add(Comment(FormattableString.Invariant($"// Reduced from {oldSizeKB:F1} KB to {newSizeKB:F1} KB")))
+                originalTrivia.Add(Comment(FormattableString.Invariant($"// Reduced from {oldSizeKiB:F1} KiB to {newSizeKiB:F1} KiB")))
                               .AddRange(outputComments);
 
             Reduced = Reduced.WithLeadingTrivia(newTrivia);
