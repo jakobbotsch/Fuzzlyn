@@ -7,10 +7,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
+[assembly: InternalsVisibleTo("Fuzzlyn.Evaluation")]
 namespace Fuzzlyn
 {
+
     internal class CodeGenerator
     {
         private int checksumSiteId;
