@@ -9,7 +9,7 @@ namespace Fuzzlyn.Evaluation
 {
     class Program
     {
-        private static int iterations = 1000;
+        private static int iterations = 10000;
 
         static void Main(string[] args)
         {
@@ -26,18 +26,19 @@ namespace Fuzzlyn.Evaluation
             Console.WriteLine("Running generation time performance test....");
 
             var options = new FuzzlynOptions();
-            var codeGen = new CodeGenerator(options);
 
             // Warm up.
-            codeGen.GenerateProgram(false);
+            var codeGenWarmUp = new CodeGenerator(options);
+            codeGenWarmUp.GenerateProgram(false);
 
             // Start timing.
             var stopwatch = Stopwatch.StartNew();
             
             for (int i = 0; i < iterations; i++) 
             {
+                options.Seed = (ulong?) i;
+                var codeGen = new CodeGenerator(options);
                 codeGen.GenerateProgram(false);
-                Console.WriteLine(i);
             }
 
             stopwatch.Stop();
@@ -54,18 +55,19 @@ namespace Fuzzlyn.Evaluation
             Console.WriteLine("Running size test ....");
 
             var options = new FuzzlynOptions();
-            var codeGen = new CodeGenerator(options);
 
             // Warm up.
-            codeGen.GenerateProgram(false);
+            var codeGenWarmUp = new CodeGenerator(options);
+            codeGenWarmUp.GenerateProgram(false);
 
             var generatedPrograms = new List<CompilationUnitSyntax>();
 
             for (int i = 0; i < iterations; i++)
             {
+                options.Seed = (ulong?) i;
+                var codeGen = new CodeGenerator(options);
                 var program = codeGen.GenerateProgram(false);
                 generatedPrograms.Add(program);
-                Console.WriteLine(i);
             }
 
             // Find size of all programs.
