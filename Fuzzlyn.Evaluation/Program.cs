@@ -2,46 +2,52 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Fuzzlyn;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
-using Fuzzlyn.Reduction;
+using System.Globalization;
 using System.IO;
+using System.Text;
+using Fuzzlyn.Reduction;
 
 namespace Fuzzlyn.Evaluation
 {
     class Program
     {
-        private static int iterations = 1;
+        private static int iterations = 10000;
 
         static void Main(string[] args)
         {
-            //TimeTest();
+            GenerationTest();
 
-            //Console.WriteLine(" ----- ");
-            //Console.WriteLine(" ----- ");
+            Console.WriteLine(" ----- ");
+            Console.WriteLine(" ----- ");
 
-            //SizeTest();
             ReduceTest();
         }
 
-        static void TimeTest()
+        static void GenerationTest()
         {
-            Console.WriteLine("Running generation time performance test....");
+            Console.WriteLine("Running generation tests....");
 
             var options = new FuzzlynOptions();
 
             // Warm up.
-            var codeGenWarmUp = new CodeGenerator(options);
-            codeGenWarmUp.GenerateProgram(false);
+            var codeGen = new CodeGenerator(options);
+            codeGen.GenerateProgram(false);
 
             // Start timing.
             var stopwatch = Stopwatch.StartNew();
-            
+
+            List<(double size, TimeSpan time)> genTimes = new List<(double size, TimeSpan time)>();
             for (int i = 0; i < iterations; i++) 
             {
-                options.Seed = (ulong?) i;
-                var codeGen = new CodeGenerator(options);
-                codeGen.GenerateProgram(false);
+                options.Seed = (ulong)i;
+                codeGen = new CodeGenerator(options);
+                var before = stopwatch.Elapsed;
+                var prog = codeGen.GenerateProgram(false);
+                var time = stopwatch.Elapsed - before;
+                genTimes.Add((prog.NormalizeWhitespace().ToString().Length / 1024.0, time));
             }
 
             stopwatch.Stop();
@@ -51,36 +57,25 @@ namespace Fuzzlyn.Evaluation
             Console.WriteLine("DONE");
             Console.WriteLine($"Iterations: {iterations}");
             Console.WriteLine($"Average time: {msPerProgram} ms");
-        }
 
-        static void SizeTest()
-        {
-            Console.WriteLine("Running size test ....");
+            StringBuilder mathematicaData = new StringBuilder();
 
-            var options = new FuzzlynOptions();
+            List<(double sizeCenter, double timeAvgMS)> groupTimes =
+                genTimes
+                .GroupBy(t => (int)(t.size / 5))
+                .Select(g => (g.Key * 5 + 2.5, g.Average(t => t.time.TotalMilliseconds)))
+                .OrderBy(t => t.Item1)
+                .ToList();
+            string groupsStr =
+                string.Join(
+                    ",",
+                    groupTimes.Select(t => string.Format(CultureInfo.InvariantCulture, "{{{0}, {1}}}", t.sizeCenter, t.timeAvgMS)));
 
-            // Warm up.
-            var codeGenWarmUp = new CodeGenerator(options);
-            codeGenWarmUp.GenerateProgram(false);
-
-            var generatedPrograms = new List<CompilationUnitSyntax>();
-
-            for (int i = 0; i < iterations; i++)
-            {
-                options.Seed = (ulong?) i;
-                var codeGen = new CodeGenerator(options);
-                var program = codeGen.GenerateProgram(false);
-                generatedPrograms.Add(program);
-            }
-
+            mathematicaData.AppendLine($"times = {{{groupsStr}}};");
             // Find size of all programs.
-            var avgSize = generatedPrograms.Average((p) => p.ToString().Length / 1024.0);
-
-            Console.WriteLine("DONE");
-            Console.WriteLine($"Iterations: {iterations}");
-            Console.WriteLine($"Average size: {avgSize} KiB");
-        }            
-
+            mathematicaData.AppendLine($"sizes = {{{string.Join(",", genTimes.Select(t => t.size.ToString(CultureInfo.InvariantCulture)))}}};");
+            File.WriteAllText("data.txt", mathematicaData.ToString());
+        }
 
         static void ReduceTest()
         {
