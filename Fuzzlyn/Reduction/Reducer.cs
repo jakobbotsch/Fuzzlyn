@@ -605,10 +605,19 @@ namespace Fuzzlyn.Reduction
             else
                 return node;
 
-            SyntaxNode methodWithoutParam =
-                method.ReplaceNode(
-                    method.ParameterList,
-                    method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
+            SyntaxNode methodWithoutParam;
+            if (method is ConstructorDeclarationSyntax && method.ParameterList.Parameters.Count == 1)
+            {
+                // Remove constructors if they get 0 args
+                methodWithoutParam = null;
+            }
+            else
+            {
+                methodWithoutParam =
+                    method.ReplaceNode(
+                        method.ParameterList,
+                        method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
+            }
 
             SyntaxNode newNode = unit.ReplaceNode(method, methodWithoutParam);
             while (true)
@@ -857,6 +866,31 @@ namespace Fuzzlyn.Reduction
                 return node;
 
             return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0));
+        }
+
+        // Add ': this()' to struct constructor to allow further simplification of struct
+        [Simplifier]
+        private SyntaxNode SimplifyStructAddConstructorInitializers(SyntaxNode node)
+        {
+            if (!(node is StructDeclarationSyntax @struct))
+                return node;
+
+            StructDeclarationSyntax newStruct = @struct;
+            while (true)
+            {
+                ConstructorDeclarationSyntax ctor =
+                    newStruct.Members.OfType<ConstructorDeclarationSyntax>().FirstOrDefault(c => c.Initializer == null);
+
+                if (ctor == null)
+                    return newStruct;
+
+                newStruct = newStruct.ReplaceNode(
+                    ctor,
+                    ctor.WithInitializer(
+                        ConstructorInitializer(
+                            SyntaxKind.ThisConstructorInitializer,
+                            ArgumentList())));
+            }
         }
 
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
