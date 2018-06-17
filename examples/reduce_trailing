@@ -1,2 +1,2 @@
 #!/bin/bash
-tail -f -n +1 ../Fuzzlyn/bin/Release/netcoreapp2.1/Execution_Mismatch.txt | grep --line-buffered -Po 'Seed: \K\d+' | xargs -L1 -I {} bash -c "echo 'Processing {}'; if [ ! -f 'reduced/{}.cs' ]; then dotnet ../Fuzzlyn/bin/Release/netcoreapp2.1/Fuzzlyn.dll --seed={} --reduce > reduced/{}.cs; git add reduced/{}.cs; git commit -m 'Add example {}'; git push; fi"
+tail -f -n +1 ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Execution_Mismatch.txt | grep --line-buffered -Po 'Seed: \K\d+' | xargs -L1 -I {} bash -c "echo 'Processing {}'; if [ ! -f 'reduced/{}.cs' ]; then corerun ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Fuzzlyn.dll --seed={} --reduce > reduced/{}.cs && git add reduced/{}.cs && git commit -m 'Add example {}' && git push; fi"
