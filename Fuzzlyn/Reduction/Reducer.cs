@@ -571,6 +571,19 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
+        private SyntaxNode RemoveFieldInitializer(SyntaxNode node)
+        {
+            if (!(node is FieldDeclarationSyntax field))
+                return node;
+
+            if (field.Declaration.Variables.Count != 1 ||
+                field.Declaration.Variables[0].Initializer == null)
+                return node;
+
+            return field.ReplaceNode(field.Declaration.Variables[0].Initializer, (SyntaxNode)null);
+        }
+
+        [Simplifier]
         private SyntaxNode RemoveMethodArgument(SyntaxNode node)
         {
             if (!(node is CompilationUnitSyntax unit))
