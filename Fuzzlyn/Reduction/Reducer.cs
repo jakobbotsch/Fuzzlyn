@@ -353,7 +353,8 @@ namespace Fuzzlyn.Reduction
             List<InvocationExpressionSyntax> invocs =
                 cls.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
-                .Where(i => i.Expression is IdentifierNameSyntax && i.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax))
+                .Where(i => i.Expression is IdentifierNameSyntax &&
+                            i.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax || a.Expression is LiteralExpressionSyntax))
                 .ToList();
 
             if (invocs.Count <= 0)
@@ -691,7 +692,7 @@ namespace Fuzzlyn.Reduction
             }
 
             // Remove ones that already have only variables as arguments, including ones with 0 arguments.
-            invocs.RemoveAll(inv => inv.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax));
+            invocs.RemoveAll(inv => inv.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax || a.Expression is LiteralExpressionSyntax));
             // Remove checksums
             invocs.RemoveAll(IsChecksumCall);
 
@@ -708,7 +709,7 @@ namespace Fuzzlyn.Reduction
                 List<int> simplifiableArgIndices =
                     invoc.ArgumentList.Arguments
                     .Select((a, i) => (a, i))
-                    .Where(t => !(t.a.Expression is IdentifierNameSyntax))
+                    .Where(t => !(t.a.Expression is IdentifierNameSyntax || t.a.Expression is LiteralExpressionSyntax))
                     .Select(t => t.i)
                     .ToList();
                 if (simplifiableArgIndices.Count <= 0)
@@ -723,7 +724,9 @@ namespace Fuzzlyn.Reduction
             for (int i = 0; i < invoc.ArgumentList.Arguments.Count; i++)
             {
                 ArgumentSyntax arg = invoc.ArgumentList.Arguments[i];
-                if (arg.Expression is IdentifierNameSyntax id || (single && simplifyIndex != i))
+                if (arg.Expression is IdentifierNameSyntax ||
+                    arg.Expression is LiteralExpressionSyntax ||
+                    (single && simplifyIndex != i))
                 {
                     newArgs.Add(arg);
                     continue;
@@ -743,7 +746,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyIfExtractCondition(SyntaxNode node)
         {
-            if (!(node is IfStatementSyntax @if) || @if.Condition is IdentifierNameSyntax)
+            if (!(node is IfStatementSyntax @if) || @if.Condition is IdentifierNameSyntax || @if.Condition is LiteralExpressionSyntax)
                 return node;
 
             var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
@@ -811,9 +814,10 @@ namespace Fuzzlyn.Reduction
             return newBlock;
         }
 
-        // Inlines locals of the form
+        // Inlines locals of the forms
         // var a = b;
-        // All occurences of a are replaced by b.
+        // var a = literal;
+        // All occurences of a are replaced by the right-hand side.
         [Simplifier]
         private SyntaxNode InlineLocal(SyntaxNode node)
         {
@@ -823,7 +827,8 @@ namespace Fuzzlyn.Reduction
             List<LocalDeclarationStatementSyntax> candidates =
                 block.Statements.OfType<LocalDeclarationStatementSyntax>()
                 .Where(l => l.Declaration.Variables.Count == 1 &&
-                            l.Declaration.Variables[0].Initializer?.Value is IdentifierNameSyntax)
+                            (l.Declaration.Variables[0].Initializer?.Value is IdentifierNameSyntax ||
+                             l.Declaration.Variables[0].Initializer?.Value is LiteralExpressionSyntax))
                 .ToList();
 
             if (candidates.Count <= 0)
@@ -831,7 +836,7 @@ namespace Fuzzlyn.Reduction
 
             LocalDeclarationStatementSyntax local = candidates[_rng.Next(candidates.Count)];
             string toReplace = local.Declaration.Variables[0].Identifier.Text;
-            string replaceWith = ((IdentifierNameSyntax)local.Declaration.Variables[0].Initializer.Value).Identifier.Text;
+            SyntaxNode replaceWith = local.Declaration.Variables[0].Initializer.Value;
 
             BlockSyntax newNode =
                 block.WithStatements(block.Statements.Remove(local));
@@ -839,9 +844,19 @@ namespace Fuzzlyn.Reduction
             newNode =
                 newNode.ReplaceNodes(
                     newNode.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id => id.Identifier.Text == toReplace),
-                    (orig, _) => IdentifierName(replaceWith));
+                    (orig, _) => replaceWith);
 
             return newNode;
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyConstant(SyntaxNode node)
+        {
+            if (!(node is LiteralExpressionSyntax literal) || literal.Kind() != SyntaxKind.NumericLiteralExpression ||
+                literal.Token.Text == "0")
+                return node;
+
+            return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0));
         }
 
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
