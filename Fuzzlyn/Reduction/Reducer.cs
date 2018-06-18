@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Emit;
 using System;
 using System.Collections.Generic;
@@ -72,6 +73,14 @@ namespace Fuzzlyn.Reduction
                         return results.DebugResult.ExceptionType == origResults.DebugResult.ExceptionType &&
                                results.ReleaseResult.ExceptionType == origResults.ReleaseResult.ExceptionType;
                     }
+                    else
+                    {
+                        if (results.DebugResult.ExceptionType != origResults.DebugResult.ExceptionType ||
+                            results.ReleaseResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
+                        {
+                            return false;
+                        }
+                    }
 
                     return results.DebugResult.Checksum != results.ReleaseResult.Checksum;
                 };
@@ -80,6 +89,8 @@ namespace Fuzzlyn.Reduction
             // Save original comments as simplification may remove it by removing an unnecessary type.
             SyntaxTriviaList originalTrivia = Original.GetLeadingTrivia();
             Reduced = Original.WithLeadingTrivia();
+
+            Reduced = CoarseSimplify(Reduced, isInteresting);
             List<SyntaxNode> simplifiedNodes = new List<SyntaxNode>();
             bool first = true;
             bool any = true;
@@ -174,6 +185,90 @@ namespace Fuzzlyn.Reduction
             ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
             ProgramPairResults results = ProgramExecutor.RunPair(pair);
             return results;
+        }
+
+        /// <summary>
+        /// Perform coarse simplification by removing statements with a binary search.
+        /// </summary>
+        private CompilationUnitSyntax CoarseSimplify(CompilationUnitSyntax reduced, Func<CompilationUnitSyntax, bool> isInteresting)
+        {
+            // Step 1: Declare all variables at the start of the methods with a default value.
+            // This will hopefully allow us to remove more assignments than otherwise.
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
+
+            foreach (MethodDeclarationSyntax method in reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
+            {
+                List<LocalDeclarationStatementSyntax> decls =
+                    method.DescendantNodes().OfType<LocalDeclarationStatementSyntax>().ToList();
+
+                if (decls.Count == 0)
+                    continue;
+
+                Dictionary<SyntaxNode, SyntaxNode> assignmentReplacements = new Dictionary<SyntaxNode, SyntaxNode>();
+                foreach (LocalDeclarationStatementSyntax decl in decls)
+                {
+                    if (decl.Declaration.Variables.Count != 1 ||
+                        decl.Declaration.Variables[0].Initializer == null)
+                    {
+                        continue;
+                    }
+
+                    assignmentReplacements.Add(
+                        decl,
+                        ExpressionStatement(
+                            AssignmentExpression(
+                                SyntaxKind.SimpleAssignmentExpression,
+                                IdentifierName(decl.Declaration.Variables[0].Identifier),
+                                    decl.Declaration.Variables[0].Initializer.Value)));
+                }
+
+                MethodDeclarationSyntax withoutLocals =
+                    method.ReplaceNodes(
+                        assignmentReplacements.Keys,
+                        (orig, _) => assignmentReplacements[orig]);
+
+
+                IEnumerable<LocalDeclarationStatementSyntax> newDecls =
+                    decls
+                    .Select(
+                        d => d.ReplaceNode(
+                            d.Declaration.Variables[0].Initializer.Value,
+                            DefaultExpression(d.Declaration.Type)));
+
+                MethodDeclarationSyntax withLocalsAtTop =
+                    withoutLocals.WithBody(
+                        Block(
+                            withoutLocals.Body.Statements.InsertRange(
+                                0,
+                                newDecls)));
+
+                replacements.Add(method, withLocalsAtTop);
+            }
+
+            CompilationUnitSyntax candidate = reduced.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+            if (!isInteresting(candidate))
+                candidate = reduced;
+
+            // Step 2: Remove by binary searches. Prefer large ones first to remove as much as fast as possible.
+            List<string> names =
+                candidate.DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .OrderByDescending(m => m.DescendantNodes().Count())
+                .Select(m => m.Identifier.Text)
+                .ToList();
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                Console.Title = $"Simplifying coarsely. Method {i + 1}/{names.Count}.";
+                bool isMethodInteresting(MethodDeclarationSyntax orig, MethodDeclarationSyntax @new)
+                    => isInteresting(candidate.ReplaceNode(orig, @new));
+
+                var method = candidate.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == names[i]);
+                var newMethod = (MethodDeclarationSyntax)new CoarseStatementRemover(isMethodInteresting).Visit(method);
+                candidate = candidate.ReplaceNode(method, newMethod);
+            }
+
+            return candidate;
         }
 
         private IEnumerable<string> GetOutputComments(CompileResult ogDebugCompile, CompileResult ogRelCompile)
