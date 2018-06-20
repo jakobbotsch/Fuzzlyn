@@ -37,6 +37,7 @@ namespace Fuzzlyn
             bool? executePrograms = null;
             bool? enableChecksumming = null;
             bool? reduce = null;
+            string removeFixed = null;
             OptionSet optionSet = new OptionSet
             {
                 { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
@@ -52,6 +53,7 @@ namespace Fuzzlyn
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
+                { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
                 { "help|h", v => help = v != null }
             };
 
@@ -128,10 +130,54 @@ namespace Fuzzlyn
                 return;
             }
 
+            if (removeFixed != null)
+            {
+                RemoveFixedPrograms(options, removeFixed);
+                return;
+            }
+
             if (options.Reduce)
                 ReduceProgram(options);
             else
                 GenerateProgram(options);
+        }
+
+        private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
+        {
+            string[] files = Directory.GetFiles(dir, "*.cs");
+            for (int i = 0; i < files.Length; i++)
+            {
+                Console.Title = $"Processing {i + 1}/{files.Length}";
+
+                string contents = File.ReadAllText(files[i]);
+                MatchCollection matches = Regex.Matches(contents, "// Seed: ([0-9]+)");
+                if (matches.Count != 1)
+                    continue;
+
+                ulong seed = ulong.Parse(matches[0].Groups[1].Value);
+                options.Seed = seed;
+                var cg = new CodeGenerator(options);
+                CompilationUnitSyntax original = cg.GenerateProgram(false);
+
+                CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
+                CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
+
+                if (debug.CompileDiagnostics.Length > 0 || release.CompileDiagnostics.Length > 0)
+                    continue;
+
+                if (debug.RoslynException != null || release.RoslynException != null)
+                    continue;
+
+                ProgramPairResults execResults = ProgramExecutor.RunPair(new ProgramPair(debug.Assembly, release.Assembly));
+                if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
+                    execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
+                {
+                    continue;
+                }
+
+                Console.WriteLine("Removing {0}", Path.GetFileName(files[i]));
+                File.Delete(files[i]);
+            }
         }
 
         private static void ReduceProgram(FuzzlynOptions options)
