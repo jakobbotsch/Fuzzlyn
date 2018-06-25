@@ -87,7 +87,7 @@ To reduce a program, use the `--reduce` switch:
 
 `dotnet fuzzlyn.dll --seed <seed here> --reduce`
 
-Depending on the size of the program, this will take a while (the biggest example in the `examples` directory takes roughly 30 minutes to reduce on an i7-4770k). However, most programs do not take longer than a few minutes. The output of this command will be a small C# program, that includes information about its seed, size and runtime behavior.
+Depending on the size of the program, this will take a while (the biggest example in the `examples` directory takes roughly 10 minutes to reduce on an i7-4770k). However, most programs do not take longer than a couple of minutes. The output of this command will be a small C# program, that includes information about its seed, size and runtime behavior.
 
 ## Reproducing errors in reduced programs
 
