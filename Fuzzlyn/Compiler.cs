@@ -16,6 +16,11 @@ namespace Fuzzlyn
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location),
+            MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+            // These two are needed to properly pick up System.Object when using methods on System.Console.
+            // See here: https://github.com/dotnet/corefx/issues/11601
+            MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
+            MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
         };
 
         private static readonly CSharpParseOptions s_parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
