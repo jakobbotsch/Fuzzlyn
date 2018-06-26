@@ -145,6 +145,7 @@ namespace Fuzzlyn
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
         {
             string[] files = Directory.GetFiles(dir, "*.cs");
+            List<ulong> toRereduce = new List<ulong>();
             for (int i = 0; i < files.Length; i++)
             {
                 Console.Title = $"Processing {i + 1}/{files.Length}";
@@ -172,11 +173,76 @@ namespace Fuzzlyn
                 if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
                     execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
                 {
+                    // Execute the reduced form to see if we get interesting behavior.
+                    // Otherwise we may need to rereduce it.
+                    if (!IsReducedVersionInteresting(execResults, contents))
+                    {
+                        toRereduce.Add(seed);
+                        Console.WriteLine("Marking {0} for rereduction", Path.GetFileName(files[i]));
+                    }
+
                     continue;
                 }
 
                 Console.WriteLine("Removing {0}", Path.GetFileName(files[i]));
                 File.Delete(files[i]);
+            }
+
+            const string rereduceFile = "Rereduce_required.txt";
+            File.WriteAllText(rereduceFile, string.Join(Environment.NewLine, toRereduce));
+            Console.WriteLine("Wrote {0} seeds to be rereduced to '{1}'", toRereduce.Count, Path.GetFullPath(rereduceFile));
+        }
+
+        /// <summary>
+        /// Checks if a reduced version (on disk) is interesting by running it and checking for exceptions
+        /// and output. Output is captured by redirecting stdout during executiong.
+        private static bool IsReducedVersionInteresting(ProgramPairResults fullResults, string code)
+        {
+            CompilationUnitSyntax comp = ParseCompilationUnit(code);
+
+            var debug = Execute(Compiler.DebugOptions);
+            var release = Execute(Compiler.ReleaseOptions);
+
+            if (fullResults.DebugResult.ExceptionType != fullResults.ReleaseResult.ExceptionType)
+            {
+                return debug.exceptionType == fullResults.DebugResult.ExceptionType &&
+                       release.exceptionType == fullResults.ReleaseResult.ExceptionType;
+            }
+
+            return debug.stdout != release.stdout;
+
+            (string stdout, string exceptionType) Execute(CSharpCompilationOptions opts)
+            {
+                CompileResult result = Compiler.Compile(comp, opts);
+                Trace.Assert(result.Assembly != null);
+
+                Assembly asm = Assembly.Load(result.Assembly);
+                MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
+                Action entryPoint = (Action)Delegate.CreateDelegate(typeof(Action), mainMethodInfo);
+
+                Exception ex = null;
+                TextWriter origOut = Console.Out;
+
+                MemoryStream ms = new MemoryStream();
+                StreamWriter sw = new StreamWriter(ms, Encoding.UTF8);
+
+                try
+                {
+                    Console.SetOut(sw);
+                    entryPoint();
+                }
+                catch (Exception caughtEx)
+                {
+                    ex = caughtEx;
+                }
+                finally
+                {
+                    Console.SetOut(origOut);
+                    sw.Close();
+                }
+
+                string stdout = Encoding.UTF8.GetString(ms.ToArray());
+                return (stdout, ex?.GetType().FullName);
             }
         }
 
