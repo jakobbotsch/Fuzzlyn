@@ -2,4 +2,4 @@
 rm -f Rereduce_required.txt
 corerun ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Fuzzlyn.dll --remove-fixed=reduced
 cat Rereduce_required.txt | xargs -L1 -I {} bash -c "echo 'Rereducing {}'; corerun ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Fuzzlyn.dll --seed={} --reduce > reduced/{}.cs"
-rm -f Rereduced_required.txt
+rm -f Rereduce_required.txt
