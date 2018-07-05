@@ -13,6 +13,8 @@ We have reported the following bugs:
 * [Wrong value passed to generic interface method in release](https://github.com/dotnet/coreclr/issues/18259)
 * [Constant-folding int.MinValue % -1](https://github.com/dotnet/roslyn/issues/27348)
 * [Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522)
+* [RyuJIT incorrectly reorders expression containing a CSE, resulting in exception thrown in release](https://github.com/dotnet/coreclr/issues/18770)
+* [RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780)
 
 Fuzzlyn has found many hundreds of programs producing deviating behavior. Some examples can be seen in the [examples](examples) folder. To take a couple of examples, Fuzzlyn automatically found and produced the following programs:
 
