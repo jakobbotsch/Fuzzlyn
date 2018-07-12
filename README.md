@@ -15,6 +15,9 @@ We have reported the following bugs:
 * [Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522)
 * [RyuJIT incorrectly reorders expression containing a CSE, resulting in exception thrown in release](https://github.com/dotnet/coreclr/issues/18770)
 * [RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780)
+* [Invalid value numbering when morphing casts that changes signedness after global morph](https://github.com/dotnet/coreclr/issues/18850)
+* [RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867)
+* [RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884)
 
 Fuzzlyn has found many hundreds of programs producing deviating behavior. Some examples can be seen in the [examples](examples) folder. To take a couple of examples, Fuzzlyn automatically found and produced the following programs:
 
