@@ -44,12 +44,15 @@ namespace Fuzzlyn.Types
             return type;
         }
 
-        public FuzzType PickType()
+        public FuzzType PickType(double byRefProb = 0)
         {
             FuzzType type = PickExistingType();
             int count = Options.MakeArrayCountDist.Sample(Random.Rng);
             for (int i = 0; i < count; i++)
                 type = type.MakeArrayType(Options.ArrayRankDist.Sample(Random.Rng));
+
+            if (Random.FlipCoin(byRefProb))
+                type = new RefType(type);
 
             return type;
         }

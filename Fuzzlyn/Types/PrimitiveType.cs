@@ -20,20 +20,20 @@ namespace Fuzzlyn.Types
         public override TypeSyntax GenReferenceTo() => PredefinedType(Token(Keyword));
         public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Info.AllowedAdditionalAssignments;
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as PrimitiveType);
-        }
-
         public bool Equals(PrimitiveType other)
         {
             return other != null &&
                    Keyword == other.Keyword;
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as PrimitiveType);
+        }
+
         public override int GetHashCode()
         {
-            return -303665852 + Keyword.GetHashCode();
+            return HashCode.Combine(2, Keyword);
         }
 
         public static bool operator ==(PrimitiveType type1, PrimitiveType type2)

@@ -52,34 +52,19 @@ namespace Fuzzlyn.Types
             return _type;
         }
 
+        public bool Equals(ArrayType other)
+        {
+            return other != null && ElementType == other.ElementType && Rank == other.Rank;
+        }
+
         public override bool Equals(object obj)
         {
             return Equals(obj as ArrayType);
         }
 
-        public bool Equals(ArrayType other)
-        {
-            return other != null &&
-                   EqualityComparer<FuzzType>.Default.Equals(ElementType, other.ElementType) &&
-                   Rank == other.Rank;
-        }
-
         public override int GetHashCode()
         {
-            var hashCode = -1266642290;
-            hashCode = hashCode * -1521134295 + EqualityComparer<FuzzType>.Default.GetHashCode(ElementType);
-            hashCode = hashCode * -1521134295 + Rank.GetHashCode();
-            return hashCode;
-        }
-
-        public static bool operator ==(ArrayType type1, ArrayType type2)
-        {
-            return EqualityComparer<ArrayType>.Default.Equals(type1, type2);
-        }
-
-        public static bool operator !=(ArrayType type1, ArrayType type2)
-        {
-            return !(type1 == type2);
+            return HashCode.Combine(1, ElementType, Rank);
         }
     }
 }

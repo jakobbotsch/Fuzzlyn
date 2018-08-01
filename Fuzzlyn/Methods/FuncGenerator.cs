@@ -48,7 +48,7 @@ namespace Fuzzlyn.Methods
         public StaticsManager Statics { get; }
         public BlockSyntax Body { get; private set; }
         public FuzzType ReturnType { get; private set; }
-        public FuzzType[] ParameterTypes { get; private set; }
+        public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
 
         public MethodDeclarationSyntax Output()
@@ -62,8 +62,9 @@ namespace Fuzzlyn.Methods
             ParameterListSyntax parameters =
                 ParameterList(
                     SeparatedList(
-                        ParameterTypes.Select(
-                            (pt, i) => Parameter(Identifier($"arg{i}")).WithType(pt.GenReferenceTo()))));
+                        Parameters.Select(
+                            (pt, i) => Parameter(Identifier(pt.Name))
+                                       .WithType(pt.Type.GenReferenceTo()))));
 
             return
                 MethodDeclaration(retType, Name)
@@ -79,10 +80,16 @@ namespace Fuzzlyn.Methods
             if (randomizeParams)
             {
                 int numArgs = Options.MethodParameterCountDist.Sample(Random.Rng);
-                ParameterTypes = Enumerable.Range(0, numArgs).Select(i => Types.PickType()).ToArray();
+                Parameters = new VariableIdentifier[numArgs];
+                for (int i = 0; i < Parameters.Length; i++)
+                {
+                    var type = Types.PickType(Options.ParameterIsByRefProb);
+                    string name = $"arg{i}";
+                    Parameters[i] = new VariableIdentifier(type, name);
+                }
             }
             else
-                ParameterTypes = Array.Empty<FuzzType>();
+                Parameters = Array.Empty<VariableIdentifier>();
 
             _level = -1;
             Body = GenBlock(ReturnType != null);
@@ -134,7 +141,7 @@ namespace Fuzzlyn.Methods
             _scope.Add(scope);
 
             if (root)
-                scope.Variables.AddRange(ParameterTypes.Select((p, i) => new VariableIdentifier(p, $"arg{i}")));
+                scope.Variables.AddRange(Parameters);
 
             BlockSyntax block = Block(GenStatements());
 
