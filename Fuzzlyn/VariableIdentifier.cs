@@ -14,7 +14,12 @@ namespace Fuzzlyn
         public FuzzType Type { get; }
         public string Name { get; }
         /// <summary>
-        /// If taking a ref, what scope can that ref return to? If 0, cannot escape from local function.
+        /// If taking a ref, what scope can that ref return to?
+        /// * Ref parameters have 1
+        /// * Globals have int.MaxValue
+        /// * Values in the first scope in a function have 0 (and value params have 0)
+        /// * Values in the first nested scope in a function have -1
+        /// * etc.
         /// </summary>
         public int RefEscapeScope { get; }
     }

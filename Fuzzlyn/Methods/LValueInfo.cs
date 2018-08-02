@@ -18,10 +18,7 @@ namespace Fuzzlyn.Methods
 
         public ExpressionSyntax Expression { get; }
         public FuzzType Type { get; }
-        /// <summary>
-        /// A value indicating where a ref taken to this lvalue may escape to.
-        /// If 0, a ref may not escape to a parent. If above 0, a ref to this lvalue can be returned.
-        /// </summary>
+        /// <summary>See <see cref="VariableIdentifier.RefEscapeScope"/>.</summary>
         public int RefEscapeScope { get; }
 
         public override string ToString() => Expression.ToString();
