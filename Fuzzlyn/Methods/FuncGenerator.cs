@@ -566,7 +566,7 @@ namespace Fuzzlyn.Methods
             {
                 PrimitiveType leftType = Types.PickPrimitiveType(f => true);
                 left = GenExpression(leftType);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.Equality.GetResultType(leftType.Keyword, f.Keyword).HasValue);
                 right = GenExpression(rightType);
             }
             else
@@ -575,7 +575,7 @@ namespace Fuzzlyn.Methods
                              op == SyntaxKind.GreaterThanOrEqualExpression || op == SyntaxKind.GreaterThanExpression);
 
                 PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.Relop.GetResultType(leftType.Keyword, f.Keyword).HasValue);
                 left = GenExpression(leftType);
                 right = GenExpression(rightType);
             }
@@ -595,11 +595,17 @@ namespace Fuzzlyn.Methods
         {
             Debug.Assert(type.Info.IsIntegral);
             SyntaxKind op = (SyntaxKind)Options.BinaryIntegralDist.Sample(Random.Rng);
+
+            BinOpTable table;
             if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
-                return GenIntegralProducingBinary(type); // todo: handle. Needs separate table.
+                table = BinOpTable.Shifts;
+            else
+                table = BinOpTable.Arithmetic;
 
             PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-            PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
+            PrimitiveType rightType =
+                Types.PickPrimitiveType(f => table.GetResultType(leftType.Keyword, f.Keyword).HasValue);
+
             ExpressionSyntax left = GenExpression(leftType);
             ExpressionSyntax right = GenExpression(rightType);
             while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
@@ -617,7 +623,8 @@ namespace Fuzzlyn.Methods
             }
 
             ExpressionSyntax expr = BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
-            if (BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, rightType.Keyword) != type.Keyword)
+
+            if (table.GetResultType(leftType.Keyword, rightType.Keyword) != type.Keyword)
                 expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
 
             return expr;
