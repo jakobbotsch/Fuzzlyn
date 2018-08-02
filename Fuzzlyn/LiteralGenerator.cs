@@ -34,7 +34,7 @@ namespace Fuzzlyn
 
         private static LiteralExpressionSyntax GenPrimitiveLiteral(Randomizer random, PrimitiveType primType)
         {
-            if (!primType.Info.IsIntegral || primType.Keyword == SyntaxKind.CharKeyword || !random.FlipCoin(random.Options.PickLiteralFromTableProb))
+            if (!primType.Info.IsIntegral || !random.FlipCoin(random.Options.PickLiteralFromTableProb))
                 return primType.Info.GenRandomLiteral(random.Rng);
 
             object minValue = primType.Info.Type.GetField("MinValue").GetValue(null);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Types
@@ -28,6 +29,15 @@ namespace Fuzzlyn.Types
 
         public override TypeSyntax GenReferenceTo()
             => IdentifierName(Name);
+
+        public bool Equals(AggregateType other)
+            => ReferenceEquals(this, other);
+
+        public override bool Equals(object obj)
+            => Equals(obj as AggregateType);
+
+        public override int GetHashCode()
+            => HashCode.Combine(0, RuntimeHelpers.GetHashCode(this));
 
         /// <summary>
         /// Count recursively how many primitive fields are in this aggregate type.

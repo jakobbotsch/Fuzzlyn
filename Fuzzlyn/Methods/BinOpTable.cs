@@ -34,10 +34,8 @@ namespace Fuzzlyn.Methods
                     return 6;
                 case SyntaxKind.ULongKeyword:
                     return 7;
-                case SyntaxKind.CharKeyword:
-                    return 8;
                 case SyntaxKind.BoolKeyword:
-                    return 9;
+                    return 8;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind));
             }
@@ -53,17 +51,16 @@ namespace Fuzzlyn.Methods
         private static SyntaxKind[,] s_table =
         {
             // Generated with Fuzzlyn.TableGen
-//        i08  i16  i32  i64  u08  u16  u32  u64  chr  bol
-/*i08*/ { I32, I32, I32, I64, I32, I32, I64, ERR, I32, ERR },
-/*i16*/ { I32, I32, I32, I64, I32, I32, I64, ERR, I32, ERR },
-/*i32*/ { I32, I32, I32, I64, I32, I32, I64, ERR, I32, ERR },
-/*i64*/ { I64, I64, I64, I64, I64, I64, I64, ERR, I64, ERR },
-/*u08*/ { I32, I32, I32, I64, I32, I32, U32, U64, I32, ERR },
-/*u16*/ { I32, I32, I32, I64, I32, I32, U32, U64, I32, ERR },
-/*u32*/ { I64, I64, I64, I64, U32, U32, U32, U64, U32, ERR },
-/*u64*/ { ERR, ERR, ERR, ERR, U64, U64, U64, U64, U64, ERR },
-/*chr*/ { I32, I32, I32, I64, I32, I32, U32, U64, I32, ERR },
-/*bol*/ { ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, BOL },
+//        i08  i16  i32  i64  u08  u16  u32  u64  bol
+/*i08*/ { I32, I32, I32, I64, I32, I32, I64, ERR, ERR },
+/*i16*/ { I32, I32, I32, I64, I32, I32, I64, ERR, ERR },
+/*i32*/ { I32, I32, I32, I64, I32, I32, I64, ERR, ERR },
+/*i64*/ { I64, I64, I64, I64, I64, I64, I64, ERR, ERR },
+/*u08*/ { I32, I32, I32, I64, I32, I32, U32, U64, ERR },
+/*u16*/ { I32, I32, I32, I64, I32, I32, U32, U64, ERR },
+/*u32*/ { I64, I64, I64, I64, U32, U32, U32, U64, ERR },
+/*u64*/ { ERR, ERR, ERR, ERR, U64, U64, U64, U64, ERR },
+/*bol*/ { ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, BOL },
         };
 
     }
