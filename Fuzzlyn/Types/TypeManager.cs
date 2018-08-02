@@ -44,12 +44,15 @@ namespace Fuzzlyn.Types
             return type;
         }
 
-        public FuzzType PickType()
+        public FuzzType PickType(double byRefProb = 0)
         {
             FuzzType type = PickExistingType();
             int count = Options.MakeArrayCountDist.Sample(Random.Rng);
             for (int i = 0; i < count; i++)
                 type = type.MakeArrayType(Options.ArrayRankDist.Sample(Random.Rng));
+
+            if (Random.FlipCoin(byRefProb))
+                type = new RefType(type);
 
             return type;
         }
@@ -67,7 +70,6 @@ namespace Fuzzlyn.Types
             SyntaxKind[] primitiveTypes =
             {
                 SyntaxKind.BoolKeyword,
-                SyntaxKind.CharKeyword,
                 SyntaxKind.SByteKeyword,
                 SyntaxKind.ByteKeyword,
                 SyntaxKind.ShortKeyword,
@@ -78,7 +80,7 @@ namespace Fuzzlyn.Types
                 SyntaxKind.ULongKeyword,
                 // string, floats, IntPtr/UIntPtr?
 
-                // if expanding fix PrimitiveType ctor and GenLiteralInt as well
+                // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
             };
 
             _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));

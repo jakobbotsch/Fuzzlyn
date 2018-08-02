@@ -34,21 +34,23 @@ namespace Fuzzlyn.Reduction
             CompileResult debug = Compiler.Compile(Original, Compiler.DebugOptions);
             CompileResult release = Compiler.Compile(Original, Compiler.ReleaseOptions);
 
-            if (debug.CompileDiagnostics.Length > 0 || release.CompileDiagnostics.Length > 0)
-            {
-                ImmutableArray<Diagnostic> diags =
-                    debug.CompileDiagnostics.Length > 0 ? debug.CompileDiagnostics : release.CompileDiagnostics;
-
-                IEnumerable<Diagnostic> errs = diags.Where(d => d.Severity == DiagnosticSeverity.Error);
-                string errorString = string.Join(Environment.NewLine, errs.Select(e => "  " + e));
-                throw new InvalidOperationException("Program has compile errors: " + Environment.NewLine + errorString);
-            }
-
             Func<CompilationUnitSyntax, bool> isInteresting;
             if (debug.RoslynException != null || release.RoslynException != null)
             {
                 CSharpCompilationOptions opts = debug.RoslynException != null ? Compiler.DebugOptions : Compiler.ReleaseOptions;
                 isInteresting = program => Compiler.Compile(program, opts).RoslynException != null;
+            }
+            else if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
+            {
+                CSharpCompilationOptions opts = debug.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+                isInteresting = program =>
+                {
+                    CompileResult recompiled = Compiler.Compile(program, opts);
+                    if (recompiled.CompileErrors.Length <= 0)
+                        return false;
+
+                    return recompiled.CompileErrors[0].Id == (debug.CompileErrors.Length > 0 ? debug.CompileErrors[0] : release.CompileErrors[0]).Id;
+                };
             }
             else
             {
@@ -281,6 +283,16 @@ namespace Fuzzlyn.Reduction
             if (ogRelCompile.RoslynException != null)
             {
                 yield return $"// Roslyn throws '{ogRelCompile.RoslynException.GetType()}' when compiling in release";
+                yield break;
+            }
+
+            if (ogDebugCompile.CompileErrors.Length > 0 || ogRelCompile.CompileErrors.Length > 0)
+            {
+                CSharpCompilationOptions compileOpts =
+                    ogDebugCompile.CompileErrors.Length >= 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+
+                CompileResult result = Compiler.Compile(Reduced.NormalizeWhitespace(), compileOpts);
+                yield return $"// Roslyn gives '{result.CompileErrors[0]}'";
                 yield break;
             }
 
