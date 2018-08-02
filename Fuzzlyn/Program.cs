@@ -163,7 +163,7 @@ namespace Fuzzlyn
                 CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
                 CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
 
-                if (debug.CompileDiagnostics.Length > 0 || release.CompileDiagnostics.Length > 0)
+                if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
                     continue;
 
                 if (debug.RoslynException != null || release.RoslynException != null)
@@ -266,7 +266,7 @@ namespace Fuzzlyn
             Parallel.For(0, options.NumPrograms, po, i =>
             {
                 CodeGenerator gen = new CodeGenerator(options);
-                CompilationUnitSyntax unit = gen.GenerateProgram(options.Output);
+                CompilationUnitSyntax unit = gen.GenerateProgram(true);
                 if (options.Output)
                 {
                     string asString = unit.NormalizeWhitespace().ToFullString();
@@ -274,6 +274,7 @@ namespace Fuzzlyn
                 }
                 else
                 {
+                    unit = unit.NormalizeWhitespace();
                     Compile(gen, unit);
                 }
 
@@ -315,9 +316,9 @@ namespace Fuzzlyn
                     return null;
                 }
 
-                if (comp.CompileDiagnostics.Length > 0)
+                if (comp.CompileErrors.Length > 0)
                 {
-                    IEnumerable<Diagnostic> errors = comp.CompileDiagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
+                    IEnumerable<Diagnostic> errors = comp.CompileErrors.Where(d => d.Severity == DiagnosticSeverity.Error);
                     string logEntry =
                         "seed: " + gen.Random.Seed + Environment.NewLine +
                         string.Join(Environment.NewLine, errors.Select(d => "  " + d));

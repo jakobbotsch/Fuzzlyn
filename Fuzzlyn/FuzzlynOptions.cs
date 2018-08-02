@@ -20,7 +20,7 @@ namespace Fuzzlyn
         public double PrimitiveFieldProb { get; set; } = 0.8;
         public double AssignToNewVarProb { get; set; } = 0.3;
         public double NewVarIsLocalProb { get; set; } = 0.8;
-        public double FancyAssignmentProb { get; set; } = 0.1;
+        public double CompoundAssignmentProb { get; set; } = 0.1;
         public double IncDecAssignmentStatementProb { get; set; } = 0.1;
 
         public ProbabilityDistribution MakeAggregateTypeCountDist { get; set; } = new GeometricDistribution(0.4);
@@ -117,5 +117,10 @@ namespace Fuzzlyn
         public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.4);
         public double ParameterIsByRefProb { get; set; } = 0.25;
         public double LocalIsByRefProb { get; set; } = 0.10;
+        public double ReturnTypeIsByRefProb { get; set; } = 0.20;
+        /// <summary>Probably to generate a ref-reassign when assigning a by-ref value.</summary>
+        public double AssignGenRefReassignProb { get; set; } = 0.25;
+        /// <summary>Probability that we create a new static when making a new lvalue.</summary>
+        public double LValueMakeNewStaticProb { get; set; } = 0.3;
     }
 }
