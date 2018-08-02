@@ -11,8 +11,8 @@ namespace Fuzzlyn.TableGen
     {
         private static void Main(string[] args)
         {
-            string[] types = { "sbyte", "short", "int", "long", "byte", "ushort", "uint", "ulong", "char", "bool" };
-            string[] shortNames = { "i08", "i16", "i32", "i64", "u08", "u16", "u32", "u64", "chr", "bol" };
+            string[] types = { "sbyte", "short", "int", "long", "byte", "ushort", "uint", "ulong", "bool" };
+            string[] shortNames = { "i08", "i16", "i32", "i64", "u08", "u16", "u32", "u64", "bol" };
 
             Console.WriteLine("//        {0}", string.Join("  ", shortNames));
             for (int i = 0; i < types.Length; i++)
