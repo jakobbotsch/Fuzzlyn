@@ -274,7 +274,6 @@ namespace Fuzzlyn
                 }
                 else
                 {
-                    unit = unit.NormalizeWhitespace();
                     Compile(gen, unit);
                 }
 
