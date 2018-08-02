@@ -668,7 +668,6 @@ namespace Fuzzlyn.Methods
                 SyntaxKind.ShortKeyword,
                 SyntaxKind.ByteKeyword,
                 SyntaxKind.SByteKeyword,
-                SyntaxKind.CharKeyword
             };
 
             if (!(type is PrimitiveType pt) || !acceptedTypes.Contains(pt.Keyword))
@@ -721,11 +720,7 @@ namespace Fuzzlyn.Methods
                         SyntaxKind.StringLiteralExpression,
                         Literal(checksumSiteId));
 
-                // Checksum chars as ints since they can be unprintable and we convert them to strings
                 ExpressionSyntax expr = lvalue.Expression;
-                if (lvalue.Type is PrimitiveType pt && pt.Keyword == SyntaxKind.CharKeyword)
-                    expr = CastExpression(PredefinedType(Token(SyntaxKind.IntKeyword)), expr);
-
                 ExpressionStatementSyntax stmt = 
                     ExpressionStatement(
                         InvocationExpression(

@@ -70,7 +70,6 @@ namespace Fuzzlyn.Types
             SyntaxKind[] primitiveTypes =
             {
                 SyntaxKind.BoolKeyword,
-                SyntaxKind.CharKeyword,
                 SyntaxKind.SByteKeyword,
                 SyntaxKind.ByteKeyword,
                 SyntaxKind.ShortKeyword,
@@ -81,7 +80,7 @@ namespace Fuzzlyn.Types
                 SyntaxKind.ULongKeyword,
                 // string, floats, IntPtr/UIntPtr?
 
-                // if expanding fix PrimitiveType ctor and GenLiteralInt as well
+                // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
             };
 
             _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));

@@ -68,14 +68,6 @@ namespace Fuzzlyn.Types
                 SyntaxKind.PostDecrementExpression,
             };
 
-            SyntaxKind[] charAssigns =
-            {
-                SyntaxKind.PreIncrementExpression,
-                SyntaxKind.PostIncrementExpression,
-                SyntaxKind.PreDecrementExpression,
-                SyntaxKind.PostDecrementExpression,
-            };
-
             SyntaxKind[] boolAssigns =
             {
                 SyntaxKind.AndAssignmentExpression,
@@ -144,14 +136,6 @@ namespace Fuzzlyn.Types
                     GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((sbyte)rng.NextUInt64())),
                     Type = typeof(sbyte),
                     IsIntegral = true,
-                },
-                [SyntaxKind.CharKeyword] = new PrimitiveTypeInfo
-                {
-                    AllowedAdditionalAssignments = charAssigns,
-                    GenRandomLiteral = rng => LiteralExpression(SyntaxKind.CharacterLiteralExpression, Literal((char)rng.Next(32, 127))),
-                    Type = typeof(char),
-                    IsIntegral = true,
-                    IsUnsigned = true,
                 },
                 [SyntaxKind.BoolKeyword] = new PrimitiveTypeInfo
                 {

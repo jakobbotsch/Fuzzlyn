@@ -26,7 +26,7 @@ namespace Fuzzlyn
         internal static bool RequiresParentheses(ExpressionSyntax expr)
         {
             // We can produce a tree that won't roundtrip in the parser if we aren't careful.
-            // For example, (char)(a | 0) will be represented by:
+            // For example, (ushort)(a | 0) will be represented by:
             //  Cast
             //   |
             // Paren
@@ -34,7 +34,7 @@ namespace Fuzzlyn
             //  Bin
             //  / \
             // a   0
-            // But removing 'Paren' and outputting this gives (char)a | 0, which parses differently.
+            // But removing 'Paren' and outputting this gives (ushort)a | 0, which parses differently.
 
             if (expr is IdentifierNameSyntax ||
                 expr is LiteralExpressionSyntax ||
