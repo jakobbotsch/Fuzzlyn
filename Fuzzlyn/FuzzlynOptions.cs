@@ -114,7 +114,7 @@ namespace Fuzzlyn
         public int MaxArrayLengthPerDimension { get; set; } = 10;
         // Probability that we generate a new method when trying to generate a call.
         public double GenNewMethodProb { get; set; } = 0.07;
-        public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.2);
+        public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.4);
         public double ParameterIsByRefProb { get; set; } = 0.25;
         public double LocalIsByRefProb { get; set; } = 0.10;
         public double ReturnTypeIsByRefProb { get; set; } = 0.20;
