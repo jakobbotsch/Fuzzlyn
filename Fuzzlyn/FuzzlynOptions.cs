@@ -18,7 +18,7 @@ namespace Fuzzlyn
         public double MakeClassProb { get; set; } = 0.5;
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
         public double PrimitiveFieldProb { get; set; } = 0.8;
-        public double AssignToNewVarProb { get; set; } = 0.3;
+        public double AssignToNewVarProb { get; set; } = 0.4;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double CompoundAssignmentProb { get; set; } = 0.1;
         public double IncDecAssignmentStatementProb { get; set; } = 0.1;
@@ -120,7 +120,23 @@ namespace Fuzzlyn
         public double ReturnTypeIsByRefProb { get; set; } = 0.20;
         /// <summary>Probably to generate a ref-reassign when assigning a by-ref value.</summary>
         public double AssignGenRefReassignProb { get; set; } = 0.25;
-        /// <summary>Probability that we create a new static when making a new lvalue.</summary>
-        public double LValueMakeNewStaticProb { get; set; } = 0.3;
+
+        /// <summary>Probability that we select a local over a static when generating a member access expression.</summary>
+        public double MemberAccessSelectLocalProb { get; set; } = 0.8;
+        /// <summary>Table to use when selecting an existing lvalue.</summary>
+        public ProbabilityDistribution ExistingLValueDist { get; set; }
+         = new TableDistribution(new Dictionary<int, double>
+         {
+             [(int)LValueKind.Local] = 0.7,
+             [(int)LValueKind.Static] = 0.2,
+             [(int)LValueKind.RefReturningCall] = 0.1,
+         });
+    }
+
+    internal enum LValueKind
+    {
+        Local,
+        Static,
+        RefReturningCall,
     }
 }
