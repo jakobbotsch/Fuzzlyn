@@ -201,7 +201,7 @@ namespace Fuzzlyn.Methods
         {
             LValueInfo lvalue = null;
             if (!Random.FlipCoin(Options.AssignToNewVarProb))
-                lvalue = GenExistingLValue(null, 0);
+                lvalue = GenExistingLValue(null, int.MinValue);
 
             if (lvalue == null)
             {
@@ -215,14 +215,14 @@ namespace Fuzzlyn.Methods
                     ExpressionSyntax rhs;
                     if (newType is RefType newRt)
                     {
-                        LValueInfo rhsLV = GenLValue(newRt.InnerType, 0);
+                        LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue);
                         variable = new VariableIdentifier(newType, varName, rhsLV.RefEscapeScope);
                         rhs = RefExpression(rhsLV.Expression);
                     }
                     else
                     {
                         rhs = GenExpression(newType);
-                        variable = new VariableIdentifier(newType, varName, 0);
+                        variable = new VariableIdentifier(newType, varName, -(_scope.Count - 1));
                     }
 
                     LocalDeclarationStatementSyntax decl =
@@ -394,14 +394,12 @@ namespace Fuzzlyn.Methods
             return gen;
         }
 
-        /// <summary>Returns an lvalue. This will probabilistically create a new lvalue.</summary>
+        /// <summary>Returns an lvalue.</summary>
         private LValueInfo GenLValue(FuzzType type, int minRefEscapeScope)
         {
             Debug.Assert(type != null);
 
-            LValueInfo lv = null;
-            if (!Random.FlipCoin(Options.LValueMakeNewStaticProb))
-                lv = GenExistingLValue(type, minRefEscapeScope);
+            LValueInfo lv = GenExistingLValue(type, minRefEscapeScope);
 
             if (lv == null)
             {
@@ -416,48 +414,68 @@ namespace Fuzzlyn.Methods
         {
             Debug.Assert(type == null || !(type is RefType));
 
-            List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope);
-            List<FuncGenerator> refReturningFuncs = new List<FuncGenerator>();
-            foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
-            {
-                if (!(func.ReturnType is RefType rt))
-                    continue;
+            LValueKind kind = (LValueKind)Options.ExistingLValueDist.Sample(Random.Rng);
 
-                if (type == null || type == rt.InnerType)
-                    refReturningFuncs.Add(func);
+            if (kind == LValueKind.RefReturningCall)
+            {
+                List<FuncGenerator> refReturningFuncs = new List<FuncGenerator>();
+                foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
+                {
+                    if (!(func.ReturnType is RefType rt))
+                        continue;
+
+                    if (type == null || type == rt.InnerType)
+                        refReturningFuncs.Add(func);
+                }
+
+                // If we don't have a ref-returning function, fall back to local/static by retrying.
+                // The reason we don't always fall back to trying other options is that otherwise
+                // we may stack overflow in cases like ref int M(ref int a), if we have no locals
+                // or statics of type int. We would keep generating method calls in this case.
+                // This is kind of a hack, although it is pretty natural to pick statics/locals for
+                // lvalues, so it is not that big of a deal.
+                if (refReturningFuncs.Count == 0)
+                    return GenExistingLValue(type, minRefEscapeScope);
+
+                FuncGenerator funcToCall = Random.NextElement(refReturningFuncs);
+
+                // When calling a func that returns a by-ref, we need to take into account that the C# compiler
+                // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
+                // allowed to pass non-local by-refs. The following example illustrates the analysis performed
+                // by the compiler:
+                // ref int M(ref int b, ref int c) {
+                //   int a = 2;
+                //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
+                //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
+                // }
+                // ref int Max(ref int a, ref int b) { ... }
+                // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
+                // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
+                // and the result of that call would not be valid to return.
+                ArgumentSyntax[] args = GenArgs(funcToCall, minRefEscapeScope, out int argsMinRefEscapeScope);
+                InvocationExpressionSyntax invoc =
+                    InvocationExpression(
+                        IdentifierName(funcToCall.Name),
+                        ArgumentList(
+                            SeparatedList(
+                                args)));
+
+                return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope);
             }
 
-            if (lvalues.Count + refReturningFuncs.Count == 0)
-                return null;
+            List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static);
+            if (lvalues.Count == 0)
+            {
+                // We typically fall back to generating a static, so just try to find a static if we found no local.
+                if (kind != LValueKind.Local)
+                    return null;
 
-            int index = Random.Next(lvalues.Count + refReturningFuncs.Count);
-            if (index < lvalues.Count)
-                return lvalues[index];
+                lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true);
+                if (lvalues.Count == 0)
+                    return null;
+            }
 
-            FuncGenerator funcToCall = refReturningFuncs[index - lvalues.Count];
-
-            // When calling a func that returns a by-ref, we need to take into account that the C# compiler
-            // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
-            // allowed to pass non-local by-refs. The following example illustrates the analysis performed
-            // by the compiler:
-            // ref int M(ref int b, ref int c) {
-            //   int a = 2;
-            //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
-            //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
-            // }
-            // ref int Max(ref int a, ref int b) { ... }
-            // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
-            // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
-            // and the result of that call would not be valid to return.
-            ArgumentSyntax[] args = GenArgs(funcToCall, minRefEscapeScope);
-            InvocationExpressionSyntax invoc =
-                InvocationExpression(
-                    IdentifierName(funcToCall.Name),
-                    ArgumentList(
-                        SeparatedList(
-                            args)));
-
-            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, minRefEscapeScope);
+            return Random.NextElement(lvalues);
         }
 
         /// <summary>
@@ -470,22 +488,32 @@ namespace Fuzzlyn.Methods
         /// </summary>
         private LValueInfo GenMemberAccess(FuzzType ft)
         {
-            List<LValueInfo> paths = CollectVariablePaths(ft, 0);
+            List<LValueInfo> paths =
+                Random.FlipCoin(Options.MemberAccessSelectLocalProb)
+                ? CollectVariablePaths(ft, int.MinValue, true, false)
+                : CollectVariablePaths(ft, int.MinValue, false, true);
+
             return paths.Count > 0 ? Random.NextElement(paths) : null;
         }
 
-        private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope)
+        private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics)
         {
             List<LValueInfo> paths = new List<LValueInfo>();
 
-            foreach (ScopeFrame sf in _scope)
+            if (collectLocals)
             {
-                foreach (VariableIdentifier variable in sf.Variables)
-                    AppendVariablePaths(paths, variable);
+                foreach (ScopeFrame sf in _scope)
+                {
+                    foreach (VariableIdentifier variable in sf.Variables)
+                        AppendVariablePaths(paths, variable);
+                }
             }
 
-            foreach (StaticField stat in Statics.Fields)
-                AppendVariablePaths(paths, stat.Var);
+            if (collectStatics)
+            {
+                foreach (StaticField stat in Statics.Fields)
+                    AppendVariablePaths(paths, stat.Var);
+            }
 
             Debug.Assert(type == null || !(type is RefType), "Cannot collect variables of ref type");
 
@@ -499,7 +527,7 @@ namespace Fuzzlyn.Methods
             // lhs = ref rhs1; // must be supported
             // lhs = ref rhs2; // must be supported
             bool IsAllowedType(FuzzType other)
-                => type != null && (other == type || (other is RefType rt && rt.InnerType == type));
+                => type == null || (other == type || (other is RefType rt && rt.InnerType == type));
 
             paths.RemoveAll(lv => lv.RefEscapeScope < minRefEscapeScope || !IsAllowedType(lv.Type));
             return paths;
@@ -621,7 +649,7 @@ namespace Fuzzlyn.Methods
                 type = type ?? func.ReturnType;
             }
 
-            ArgumentSyntax[] args = GenArgs(func, 0);
+            ArgumentSyntax[] args = GenArgs(func, 0, out _);
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
                     IdentifierName(func.Name),
@@ -634,18 +662,19 @@ namespace Fuzzlyn.Methods
             return CastExpression(type.GenReferenceTo(), invoc);
         }
 
-        private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope)
+        private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope, out int argsMinRefEscapeScope)
         {
             ArgumentSyntax[] args = new ArgumentSyntax[funcToCall.Parameters.Length];
+            argsMinRefEscapeScope = int.MaxValue;
+
             for (int i = 0; i < args.Length; i++)
             {
                 FuzzType paramType = funcToCall.Parameters[i].Type;
                 if (paramType is RefType rt)
                 {
-                    args[i] =
-                        Argument(
-                            GenLValue(rt.InnerType, minRefEscapeScope).Expression)
-                        .WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
+                    LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
+                    argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
+                    args[i] = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
                 }
                 else
                 {
@@ -673,7 +702,7 @@ namespace Fuzzlyn.Methods
             if (!(type is PrimitiveType pt) || !acceptedTypes.Contains(pt.Keyword))
                 return null;
 
-            LValueInfo subject = GenExistingLValue(type, 0);
+            LValueInfo subject = GenExistingLValue(type, int.MinValue);
             if (subject == null)
                 return null;
 
@@ -710,7 +739,7 @@ namespace Fuzzlyn.Methods
             foreach (VariableIdentifier variable in variables)
                 AppendVariablePaths(paths, variable);
 
-            paths.RemoveAll(lv => !(lv.Type is PrimitiveType));
+            paths.RemoveAll(lv => !(lv.Type is PrimitiveType) && !(lv.Type is RefType rt && rt.InnerType is PrimitiveType));
 
             foreach (LValueInfo lvalue in paths)
             {
