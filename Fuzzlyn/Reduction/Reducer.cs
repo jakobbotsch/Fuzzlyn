@@ -1014,6 +1014,35 @@ namespace Fuzzlyn.Reduction
             }
         }
 
+        // Simplify ref-local. ref T a = ref b => T a = b
+        [Simplifier]
+        private SyntaxNode SimplifyLocalRemoveRef(SyntaxNode node)
+        {
+            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1 ||
+                !(local.Declaration.Type is RefTypeSyntax refTypeSyntax))
+                return node;
+
+            VariableDeclaratorSyntax var = local.Declaration.Variables[0];
+            if (var.Initializer == null)
+                return node;
+
+            Debug.Assert(var.Initializer.Value is RefExpressionSyntax);
+
+            ExpressionSyntax innerExpr = ((RefExpressionSyntax)var.Initializer.Value).Expression;
+            SyntaxNode newNode =
+                LocalDeclarationStatement(
+                    VariableDeclaration(
+                        refTypeSyntax.Type,
+                        SingletonSeparatedList(
+                            VariableDeclarator(
+                                var.Identifier)
+                            .WithInitializer(
+                                EqualsValueClause(
+                                    innerExpr)))));
+
+            return newNode;
+        }
+
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)
         {
             string name = MakeLocalName();
