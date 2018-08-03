@@ -453,15 +453,10 @@ namespace Fuzzlyn.Reduction
             if (!(node is ClassDeclarationSyntax cls))
                 return node;
 
-            // We require invocations to be on the form
-            // M(var1, var2, ...)
-            // so we can simply replace parameters with those variables. We have other simplifications that rewrite
-            // invocations to that form.
             List<InvocationExpressionSyntax> invocs =
                 cls.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
-                .Where(i => i.Expression is IdentifierNameSyntax &&
-                            i.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax || a.Expression is LiteralExpressionSyntax))
+                .Where(i => i.Expression is IdentifierNameSyntax)
                 .ToList();
 
             if (invocs.Count <= 0)
@@ -488,7 +483,13 @@ namespace Fuzzlyn.Reduction
             // being passed as an arg, so the assignments here replicate that as well.
             foreach (var (param, arg) in target.ParameterList.Parameters.Zip(invoc.ArgumentList.Arguments, (p, a) => (p, a)))
             {
-                var (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+                LocalDeclarationStatementSyntax argLocal;
+                string argLocalName;
+                if (arg.RefKindKeyword != null)
+                    (argLocal, argLocalName) = MakeLocalDecl(RefExpression(arg.Expression), RefType(param.Type));
+                else
+                    (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+
                 finalStatements.Add(argLocal);
                 idReplacements.Add(param.Identifier.Text, argLocalName);
             }
