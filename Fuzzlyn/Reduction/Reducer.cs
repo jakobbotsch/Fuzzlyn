@@ -194,14 +194,19 @@ namespace Fuzzlyn.Reduction
         /// </summary>
         private CompilationUnitSyntax CoarseSimplify(CompilationUnitSyntax reduced, Func<CompilationUnitSyntax, bool> isInteresting)
         {
-            // Step 1: Declare all variables at the start of the methods with a default value.
+            // Step 1: Declare all non-ref variables at the start of the methods with a default value.
             // This will hopefully allow us to remove more assignments than otherwise.
             Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
 
             foreach (MethodDeclarationSyntax method in reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
             {
                 List<LocalDeclarationStatementSyntax> decls =
-                    method.DescendantNodes().OfType<LocalDeclarationStatementSyntax>().ToList();
+                    method.DescendantNodes()
+                    .OfType<LocalDeclarationStatementSyntax>()
+                    .Where(decl => decl.Declaration.Variables.Count == 1 &&
+                                   decl.Declaration.Variables[0] != null &&
+                                   !(decl.Declaration.Type is RefTypeSyntax))
+                    .ToList();
 
                 if (decls.Count == 0)
                     continue;
@@ -209,12 +214,6 @@ namespace Fuzzlyn.Reduction
                 Dictionary<SyntaxNode, SyntaxNode> assignmentReplacements = new Dictionary<SyntaxNode, SyntaxNode>();
                 foreach (LocalDeclarationStatementSyntax decl in decls)
                 {
-                    if (decl.Declaration.Variables.Count != 1 ||
-                        decl.Declaration.Variables[0].Initializer == null)
-                    {
-                        continue;
-                    }
-
                     assignmentReplacements.Add(
                         decl,
                         ExpressionStatement(
@@ -228,7 +227,6 @@ namespace Fuzzlyn.Reduction
                     method.ReplaceNodes(
                         assignmentReplacements.Keys,
                         (orig, _) => assignmentReplacements[orig]);
-
 
                 IEnumerable<LocalDeclarationStatementSyntax> newDecls =
                     decls
@@ -947,6 +945,7 @@ namespace Fuzzlyn.Reduction
         // Inlines locals of the forms
         // var a = b;
         // var a = literal;
+        // ref int a = ref b;
         // All occurences of a are replaced by the right-hand side.
         [Simplifier]
         private SyntaxNode InlineLocal(SyntaxNode node)
