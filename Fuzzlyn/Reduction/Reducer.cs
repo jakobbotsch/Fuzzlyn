@@ -955,9 +955,20 @@ namespace Fuzzlyn.Reduction
 
             List<LocalDeclarationStatementSyntax> candidates =
                 block.Statements.OfType<LocalDeclarationStatementSyntax>()
-                .Where(l => l.Declaration.Variables.Count == 1 &&
-                            (l.Declaration.Variables[0].Initializer?.Value is IdentifierNameSyntax ||
-                             l.Declaration.Variables[0].Initializer?.Value is LiteralExpressionSyntax))
+                .Where(l =>
+                {
+                    if (l.Declaration.Variables.Count != 1)
+                        return false;
+
+                    VariableDeclaratorSyntax var = l.Declaration.Variables[0];
+                    if (var.Initializer == null)
+                        return false;
+
+                    return
+                        var.Initializer.Value is IdentifierNameSyntax ||
+                        var.Initializer.Value is LiteralExpressionSyntax ||
+                        (var.Initializer.Value is RefExpressionSyntax lclRes && lclRes.Expression is IdentifierNameSyntax);
+                })
                 .ToList();
 
             if (candidates.Count <= 0)
@@ -966,6 +977,9 @@ namespace Fuzzlyn.Reduction
             LocalDeclarationStatementSyntax local = candidates[_rng.Next(candidates.Count)];
             string toReplace = local.Declaration.Variables[0].Identifier.Text;
             SyntaxNode replaceWith = local.Declaration.Variables[0].Initializer.Value;
+
+            if (replaceWith is RefExpressionSyntax res)
+                replaceWith = res.Expression;
 
             BlockSyntax newNode =
                 block.WithStatements(block.Statements.Remove(local));
