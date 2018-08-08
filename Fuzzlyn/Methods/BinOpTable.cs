@@ -96,9 +96,23 @@ namespace Fuzzlyn.Methods
 /*bol*/ { ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, BOL },
         };
 
+        private static readonly SyntaxKind[,] s_relopTable =
+        {
+//        i08  i16  i32  i64  u08  u16  u32  u64  bol
+/*i08*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR, ERR },
+/*i16*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR, ERR },
+/*i32*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR, ERR },
+/*i64*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR, ERR },
+/*u08*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR },
+/*u16*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR },
+/*u32*/ { BOL, BOL, BOL, BOL, BOL, BOL, BOL, BOL, ERR },
+/*u64*/ { ERR, ERR, ERR, ERR, BOL, BOL, BOL, BOL, ERR },
+/*bol*/ { ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR },
+        };
+
         public static BinOpTable Arithmetic { get; } = new BinOpTable(s_arithmeticTable);
         public static BinOpTable Shifts { get; } = new BinOpTable(s_shiftTable);
-        public static BinOpTable Relop => Arithmetic;
         public static BinOpTable Equality { get; } = new BinOpTable(s_equalityTable);
+        public static BinOpTable Relop { get; } = new BinOpTable(s_relopTable);
     }
 }

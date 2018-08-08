@@ -17,6 +17,8 @@ namespace Fuzzlyn.TableGen
             GenTable("<<");
             Console.WriteLine("Table for equality:");
             GenTable("==");
+            Console.WriteLine("Table for relops:");
+            GenTable(">");
             Console.ReadLine();
         }
 
