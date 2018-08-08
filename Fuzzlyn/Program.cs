@@ -279,7 +279,7 @@ namespace Fuzzlyn
 
                 int numGen = Interlocked.Increment(ref numGenerated);
                 if (numGen % 100 == 0)
-                    Console.Title = $"{numGen}/{options.NumPrograms} programs generated";
+                    Console.Title = $"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found";
 
             });
 
@@ -331,6 +331,7 @@ namespace Fuzzlyn
             }
         }
 
+        private static int s_numDeviating;
         private static void ExecuteQueue()
         {
             if (s_programQueue.Count <= 0)
@@ -353,6 +354,7 @@ namespace Fuzzlyn
                     File.AppendAllText(
                         "Execution_Mismatch.txt",
                         "Seed: " + s_programQueue[i].Item1 + Environment.NewLine + JsonConvert.SerializeObject(result, Formatting.Indented) + Environment.NewLine);
+                    Interlocked.Increment(ref s_numDeviating);
                 }
             }
 
