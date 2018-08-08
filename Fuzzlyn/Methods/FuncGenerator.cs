@@ -21,6 +21,7 @@ namespace Fuzzlyn.Methods
         private readonly int _funcIndex;
         private int _varCounter;
         private int _level;
+        private int _finallyCount;
         private readonly Func<string> _genChecksumSiteId;
 
         public FuncGenerator(
@@ -119,8 +120,11 @@ namespace Fuzzlyn.Methods
                 StatementKind kind =
                     (StatementKind)Options.StatementTypeDist.Sample(Random.Rng);
 
-                if ((kind == StatementKind.Block || kind == StatementKind.If) &&
+                if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryFinally) &&
                     ShouldRejectRecursion())
+                    continue;
+
+                if (kind == StatementKind.Return && _finallyCount > 0)
                     continue;
 
                 switch (kind)
@@ -133,6 +137,8 @@ namespace Fuzzlyn.Methods
                         return GenCallStatement(tryExisting: ShouldRejectRecursion());
                     case StatementKind.If:
                         return GenIf();
+                    case StatementKind.TryFinally:
+                        return GenTryFinally();
                     case StatementKind.Return:
                         return GenReturn();
                     default:
@@ -150,8 +156,11 @@ namespace Fuzzlyn.Methods
             return rand < levelPow / (levelPow + Math.Pow(h, n));
         }
 
-        private BlockSyntax GenBlock(bool root)
+        private BlockSyntax GenBlock(bool root, int numStatements = -1)
         {
+            if (numStatements == -1)
+                numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
+
             _level++;
 
             ScopeFrame scope = new ScopeFrame();
@@ -169,7 +178,6 @@ namespace Fuzzlyn.Methods
 
             IEnumerable<StatementSyntax> GenStatements()
             {
-                int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
                 StatementSyntax retStmt = null;
                 for (int i = 0; i < numStatements; i++)
                 {
@@ -334,6 +342,23 @@ namespace Fuzzlyn.Methods
                 gen = IfStatement(guard, GenBlock(false), ElseClause(GenBlock(false)));
             }
             return gen;
+        }
+
+        private StatementSyntax GenTryFinally()
+        {
+            int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
+            int tryStatements = Random.Next(numStatements);
+            int finallyStatements = numStatements - tryStatements;
+
+            BlockSyntax body = GenBlock(false, tryStatements);
+            _finallyCount++;
+            BlockSyntax finallyBody = GenBlock(false, finallyStatements);
+            _finallyCount--;
+            return
+                TryStatement(
+                    body,
+                    List<CatchClauseSyntax>(),
+                    FinallyClause(finallyBody));
         }
 
         private StatementSyntax GenReturn()
@@ -823,6 +848,7 @@ namespace Fuzzlyn.Methods
         Call,
         If,
         Return,
+        TryFinally,
     }
 
     internal enum ExpressionKind
