@@ -4,7 +4,7 @@ Get-Content -Path ..\Fuzzlyn\bin\Release\netcoreapp2.1\publish\Execution_Mismatc
 	}
 
 	$seed = ($_ -split ' ')[1]
-	if (Test-Path "reduced\\$seed.txt") {
+	if (Test-Path "reduced\\$seed.cs") {
 		Write-Host "Skipping $seed because it is already reduced"
 		return
 	}
