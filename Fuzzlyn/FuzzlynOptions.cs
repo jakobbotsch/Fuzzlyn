@@ -20,6 +20,7 @@ namespace Fuzzlyn
         public double MakeClassProb { get; set; } = 0.5;
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
         public double PrimitiveFieldProb { get; set; } = 0.8;
+        public int ProgramMinStatements { get; set; } = 50;
         public double AssignToNewVarProb { get; set; } = 0.4;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double CompoundAssignmentProb { get; set; } = 0.1;

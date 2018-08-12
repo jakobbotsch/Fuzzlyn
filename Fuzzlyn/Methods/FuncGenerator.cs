@@ -51,6 +51,7 @@ namespace Fuzzlyn.Methods
         public FuzzType ReturnType { get; private set; }
         public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
+        public int NumStatements { get; private set; }
 
         public MethodDeclarationSyntax Output()
         {
@@ -110,11 +111,14 @@ namespace Fuzzlyn.Methods
                 Parameters = Array.Empty<VariableIdentifier>();
 
             _level = -1;
-            Body = GenBlock(ReturnType != null);
+            Body = GenBlock(true);
         }
 
-        private StatementSyntax GenStatement()
+        private StatementSyntax GenStatement(bool allowReturn = true)
         {
+            if (_finallyCount > 0)
+                allowReturn = false;
+
             while (true)
             {
                 StatementKind kind =
@@ -124,7 +128,7 @@ namespace Fuzzlyn.Methods
                     ShouldRejectRecursion())
                     continue;
 
-                if (kind == StatementKind.Return && _finallyCount > 0)
+                if (kind == StatementKind.Return && !allowReturn)
                     continue;
 
                 switch (kind)
@@ -166,6 +170,7 @@ namespace Fuzzlyn.Methods
             BlockSyntax block = Block(GenStatements());
 
             _scope.RemoveAt(_scope.Count - 1);
+
             _level--;
 
             return block;
@@ -173,20 +178,33 @@ namespace Fuzzlyn.Methods
             IEnumerable<StatementSyntax> GenStatements()
             {
                 StatementSyntax retStmt = null;
-                for (int i = 0; i < numStatements; i++)
+                int numGenerated = 0;
+                while (true)
                 {
-                    StatementSyntax stmt = GenStatement();
+                    StatementSyntax stmt = GenStatement(allowReturn: !root);
+
                     if (stmt is ReturnStatementSyntax)
                     {
                         retStmt = stmt;
                         break;
                     }
 
+                    NumStatements++;
                     yield return stmt;
-                }
 
-                if (root && retStmt == null)
-                    retStmt = GenReturn();
+                    numGenerated++;
+                    if (numGenerated < numStatements)
+                        continue;
+
+                    // For first block we ensure we get a minimum amount of statements
+                    if (root && _funcIndex == 0)
+                    {
+                        if (_funcs.Sum(f => f.NumStatements) < Options.ProgramMinStatements)
+                            continue;
+                    }
+
+                    break;
+                }
 
                 if (Options.EnableChecksumming)
                 {
@@ -194,8 +212,14 @@ namespace Fuzzlyn.Methods
                         yield return stmt;
                 }
 
+                if (root && retStmt == null && ReturnType != null)
+                    retStmt = GenReturn();
+
                 if (retStmt != null)
+                {
+                    NumStatements++;
                     yield return retStmt;
+                }
             }
         }
 
