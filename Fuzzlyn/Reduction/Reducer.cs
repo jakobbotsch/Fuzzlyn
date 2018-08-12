@@ -415,14 +415,15 @@ namespace Fuzzlyn.Reduction
             }
         }
 
-        // Simplify "bool b = s_2 == M();" to "M();"
+        // Simplify statement containing call to just the call.
         [Simplifier]
-        private SyntaxNode SimplifyLocalWithCall(SyntaxNode node)
+        private SyntaxNode SimplifyStatementWithCall(SyntaxNode node)
         {
-            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1)
+            if (!(node is ExpressionStatementSyntax stmt))
                 return node;
 
-            List<InvocationExpressionSyntax> calls = local.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
+            // Take descendant nodes of expression to avoid simplifying M(); to M();
+            List<InvocationExpressionSyntax> calls = stmt.Expression.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
             if (calls.Count <= 0)
                 return node;
 
@@ -565,6 +566,15 @@ namespace Fuzzlyn.Reduction
                 return node;
 
             return @if.Else.Statement;
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyIfRemoveElse(SyntaxNode node)
+        {
+            if (!(node is IfStatementSyntax @if) || @if.Else == null)
+                return node;
+
+            return @if.WithElse(null);
         }
 
         [Simplifier]
@@ -1053,6 +1063,33 @@ namespace Fuzzlyn.Reduction
                                 EqualsValueClause(
                                     innerExpr)))));
 
+            return newNode;
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyTryFinally(SyntaxNode node)
+        {
+            if (!(node is TryStatementSyntax @try) || @try.Catches.Any())
+                return node;
+
+            return Block(@try.Block, @try.Finally.Block);
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyMethodRemoveReturn(SyntaxNode node)
+        {
+            if (!(node is MethodDeclarationSyntax method))
+                return node;
+
+            if (method.ReturnType is PredefinedTypeSyntax returnType &&
+                returnType.Keyword.IsKind(SyntaxKind.VoidKeyword))
+            {
+                return node;
+            }
+
+            SyntaxNode newNode =
+                method.WithReturnType(PredefinedType(Token(SyntaxKind.VoidKeyword)));
+            newNode = newNode.ReplaceNodes(newNode.DescendantNodes().OfType<ReturnStatementSyntax>(), (cur, old) => ReturnStatement());
             return newNode;
         }
 
