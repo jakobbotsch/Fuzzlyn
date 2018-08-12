@@ -14,7 +14,6 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 [assembly: InternalsVisibleTo("Fuzzlyn.Evaluation")]
 namespace Fuzzlyn
 {
-
     internal class CodeGenerator
     {
         private int checksumSiteId;
@@ -37,14 +36,14 @@ namespace Fuzzlyn
         private void GenerateTypes() => Types.GenerateTypes();
         private void GenerateMethods() => Methods.GenerateMethods(GenerateChecksumSiteId);
 
-        public CompilationUnitSyntax GenerateProgram(bool includeComments)
+        public CompilationUnitSyntax GenerateProgram()
         {
             GenerateTypes();
             GenerateMethods();
-            return OutputProgram(includeComments);
+            return OutputProgram();
         }
 
-        private CompilationUnitSyntax OutputProgram(bool includeComments)
+        private CompilationUnitSyntax OutputProgram()
         {
             CompilationUnitSyntax unit = CompilationUnit();
 
@@ -60,8 +59,7 @@ namespace Fuzzlyn
             types = types.Concat(new[] { programClass });
 
             unit = unit.WithMembers(types.ToSyntaxList());
-            if (includeComments)
-                unit = unit.WithLeadingTrivia(OutputHeader().Select(Comment));
+            unit = unit.WithLeadingTrivia(OutputHeader().Select(Comment));
 
             return unit;
         }

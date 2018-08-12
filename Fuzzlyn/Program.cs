@@ -38,6 +38,7 @@ namespace Fuzzlyn
             bool? enableChecksumming = null;
             bool? reduce = null;
             string removeFixed = null;
+            bool? stats = null;
             OptionSet optionSet = new OptionSet
             {
                 { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
@@ -54,9 +55,9 @@ namespace Fuzzlyn
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
+                { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
                 { "help|h", v => help = v != null }
             };
-
 
             string error = null;
             try
@@ -105,16 +106,12 @@ namespace Fuzzlyn
                 options.EnableChecksumming = enableChecksumming.Value;
             if (reduce.HasValue)
                 options.Reduce = reduce.Value;
+            if (stats.HasValue)
+                options.Stats = stats.Value;
 
             if (options.NumPrograms != 1 && options.Seed.HasValue)
             {
                 Console.WriteLine("Error: Must specify exactly 1 program if a seed is specified.");
-                return;
-            }
-
-            if (options.NumPrograms != 1 && options.Output)
-            {
-                Console.WriteLine("Error: Must specify exactly 1 program if output is desired.");
                 return;
             }
 
@@ -131,15 +128,15 @@ namespace Fuzzlyn
             }
 
             if (removeFixed != null)
-            {
                 RemoveFixedPrograms(options, removeFixed);
-                return;
-            }
-
-            if (options.Reduce)
+            else if (options.Reduce)
                 ReduceProgram(options);
+            else if (options.Stats)
+                GenerateProgramsAndGetStats(options);
+            else if (options.Output)
+                GenerateProgramsAndOutput(options);
             else
-                GenerateProgram(options);
+                GenerateProgramsAndCheck(options);
         }
 
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
@@ -158,7 +155,7 @@ namespace Fuzzlyn
                 ulong seed = ulong.Parse(matches[0].Groups[1].Value);
                 options.Seed = seed;
                 var cg = new CodeGenerator(options);
-                CompilationUnitSyntax original = cg.GenerateProgram(false);
+                CompilationUnitSyntax original = cg.GenerateProgram();
 
                 CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
                 CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
@@ -249,13 +246,64 @@ namespace Fuzzlyn
         private static void ReduceProgram(FuzzlynOptions options)
         {
             var cg = new CodeGenerator(options);
-            CompilationUnitSyntax original = cg.GenerateProgram(true);
+            CompilationUnitSyntax original = cg.GenerateProgram();
             Reducer reducer = new Reducer(original, options.Seed.Value);
             CompilationUnitSyntax reduced = reducer.Reduce();
             Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
         }
 
-        private static void GenerateProgram(FuzzlynOptions options)
+        private static void GenerateProgramsAndOutput(FuzzlynOptions options)
+        {
+            void Output(CompilationUnitSyntax unit, ulong seed)
+            {
+                Console.WriteLine(unit.NormalizeWhitespace().ToFullString());
+            }
+
+            GeneratePrograms(options, Output);
+        }
+
+        private static void GenerateProgramsAndGetStats(FuzzlynOptions options)
+        {
+            List<double> sizes = new List<double>();
+            void AddProgramSize(CompilationUnitSyntax unit, ulong seed)
+            {
+                unit = unit.NormalizeWhitespace();
+                double size = unit.ToFullString().Length;
+                lock (sizes)
+                {
+                    sizes.Add(size);
+                    if (sizes.Count % 500 != 0)
+                        return;
+
+                    Console.WriteLine("Stats of {0} examples", sizes.Count);
+                    Console.WriteLine("Average program size: {0:F2} KiB", sizes.Average() / 1024.0);
+                    Console.WriteLine("Min program size: {0} B", sizes.Min());
+                    Console.WriteLine("Max program size: {0} KiB", sizes.Max() / 1024.0);
+                    Console.WriteLine("# programs < 2 KiB: {0}", sizes.Count(s => s < 2048));
+                    Console.WriteLine("10th percentiles:");
+                    List<double> sortedSizes = sizes.OrderBy(s => s).ToList();
+                    int programsPerPercentile = sortedSizes.Count / 10;
+                    for (int i = 0; i < 10; i++)
+                    {
+                        double min = sortedSizes[i * programsPerPercentile];
+                        double max = i == 9 ? sortedSizes.Last() : sortedSizes[(i + 1) * programsPerPercentile];
+                        Console.WriteLine("{0:F2} KiB <= size <{1} {2:F2} KiB: {3} programs", min / 1024, i == 9 ? "=" : "", max / 1024, programsPerPercentile);
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+
+            GeneratePrograms(options, AddProgramSize);
+        }
+
+        private static void GenerateProgramsAndCheck(FuzzlynOptions options)
+        {
+            GeneratePrograms(options, Compile);
+            ExecuteQueue();
+        }
+
+        private static void GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
         {
             ParallelOptions po = new ParallelOptions
             {
@@ -266,29 +314,17 @@ namespace Fuzzlyn
             Parallel.For(0, options.NumPrograms, po, i =>
             {
                 CodeGenerator gen = new CodeGenerator(options);
-                CompilationUnitSyntax unit = gen.GenerateProgram(true);
-                if (options.Output)
-                {
-                    string asString = unit.NormalizeWhitespace().ToFullString();
-                    Console.Write(asString);
-                }
-                else
-                {
-                    Compile(gen, unit);
-                }
-
+                CompilationUnitSyntax unit = gen.GenerateProgram();
+                action(unit, gen.Random.Seed);
                 int numGen = Interlocked.Increment(ref numGenerated);
                 if (numGen % 100 == 0)
                     Console.Title = $"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found";
-
             });
-
-            ExecuteQueue();
         }
 
         private static readonly object s_fileLock = new object();
         private static readonly List<(ulong, byte[], byte[])> s_programQueue = new List<(ulong, byte[], byte[])>();
-        private static void Compile(CodeGenerator gen, CompilationUnitSyntax program)
+        private static void Compile(CompilationUnitSyntax program, ulong seed)
         {
             byte[] debug = DoCompilation(Compiler.DebugOptions);
             byte[] release = DoCompilation(Compiler.ReleaseOptions);
@@ -297,7 +333,7 @@ namespace Fuzzlyn
             {
                 lock (s_programQueue)
                 {
-                    s_programQueue.Add((gen.Random.Seed, debug, release));
+                    s_programQueue.Add((seed, debug, release));
 
                     if (s_programQueue.Count >= 100)
                         ExecuteQueue();
@@ -310,7 +346,7 @@ namespace Fuzzlyn
                 if (comp.RoslynException != null)
                 {
                     lock (s_fileLock)
-                        File.AppendAllText("Crashes.txt", "seed: " + gen.Random.Seed + Environment.NewLine);
+                        File.AppendAllText("Crashes.txt", "seed: " + seed + Environment.NewLine);
 
                     return null;
                 }
@@ -319,7 +355,7 @@ namespace Fuzzlyn
                 {
                     IEnumerable<Diagnostic> errors = comp.CompileErrors.Where(d => d.Severity == DiagnosticSeverity.Error);
                     string logEntry =
-                        "seed: " + gen.Random.Seed + Environment.NewLine +
+                        "seed: " + seed + Environment.NewLine +
                         string.Join(Environment.NewLine, errors.Select(d => "  " + d));
                     lock (s_fileLock)
                         File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
