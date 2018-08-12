@@ -350,7 +350,13 @@ namespace Fuzzlyn.Methods
         private StatementSyntax GenIf()
         {
             StatementSyntax gen = null;
-            ExpressionSyntax guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            ExpressionSyntax guard;
+            int attempts = 0;
+            do
+            {
+                guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            } while (guard is LiteralExpressionSyntax && attempts++ < 20);
+
             if (Random.FlipCoin(0.5))
             {
                 gen = IfStatement(guard, GenBlock(false));
