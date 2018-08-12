@@ -600,34 +600,32 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBoolProducingBinary()
         {
-            FuzzType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
-            ExpressionSyntax left, right;
+            PrimitiveType leftType;
+            PrimitiveType rightType;
             SyntaxKind op = (SyntaxKind)Options.BinaryBoolDist.Sample(Random.Rng);
             if (op == SyntaxKind.LogicalAndExpression || op == SyntaxKind.LogicalOrExpression ||
                 op == SyntaxKind.ExclusiveOrExpression || op == SyntaxKind.BitwiseAndExpression ||
                 op == SyntaxKind.BitwiseOrExpression)
             {
                 // &&, ||, ^, &, | must be between bools to produce bool
-                left = GenExpression(boolType);
-                right = GenExpression(boolType);
+                PrimitiveType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
+                leftType = rightType = boolType;
             }
             else if (op == SyntaxKind.EqualsExpression || op == SyntaxKind.NotEqualsExpression)
             {
-                PrimitiveType leftType = Types.PickPrimitiveType(f => true);
-                left = GenExpression(leftType);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.Equality.GetResultType(leftType.Keyword, f.Keyword).HasValue);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => true);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Equality.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
             else
             {
                 Debug.Assert(op == SyntaxKind.LessThanOrEqualExpression || op == SyntaxKind.LessThanExpression ||
                              op == SyntaxKind.GreaterThanOrEqualExpression || op == SyntaxKind.GreaterThanExpression);
 
-                PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.Relop.GetResultType(leftType.Keyword, f.Keyword).HasValue);
-                left = GenExpression(leftType);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Relop.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
+
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             return BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
         }
@@ -655,10 +653,7 @@ namespace Fuzzlyn.Methods
             PrimitiveType rightType =
                 Types.PickPrimitiveType(f => table.GetResultType(leftType.Keyword, f.Keyword).HasValue);
 
-            ExpressionSyntax left = GenExpression(leftType);
-            ExpressionSyntax right = GenExpression(rightType);
-            while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
-                right = GenExpression(rightType);
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             if (op == SyntaxKind.ModuloExpression || op == SyntaxKind.DivideExpression)
             {
@@ -677,6 +672,21 @@ namespace Fuzzlyn.Methods
                 expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
 
             return expr;
+        }
+
+        private (ExpressionSyntax, ExpressionSyntax) GenLeftRightForBinary(FuzzType leftType, FuzzType rightType)
+        {
+            ExpressionSyntax left = GenExpression(leftType);
+            ExpressionSyntax right;
+            // There are two reasons we don't allow both left and right to be literals:
+            // 1. If the computation overflows, this gives a C# compiler error
+            // 2. The compiler is required to constant fold these expressions which is not interesting.
+            do
+            {
+                right = GenExpression(rightType);
+            } while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax);
+
+            return (left, right);
         }
 
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
