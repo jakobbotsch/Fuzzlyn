@@ -145,15 +145,9 @@ namespace Fuzzlyn.Methods
                         throw new Exception("Unreachable");
                 }
             }
-        }
 
-        private bool ShouldRejectRecursion()
-        {
-            double rand = Random.NextDouble();
-            double n = Options.StatementRejectionLevelParameterN;
-            double h = Options.StatementRejectionLevelParameterH;
-            double levelPow = Math.Pow(_level, n);
-            return rand < levelPow / (levelPow + Math.Pow(h, n));
+            bool ShouldRejectRecursion()
+                => Options.StatementRejection.Reject(_level, Random.Rng);
         }
 
         private BlockSyntax GenBlock(bool root, int numStatements = -1)
@@ -660,7 +654,7 @@ namespace Fuzzlyn.Methods
             Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
             FuncGenerator func;
-            if (allowNew && Random.FlipCoin(Options.GenNewMethodProb))
+            if (allowNew && Random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, Random.Rng))
             {
                 type = type ?? Types.PickType(Options.ReturnTypeIsByRefProb);
 
