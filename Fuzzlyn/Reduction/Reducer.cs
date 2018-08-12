@@ -194,14 +194,19 @@ namespace Fuzzlyn.Reduction
         /// </summary>
         private CompilationUnitSyntax CoarseSimplify(CompilationUnitSyntax reduced, Func<CompilationUnitSyntax, bool> isInteresting)
         {
-            // Step 1: Declare all variables at the start of the methods with a default value.
+            // Step 1: Declare all non-ref variables at the start of the methods with a default value.
             // This will hopefully allow us to remove more assignments than otherwise.
             Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
 
             foreach (MethodDeclarationSyntax method in reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
             {
                 List<LocalDeclarationStatementSyntax> decls =
-                    method.DescendantNodes().OfType<LocalDeclarationStatementSyntax>().ToList();
+                    method.DescendantNodes()
+                    .OfType<LocalDeclarationStatementSyntax>()
+                    .Where(decl => decl.Declaration.Variables.Count == 1 &&
+                                   decl.Declaration.Variables[0] != null &&
+                                   !(decl.Declaration.Type is RefTypeSyntax))
+                    .ToList();
 
                 if (decls.Count == 0)
                     continue;
@@ -209,12 +214,6 @@ namespace Fuzzlyn.Reduction
                 Dictionary<SyntaxNode, SyntaxNode> assignmentReplacements = new Dictionary<SyntaxNode, SyntaxNode>();
                 foreach (LocalDeclarationStatementSyntax decl in decls)
                 {
-                    if (decl.Declaration.Variables.Count != 1 ||
-                        decl.Declaration.Variables[0].Initializer == null)
-                    {
-                        continue;
-                    }
-
                     assignmentReplacements.Add(
                         decl,
                         ExpressionStatement(
@@ -228,7 +227,6 @@ namespace Fuzzlyn.Reduction
                     method.ReplaceNodes(
                         assignmentReplacements.Keys,
                         (orig, _) => assignmentReplacements[orig]);
-
 
                 IEnumerable<LocalDeclarationStatementSyntax> newDecls =
                     decls
@@ -417,14 +415,15 @@ namespace Fuzzlyn.Reduction
             }
         }
 
-        // Simplify "bool b = s_2 == M();" to "M();"
+        // Simplify statement containing call to just the call.
         [Simplifier]
-        private SyntaxNode SimplifyLocalWithCall(SyntaxNode node)
+        private SyntaxNode SimplifyStatementWithCall(SyntaxNode node)
         {
-            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1)
+            if (!(node is ExpressionStatementSyntax stmt))
                 return node;
 
-            List<InvocationExpressionSyntax> calls = local.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
+            // Take descendant nodes of expression to avoid simplifying M(); to M();
+            List<InvocationExpressionSyntax> calls = stmt.Expression.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
             if (calls.Count <= 0)
                 return node;
 
@@ -453,15 +452,10 @@ namespace Fuzzlyn.Reduction
             if (!(node is ClassDeclarationSyntax cls))
                 return node;
 
-            // We require invocations to be on the form
-            // M(var1, var2, ...)
-            // so we can simply replace parameters with those variables. We have other simplifications that rewrite
-            // invocations to that form.
             List<InvocationExpressionSyntax> invocs =
                 cls.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
-                .Where(i => i.Expression is IdentifierNameSyntax &&
-                            i.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax || a.Expression is LiteralExpressionSyntax))
+                .Where(i => i.Expression is IdentifierNameSyntax)
                 .ToList();
 
             if (invocs.Count <= 0)
@@ -488,7 +482,13 @@ namespace Fuzzlyn.Reduction
             // being passed as an arg, so the assignments here replicate that as well.
             foreach (var (param, arg) in target.ParameterList.Parameters.Zip(invoc.ArgumentList.Arguments, (p, a) => (p, a)))
             {
-                var (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+                LocalDeclarationStatementSyntax argLocal;
+                string argLocalName;
+                if (arg.RefKindKeyword != null)
+                    (argLocal, argLocalName) = MakeLocalDecl(RefExpression(arg.Expression), RefType(param.Type));
+                else
+                    (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+
                 finalStatements.Add(argLocal);
                 idReplacements.Add(param.Identifier.Text, argLocalName);
             }
@@ -566,6 +566,15 @@ namespace Fuzzlyn.Reduction
                 return node;
 
             return @if.Else.Statement;
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyIfRemoveElse(SyntaxNode node)
+        {
+            if (!(node is IfStatementSyntax @if) || @if.Else == null)
+                return node;
+
+            return @if.WithElse(null);
         }
 
         [Simplifier]
@@ -946,6 +955,7 @@ namespace Fuzzlyn.Reduction
         // Inlines locals of the forms
         // var a = b;
         // var a = literal;
+        // ref int a = ref b;
         // All occurences of a are replaced by the right-hand side.
         [Simplifier]
         private SyntaxNode InlineLocal(SyntaxNode node)
@@ -955,9 +965,20 @@ namespace Fuzzlyn.Reduction
 
             List<LocalDeclarationStatementSyntax> candidates =
                 block.Statements.OfType<LocalDeclarationStatementSyntax>()
-                .Where(l => l.Declaration.Variables.Count == 1 &&
-                            (l.Declaration.Variables[0].Initializer?.Value is IdentifierNameSyntax ||
-                             l.Declaration.Variables[0].Initializer?.Value is LiteralExpressionSyntax))
+                .Where(l =>
+                {
+                    if (l.Declaration.Variables.Count != 1)
+                        return false;
+
+                    VariableDeclaratorSyntax var = l.Declaration.Variables[0];
+                    if (var.Initializer == null)
+                        return false;
+
+                    return
+                        var.Initializer.Value is IdentifierNameSyntax ||
+                        var.Initializer.Value is LiteralExpressionSyntax ||
+                        (var.Initializer.Value is RefExpressionSyntax lclRes && lclRes.Expression is IdentifierNameSyntax);
+                })
                 .ToList();
 
             if (candidates.Count <= 0)
@@ -966,6 +987,9 @@ namespace Fuzzlyn.Reduction
             LocalDeclarationStatementSyntax local = candidates[_rng.Next(candidates.Count)];
             string toReplace = local.Declaration.Variables[0].Identifier.Text;
             SyntaxNode replaceWith = local.Declaration.Variables[0].Initializer.Value;
+
+            if (replaceWith is RefExpressionSyntax res)
+                replaceWith = res.Expression;
 
             BlockSyntax newNode =
                 block.WithStatements(block.Statements.Remove(local));
@@ -1011,6 +1035,62 @@ namespace Fuzzlyn.Reduction
                             SyntaxKind.ThisConstructorInitializer,
                             ArgumentList())));
             }
+        }
+
+        // Simplify ref-local. ref T a = ref b => T a = b
+        [Simplifier]
+        private SyntaxNode SimplifyLocalRemoveRef(SyntaxNode node)
+        {
+            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1 ||
+                !(local.Declaration.Type is RefTypeSyntax refTypeSyntax))
+                return node;
+
+            VariableDeclaratorSyntax var = local.Declaration.Variables[0];
+            if (var.Initializer == null)
+                return node;
+
+            Debug.Assert(var.Initializer.Value is RefExpressionSyntax);
+
+            ExpressionSyntax innerExpr = ((RefExpressionSyntax)var.Initializer.Value).Expression;
+            SyntaxNode newNode =
+                LocalDeclarationStatement(
+                    VariableDeclaration(
+                        refTypeSyntax.Type,
+                        SingletonSeparatedList(
+                            VariableDeclarator(
+                                var.Identifier)
+                            .WithInitializer(
+                                EqualsValueClause(
+                                    innerExpr)))));
+
+            return newNode;
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyTryFinally(SyntaxNode node)
+        {
+            if (!(node is TryStatementSyntax @try) || @try.Catches.Any())
+                return node;
+
+            return Block(@try.Block, @try.Finally.Block);
+        }
+
+        [Simplifier]
+        private SyntaxNode SimplifyMethodRemoveReturn(SyntaxNode node)
+        {
+            if (!(node is MethodDeclarationSyntax method))
+                return node;
+
+            if (method.ReturnType is PredefinedTypeSyntax returnType &&
+                returnType.Keyword.IsKind(SyntaxKind.VoidKeyword))
+            {
+                return node;
+            }
+
+            SyntaxNode newNode =
+                method.WithReturnType(PredefinedType(Token(SyntaxKind.VoidKeyword)));
+            newNode = newNode.ReplaceNodes(newNode.DescendantNodes().OfType<ReturnStatementSyntax>(), (cur, old) => ReturnStatement());
+            return newNode;
         }
 
         private (LocalDeclarationStatementSyntax local, string name) MakeLocalDecl(ExpressionSyntax expr, TypeSyntax type = null)

@@ -21,6 +21,7 @@ namespace Fuzzlyn.Methods
         private readonly int _funcIndex;
         private int _varCounter;
         private int _level;
+        private int _finallyCount;
         private readonly Func<string> _genChecksumSiteId;
 
         public FuncGenerator(
@@ -50,6 +51,7 @@ namespace Fuzzlyn.Methods
         public FuzzType ReturnType { get; private set; }
         public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
+        public int NumStatements { get; private set; }
 
         public MethodDeclarationSyntax Output()
         {
@@ -109,18 +111,24 @@ namespace Fuzzlyn.Methods
                 Parameters = Array.Empty<VariableIdentifier>();
 
             _level = -1;
-            Body = GenBlock(ReturnType != null);
+            Body = GenBlock(true);
         }
 
-        private StatementSyntax GenStatement()
+        private StatementSyntax GenStatement(bool allowReturn = true)
         {
+            if (_finallyCount > 0)
+                allowReturn = false;
+
             while (true)
             {
                 StatementKind kind =
                     (StatementKind)Options.StatementTypeDist.Sample(Random.Rng);
 
-                if ((kind == StatementKind.Block || kind == StatementKind.If) &&
+                if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryFinally) &&
                     ShouldRejectRecursion())
+                    continue;
+
+                if (kind == StatementKind.Return && !allowReturn)
                     continue;
 
                 switch (kind)
@@ -133,25 +141,24 @@ namespace Fuzzlyn.Methods
                         return GenCallStatement(tryExisting: ShouldRejectRecursion());
                     case StatementKind.If:
                         return GenIf();
+                    case StatementKind.TryFinally:
+                        return GenTryFinally();
                     case StatementKind.Return:
                         return GenReturn();
                     default:
                         throw new Exception("Unreachable");
                 }
             }
+
+            bool ShouldRejectRecursion()
+                => Options.StatementRejection.Reject(_level, Random.Rng);
         }
 
-        private bool ShouldRejectRecursion()
+        private BlockSyntax GenBlock(bool root, int numStatements = -1)
         {
-            double rand = Random.NextDouble();
-            double n = Options.StatementRejectionLevelParameterN;
-            double h = Options.StatementRejectionLevelParameterH;
-            double levelPow = Math.Pow(_level, n);
-            return rand < levelPow / (levelPow + Math.Pow(h, n));
-        }
+            if (numStatements == -1)
+                numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
 
-        private BlockSyntax GenBlock(bool root)
-        {
             _level++;
 
             ScopeFrame scope = new ScopeFrame();
@@ -163,28 +170,41 @@ namespace Fuzzlyn.Methods
             BlockSyntax block = Block(GenStatements());
 
             _scope.RemoveAt(_scope.Count - 1);
+
             _level--;
 
             return block;
 
             IEnumerable<StatementSyntax> GenStatements()
             {
-                int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
                 StatementSyntax retStmt = null;
-                for (int i = 0; i < numStatements; i++)
+                int numGenerated = 0;
+                while (true)
                 {
-                    StatementSyntax stmt = GenStatement();
+                    StatementSyntax stmt = GenStatement(allowReturn: !root);
+
                     if (stmt is ReturnStatementSyntax)
                     {
                         retStmt = stmt;
                         break;
                     }
 
+                    NumStatements++;
                     yield return stmt;
-                }
 
-                if (root && retStmt == null)
-                    retStmt = GenReturn();
+                    numGenerated++;
+                    if (numGenerated < numStatements)
+                        continue;
+
+                    // For first block we ensure we get a minimum amount of statements
+                    if (root && _funcIndex == 0)
+                    {
+                        if (_funcs.Sum(f => f.NumStatements) < Options.ProgramMinStatements)
+                            continue;
+                    }
+
+                    break;
+                }
 
                 if (Options.EnableChecksumming)
                 {
@@ -192,8 +212,14 @@ namespace Fuzzlyn.Methods
                         yield return stmt;
                 }
 
+                if (root && retStmt == null && ReturnType != null)
+                    retStmt = GenReturn();
+
                 if (retStmt != null)
+                {
+                    NumStatements++;
                     yield return retStmt;
+                }
             }
         }
 
@@ -324,7 +350,13 @@ namespace Fuzzlyn.Methods
         private StatementSyntax GenIf()
         {
             StatementSyntax gen = null;
-            ExpressionSyntax guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            ExpressionSyntax guard;
+            int attempts = 0;
+            do
+            {
+                guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            } while (guard is LiteralExpressionSyntax && attempts++ < 20);
+
             if (Random.FlipCoin(0.5))
             {
                 gen = IfStatement(guard, GenBlock(false));
@@ -334,6 +366,23 @@ namespace Fuzzlyn.Methods
                 gen = IfStatement(guard, GenBlock(false), ElseClause(GenBlock(false)));
             }
             return gen;
+        }
+
+        private StatementSyntax GenTryFinally()
+        {
+            int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
+            int tryStatements = Random.Next(numStatements);
+            int finallyStatements = numStatements - tryStatements;
+
+            BlockSyntax body = GenBlock(false, tryStatements);
+            _finallyCount++;
+            BlockSyntax finallyBody = GenBlock(false, finallyStatements);
+            _finallyCount--;
+            return
+                TryStatement(
+                    body,
+                    List<CatchClauseSyntax>(),
+                    FinallyClause(finallyBody));
         }
 
         private StatementSyntax GenReturn()
@@ -551,34 +600,32 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBoolProducingBinary()
         {
-            FuzzType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
-            ExpressionSyntax left, right;
+            PrimitiveType leftType;
+            PrimitiveType rightType;
             SyntaxKind op = (SyntaxKind)Options.BinaryBoolDist.Sample(Random.Rng);
             if (op == SyntaxKind.LogicalAndExpression || op == SyntaxKind.LogicalOrExpression ||
                 op == SyntaxKind.ExclusiveOrExpression || op == SyntaxKind.BitwiseAndExpression ||
                 op == SyntaxKind.BitwiseOrExpression)
             {
                 // &&, ||, ^, &, | must be between bools to produce bool
-                left = GenExpression(boolType);
-                right = GenExpression(boolType);
+                PrimitiveType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
+                leftType = rightType = boolType;
             }
             else if (op == SyntaxKind.EqualsExpression || op == SyntaxKind.NotEqualsExpression)
             {
-                PrimitiveType leftType = Types.PickPrimitiveType(f => true);
-                left = GenExpression(leftType);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => true);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Equality.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
             else
             {
                 Debug.Assert(op == SyntaxKind.LessThanOrEqualExpression || op == SyntaxKind.LessThanExpression ||
                              op == SyntaxKind.GreaterThanOrEqualExpression || op == SyntaxKind.GreaterThanExpression);
 
-                PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-                left = GenExpression(leftType);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Relop.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
+
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             return BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
         }
@@ -595,15 +642,21 @@ namespace Fuzzlyn.Methods
         {
             Debug.Assert(type.Info.IsIntegral);
             SyntaxKind op = (SyntaxKind)Options.BinaryIntegralDist.Sample(Random.Rng);
+
+            BinOpTable table;
             if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
-                return GenIntegralProducingBinary(type); // todo: handle. Needs separate table.
+            {
+                table = BinOpTable.Shifts;
+                return GenIntegralProducingBinary(type);
+            }
+            else
+                table = BinOpTable.Arithmetic;
 
             PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-            PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-            ExpressionSyntax left = GenExpression(leftType);
-            ExpressionSyntax right = GenExpression(rightType);
-            while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
-                right = GenExpression(rightType);
+            PrimitiveType rightType =
+                Types.PickPrimitiveType(f => table.GetResultType(leftType.Keyword, f.Keyword).HasValue);
+
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             if (op == SyntaxKind.ModuloExpression || op == SyntaxKind.DivideExpression)
             {
@@ -617,10 +670,26 @@ namespace Fuzzlyn.Methods
             }
 
             ExpressionSyntax expr = BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
-            if (BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, rightType.Keyword) != type.Keyword)
+
+            if (table.GetResultType(leftType.Keyword, rightType.Keyword) != type.Keyword)
                 expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
 
             return expr;
+        }
+
+        private (ExpressionSyntax, ExpressionSyntax) GenLeftRightForBinary(FuzzType leftType, FuzzType rightType)
+        {
+            ExpressionSyntax left = GenExpression(leftType);
+            ExpressionSyntax right;
+            // There are two reasons we don't allow both left and right to be literals:
+            // 1. If the computation overflows, this gives a C# compiler error
+            // 2. The compiler is required to constant fold these expressions which is not interesting.
+            do
+            {
+                right = GenExpression(rightType);
+            } while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax);
+
+            return (left, right);
         }
 
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
@@ -628,7 +697,7 @@ namespace Fuzzlyn.Methods
             Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
             FuncGenerator func;
-            if (allowNew && Random.FlipCoin(Options.GenNewMethodProb))
+            if (allowNew && Random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, Random.Rng))
             {
                 type = type ?? Types.PickType(Options.ReturnTypeIsByRefProb);
 
@@ -816,6 +885,7 @@ namespace Fuzzlyn.Methods
         Call,
         If,
         Return,
+        TryFinally,
     }
 
     internal enum ExpressionKind

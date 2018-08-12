@@ -2,6 +2,7 @@
 using Fuzzlyn.ProbabilityDistributions;
 using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace Fuzzlyn
@@ -14,10 +15,12 @@ namespace Fuzzlyn
         public bool Output { get; set; } = false;
         public bool EnableChecksumming { get; set; } = true;
         public bool Reduce { get; set; } = false;
+        public bool Stats { get; set; } = false;
         // Probability that we pick a class when generating a new type. Otherwise we make a struct.
         public double MakeClassProb { get; set; } = 0.5;
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
         public double PrimitiveFieldProb { get; set; } = 0.8;
+        public int ProgramMinStatements { get; set; } = 50;
         public double AssignToNewVarProb { get; set; } = 0.4;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double CompoundAssignmentProb { get; set; } = 0.1;
@@ -28,14 +31,15 @@ namespace Fuzzlyn
         public ProbabilityDistribution MaxClassFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
         public ProbabilityDistribution MakeArrayCountDist { get; set; } = new GeometricDistribution(0.8);
         public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
-        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.35, 1);
+        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
         public ProbabilityDistribution StatementTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)StatementKind.Assignment] = 0.59,
-                [(int)StatementKind.If] = 0.2,
+                [(int)StatementKind.Assignment] = 0.57,
+                [(int)StatementKind.If] = 0.17,
                 [(int)StatementKind.Block] = 0.1,
                 [(int)StatementKind.Call] = 0.1,
+                [(int)StatementKind.TryFinally] = 0.05,
                 [(int)StatementKind.Return] = 0.01,
             });
         public ProbabilityDistribution ExpressionTypeDist { get; set; }
@@ -52,15 +56,14 @@ namespace Fuzzlyn
             });
 
         // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
-        // A recursive statement will be rejected if rand < level^n / (level^n + h^n).
-        // This equation is taken from https://math.stackexchange.com/a/2324218.
-        // Properties:
-        // For level = 0, the probability is 0%
-        // For level = h, the probability is 50%
-        // The probability is always increasing
-        // The probability is never 1.
-        public double StatementRejectionLevelParameterN { get; set; } = 3.5;
-        public double StatementRejectionLevelParameterH { get; set; } = 4;
+        // https://www.desmos.com/calculator/lxqwr6if6d
+        public HillEquationParameters StatementRejection { get; set; } = new HillEquationParameters(2.4, 2);
+        // Probability that we will attempt to generate a new method when trying to generate a call.
+        public double GenNewFunctionProb { get; set; } = 0.07;
+        // Controls the probability of generating a new function as a function of the total number of current
+        // functions we have.
+        // https://www.desmos.com/calculator/iaqs1fgrok
+        public HillEquationParameters FuncGenRejection { get; set; } = new HillEquationParameters(2, 100);
 
         public double PickLiteralFromTableProb { get; set; } = 0.5;
         public ProbabilityDistribution LiteralDist { get; set; }
@@ -112,8 +115,6 @@ namespace Fuzzlyn
 
         public int MaxArrayTotalSize { get; set; } = 300;
         public int MaxArrayLengthPerDimension { get; set; } = 10;
-        // Probability that we generate a new method when trying to generate a call.
-        public double GenNewMethodProb { get; set; } = 0.07;
         public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.4);
         public double ParameterIsByRefProb { get; set; } = 0.25;
         public double LocalIsByRefProb { get; set; } = 0.10;
@@ -138,5 +139,37 @@ namespace Fuzzlyn
         Local,
         Static,
         RefReturningCall,
+    }
+
+    internal class HillEquationParameters
+    {
+        public HillEquationParameters(double n, double h)
+        {
+            N = n;
+            H = h;
+        }
+
+        public double N { get; }
+        public double H { get; }
+
+        // This equation is taken from https://math.stackexchange.com/a/2324218.
+        // Properties:
+        // For level = 0, the probability is 0%
+        // For level = h, the probability is 50%
+        // The probability is always increasing
+        // The probability is never 1.
+        public double Compute(double level)
+        {
+            double @base = H / level;
+            return 1 / (Math.Pow(@base, N) + 1);
+        }
+
+        // 'samples' the hill equation to determine whether some functionality
+        // should be probabilistically rejected at this level.
+        // This function returns true if rand < 1 / ((h/level)^n + 1).
+        public bool Reject(double level, Rng rng)
+        {
+            return rng.NextDouble() < Compute(level);
+        }
     }
 }
