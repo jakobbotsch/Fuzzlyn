@@ -31,7 +31,7 @@ namespace Fuzzlyn
         public ProbabilityDistribution MaxClassFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
         public ProbabilityDistribution MakeArrayCountDist { get; set; } = new GeometricDistribution(0.8);
         public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
-        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.35, 1);
+        public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
         public ProbabilityDistribution StatementTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
@@ -57,7 +57,7 @@ namespace Fuzzlyn
 
         // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
         // https://www.desmos.com/calculator/lxqwr6if6d
-        public HillEquationParameters StatementRejection { get; set; } = new HillEquationParameters(3.5, 4);
+        public HillEquationParameters StatementRejection { get; set; } = new HillEquationParameters(2.4, 2);
         // Probability that we will attempt to generate a new method when trying to generate a call.
         public double GenNewFunctionProb { get; set; } = 0.07;
         // Controls the probability of generating a new function as a function of the total number of current
