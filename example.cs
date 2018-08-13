@@ -489,11 +489,7 @@ public class Program
 
     static uint M29()
     {
-        {
-            return s_1[0];
-        }
-
-        return s_1[0];
+        return default(uint);
     }
 
     static long M30()
