@@ -701,7 +701,6 @@ public class Program
         ulong var5 = default(ulong);
         sbyte[] var6 = default(sbyte[]);
         uint[] var8 = default(uint[]);
-        bool var9 = default(bool);
         ref short var7 = ref s_54[0];
         return ref s_10;
     }
