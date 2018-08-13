@@ -676,15 +676,7 @@ public class Program
 
     static short M51(int arg0, uint arg1, ref bool arg2, int arg3, uint arg4)
     {
-        short var0 = default(short);
-        var0 = 9946;
-        s_rt.Checksum("c_235", arg0);
-        s_rt.Checksum("c_236", arg1);
-        s_rt.Checksum("c_237", arg2);
-        s_rt.Checksum("c_238", arg3);
-        s_rt.Checksum("c_239", arg4);
-        s_rt.Checksum("c_240", var0);
-        return var0;
+        return default(short);
     }
 
     static short M52(long arg0, ushort arg1)
