@@ -150,11 +150,6 @@ public class Program
         return default(sbyte);
     }
 
-    static uint M36()
-    {
-        return default(uint);
-    }
-
     static ref uint M42()
     {
         return ref s_33;
