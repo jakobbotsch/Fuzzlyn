@@ -33,7 +33,7 @@ public class Program
     static short[] s_30 = new short[]{0};
     static int s_31 = 0;
     static int[,, ] s_32 = new int[,, ]{{{0}}};
-    static uint s_33 = 0U;
+    static uint s_33 = 0;
     static byte s_34 = 0;
     static long s_35 = 0;
     static bool[][] s_36 = new bool[][]{new bool[]{true}};
