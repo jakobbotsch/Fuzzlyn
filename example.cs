@@ -937,15 +937,7 @@ public class Program
 
     static int M96(short arg0)
     {
-        ulong[] var0 = default(ulong[]);
-        var0 = new ulong[]{0UL};
-        {
-            M97();
-        }
-
-        s_rt.Checksum("c_674", arg0);
-        s_rt.Checksum("c_675", var0[0]);
-        return M97();
+        return default(int);
     }
 
     static int M97()
