@@ -133,7 +133,7 @@ public class Program
 
     static void M0()
     {
-        byte var0 = default(byte);
+        byte var0;
         ushort[, ] var2 = default(ushort[, ]);
         ushort[] var5 = default(ushort[]);
         byte var6 = default(byte);
