@@ -2987,52 +2987,7 @@ public class Program
 
     static ushort M72()
     {
-        short[][][] var0 = default(short[][][]);
-        int var1 = default(int);
-        var0 = new short[][][]{new short[][]{new short[]{-22525, -1, -4500}, new short[]{-8875, 3076, -15672}, new short[]{0, 32766, -8804, -8767, 13444, -15540}}, new short[][]{new short[]{18963}, new short[]{3723, 2, 12941, 19788, 0, 11055}}};
-        if (s_48)
-        {
-            var1 = s_21++;
-            var1 = var1;
-            var1 = -10;
-            if (s_7)
-            {
-                M73(0, s_2[0]--, ref s_78[0], s_55[0], s_6, M88());
-                var0[0] = new short[][]{new short[]{-32768, 32767, -17242, 1}, new short[]{8568, 32766, 10574, 0, 0, 0, 20553}};
-                s_38[0] = s_4[0];
-                s_22[0][0] = s_43;
-                var1 = var1;
-            }
-            else
-            {
-                var0[0][0] = var0[0][0];
-                var0[0] = var0[0];
-                var0[0][0] = var0[0][0];
-            }
-
-            s_25 = 143;
-            var0[0] = M86(-1440769716, 65534, 18446744073709551614UL, 32767 | (uint)M79(s_26, new sbyte[]{0}, 1U), ref s_35, new sbyte[]{-108, 100, -100}, 4294967294U);
-            var0[0][0][0] = var0[0][0][0];
-            var0 = new short[][][]{new short[][]{new short[]{27267, -26818, 20725}, new short[]{8174, -32767, -24932}, new short[]{-20926, 32766}, new short[]{32545, -20666}, new short[]{702, -1092, 9175, 1}, new short[]{-25275}}, new short[][]{new short[]{11115, 22554, -11486}}, new short[][]{new short[]{-12400}}, new short[][]{new short[]{0, -17604, 30161, 0}, new short[]{32767, -32767, 31353, 32767}, new short[]{9288, 2}, new short[]{32766, 1454}}, new short[][]{new short[]{1, -23342, -32768, 1}, new short[]{-17550, 19366, -32768}, new short[]{2, 32767, 0, 32767}, new short[]{32767}, new short[]{0, 4428}, new short[]{30964}}, new short[][]{new short[]{31273, -1}, new short[]{32767, -2, -11992, -22188}, new short[]{10}, new short[]{10547, 20070, -32768, -9928}, new short[]{-27098, -6142, 26983}}, new short[][]{new short[]{25518, 1, 8931, 32767}, new short[]{-32768}, new short[]{-16408, 1, 32766}}, new short[][]{new short[]{1, 459}, new short[]{-6959, 1, 28360, -13657}, new short[]{-32768, 32767}, new short[]{-32768}, new short[]{15546}}, new short[][]{new short[]{14907, 2, -2}, new short[]{29567, 0}, new short[]{-24458, -29885, -32767}, new short[]{31001}, new short[]{0, -7281, 6820}}, new short[][]{new short[]{19773}, new short[]{0, 22083, 1}, new short[]{-20653, 1}, new short[]{22167, -6303}, new short[]{-32767, -32767, 0}, new short[]{32766, 2499}, new short[]{0, 0}}};
-            var0 = var0;
-            M76(ref s_50[0][0], new sbyte[]{2, 0, -127, -128, 1, -35, 127, 99, -113}, s_55[0]);
-            try
-            {
-                var0 = var0;
-            }
-            finally
-            {
-                var0 = new short[][][]{new short[][]{new short[]{1}}, new short[][]{new short[]{-2}, new short[]{-1807}}, new short[][]{new short[]{-1702}, new short[]{1}}, new short[][]{new short[]{30158}, new short[]{-32443}, new short[]{-10}}, new short[][]{new short[]{-1}}, new short[][]{new short[]{32766}, new short[]{0}, new short[]{0}}, new short[][]{new short[]{-13487}}, new short[][]{new short[]{1}, new short[]{-1}, new short[]{0}}, new short[][]{new short[]{26191}, new short[]{-22364}}};
-            }
-
-            s_rt.Checksum("c_461", var1);
-            return s_50[0][0]--;
-        }
-
-        var0 = var0;
-        s_72[0] = s_16[0, 0];
-        s_rt.Checksum("c_462", var0[0][0][0]);
-        return (ushort)((ulong)(65535 / (byte)((byte)(var0[0][0][0] - s_68) | 1)) | s_51);
+        return default(ushort);
     }
 
     static ref ulong[] M73(int arg0, sbyte arg1, ref sbyte arg2, bool arg3, long arg4, uint arg5)
