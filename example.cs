@@ -121,7 +121,7 @@ public class Program
     static bool s_118 = true;
     static short s_119 = 0;
     static byte[][] s_120 = new byte[][]{new byte[]{0}};
-    static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}, new short[][]{new short[]{0}}, new short[][]{new short[]{23066, -32767}}, new short[][]{new short[]{1688, -28885, 0, 24573}}, new short[][]{new short[]{28217, -18541, -5536, -23457}}, new short[][]{new short[]{1, -1628, -2398}}, new short[][]{new short[]{-32768}}, new short[][]{new short[]{19793}}, new short[][]{new short[]{0}}, new short[][]{new short[]{0}}};
+    static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}, new short[][]{new short[]{0}}, new short[][]{new short[]{23066}}, new short[][]{new short[]{1688, -28885, 0, 24573}}, new short[][]{new short[]{28217, -18541, -5536, -23457}}, new short[][]{new short[]{1, -1628, -2398}}, new short[][]{new short[]{-32768}}, new short[][]{new short[]{19793}}, new short[][]{new short[]{0}}, new short[][]{new short[]{0}}};
     static bool s_122 = false;
     static byte s_123 = 1;
     static uint s_124 = 0;
