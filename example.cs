@@ -666,7 +666,6 @@ public class Program
 
     static ref int M76(ref ushort arg0, sbyte[] arg1, bool arg2)
     {
-        short var1 = default(short);
         int var2 = default(int);
         return ref s_4[0][0];
     }
