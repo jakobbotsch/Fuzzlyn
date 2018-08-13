@@ -622,7 +622,6 @@ public class Program
 
     static ref ulong M56()
     {
-        byte var1 = default(byte);
         short var2 = default(short);
         long[, ] var3 = default(long[, ]);
         uint var4 = default(uint);
