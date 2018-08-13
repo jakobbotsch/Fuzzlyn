@@ -107,7 +107,7 @@ public class Program
     static bool s_104 = true;
     static short s_105 = 0;
     static int[][] s_106 = new int[][]{new int[]{0}};
-    static uint s_107 = 1519880997U;
+    static uint s_107 = 0;
     static int s_108 = -1626333939;
     static byte s_109 = 0;
     static byte s_110 = 0;
