@@ -339,11 +339,6 @@ public class Program
         return default(uint);
     }
 
-    static int M84()
-    {
-        return default(int);
-    }
-
     static uint M87()
     {
         return default(uint);
