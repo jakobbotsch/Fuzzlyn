@@ -79,7 +79,7 @@ public class Program
     static ushort s_76 = 0;
     static long s_77 = 0;
     static sbyte[] s_78 = new sbyte[]{0};
-    static long s_79 = -7240599102791735317L;
+    static long s_79 = 0;
     static byte s_80 = 176;
     static uint s_81 = 0;
     static ushort s_82 = 65534;
