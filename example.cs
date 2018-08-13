@@ -378,11 +378,6 @@ public class Program
         return default(ulong[]);
     }
 
-    static long M99(long arg0)
-    {
-        return default(long);
-    }
-
     static uint M101()
     {
         return default(uint);
