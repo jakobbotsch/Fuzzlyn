@@ -37,8 +37,7 @@ public class Program
         {
             var vr1 = new int[]{0};
             ref uint vr90 = ref s_1[0];
-            ref int[] vr91 = ref vr1;
-            int vr92 = vr91[0];
+            int vr92 = vr1[0];
             arg2 = (short)(51431005U | vr92);
             short var8 = arg2;
             if (arg0[0, 0] > var8)
