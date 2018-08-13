@@ -44,11 +44,11 @@ public class Program
 
     static void M2(ref uint[][] arg0)
     {
-        M11(arg0[0]);
+        M11();
         return;
     }
 
-    static void M11(uint[] arg0)
+    static void M11()
     {
         M12(s_16, s_25, s_19);
         return;
