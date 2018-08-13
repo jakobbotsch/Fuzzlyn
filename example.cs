@@ -35,7 +35,6 @@ public class Program
     static ulong s_47 = 0;
     static bool s_48 = false;
     static byte s_49 = 0;
-    static ulong s_51 = 0;
     static byte[] s_52 = new byte[]{0};
     static short[] s_54 = new short[]{0};
     static sbyte s_56 = 0;
