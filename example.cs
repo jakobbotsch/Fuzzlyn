@@ -30,7 +30,6 @@ public class Program
     static uint s_33;
     static byte s_34 = 0;
     static long s_35 = 0;
-    static int[][] s_38 = new int[][]{new int[]{0}};
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
     static ulong s_41 = 0;
     static uint s_43 = 0;
