@@ -647,37 +647,7 @@ public class Program
 
     static short M46(ushort[] arg0, uint arg1)
     {
-        try
-        {
-            try
-            {
-                try
-                {
-                    M47(s_6);
-                }
-                finally
-                {
-                    M47(M47(9223372036854775807L)) = 0L;
-                }
-            }
-            finally
-            {
-                M48((byte)M47(-1881504500373196860L));
-                arg0 = arg0;
-                M47(s_14[0]--);
-                M48(26);
-                s_42 = 0;
-            }
-        }
-        finally
-        {
-            s_9[0] = 45;
-        }
-
-        arg1 = arg1++;
-        s_rt.Checksum("c_216", arg0[0]);
-        s_rt.Checksum("c_217", arg1);
-        return s_24;
+        return default(short);
     }
 
     static ref long M47(long arg0)
