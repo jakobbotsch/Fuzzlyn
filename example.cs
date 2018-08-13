@@ -17,7 +17,7 @@ public class Program
     static long[] s_14 = new long[]{0};
     static byte s_15 = 0;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
-    static ushort s_17 = 52333;
+    static ushort s_17 = 0;
     static byte s_18 = 1;
     static short s_19 = 1;
     static byte[] s_20 = new byte[]{143, 16, 1, 172, 109};
