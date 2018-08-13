@@ -259,7 +259,6 @@ public class Program
                     }
 
                     s_1[0] = 0U;
-                    arg0[0, 0] = arg0[0, 0];
                 }
             }
             finally
