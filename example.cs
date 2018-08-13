@@ -200,7 +200,6 @@ public class Program
         try
         {
             sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
-            s_rt.Checksum("c_26", var2[0]);
         }
         finally
         {
