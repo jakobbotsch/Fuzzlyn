@@ -182,10 +182,7 @@ public class Program
 
     static int M7()
     {
-        M8();
-        s_2 = s_2;
-        s_2 = new sbyte[]{109, 53, -128, 61, -71, -10, 10};
-        return (int)M8();
+        return default(int);
     }
 
     static uint M8()
