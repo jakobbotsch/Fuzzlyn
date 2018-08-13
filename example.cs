@@ -41,7 +41,7 @@ public class Program
     static int[][] s_38 = new int[][]{new int[]{0}};
     static bool s_39 = true;
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
-    static ulong s_41 = 14379028663109837625UL;
+    static ulong s_41 = 0;
     static short s_42 = -26110;
     static uint s_43 = 0U;
     static long s_44 = 9223372036854775807L;
