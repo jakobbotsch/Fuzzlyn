@@ -20,7 +20,6 @@ public class Program
     static sbyte s_26;
     static long s_29;
     static uint s_33;
-    static byte s_34 = 0;
     static long s_35;
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
     static ulong s_41 = 0;
