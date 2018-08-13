@@ -994,26 +994,7 @@ public class Program
 
     static int M79(sbyte arg0, sbyte[] arg1, uint arg2)
     {
-        bool var0 = default(bool);
-        long[] var1 = default(long[]);
-        if (true & ((byte)(s_3[0]++ | arg2) != 65534))
-        {
-            arg2 = arg2++;
-        }
-
-        var0 = M80(-9223372036854775807L);
-        arg1 = arg1;
-        if (s_55[0])
-        {
-            var1 = new long[]{1L, 748189618062369328L, 1L, -9223372036854775808L};
-            s_rt.Checksum("c_397", var1[0]);
-        }
-
-        s_rt.Checksum("c_398", arg0);
-        s_rt.Checksum("c_399", arg1[0]);
-        s_rt.Checksum("c_400", arg2);
-        s_rt.Checksum("c_401", var0);
-        return 1;
+        return default(int);
     }
 
     static bool M80(long arg0)
