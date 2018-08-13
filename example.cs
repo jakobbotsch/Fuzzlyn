@@ -958,30 +958,7 @@ public class Program
 
     static long M77(ulong[][] arg0, sbyte arg1, ushort[] arg2)
     {
-        bool var0 = default(bool);
-        if ((sbyte)(s_19-- % (long)(s_59[0]-- | 1)) == arg2[0])
-        {
-            arg0[0] = new ulong[]{1UL, 429455367443649211UL, 18446744073709551614UL, 2UL};
-        }
-        else
-        {
-            {
-                try
-                {
-                    var0 = false;
-                    s_rt.Checksum("c_347", var0);
-                }
-                finally
-                {
-                    arg2[0] = arg2[0]++;
-                }
-            }
-        }
-
-        s_rt.Checksum("c_348", arg0[0][0]);
-        s_rt.Checksum("c_349", arg1);
-        s_rt.Checksum("c_350", arg2[0]);
-        return 1864377746738087952L;
+        return default(long);
     }
 
     static ulong[][] M78()
