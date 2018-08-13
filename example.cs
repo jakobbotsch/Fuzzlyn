@@ -114,7 +114,7 @@ public class Program
     static ulong s_111 = 0;
     static short s_112 = 0;
     static short s_113 = 0;
-    static byte s_114 = 236;
+    static byte s_114 = 0;
     static short[] s_115 = new short[]{-32768};
     static long s_116 = 0;
     static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{-127, -128, 0, -10, 126, -1, -23}, new sbyte[]{1, -2, -128, -93}, new sbyte[]{98, -7, 0, 1, 127, -41, 51}, new sbyte[]{103, 127, -123, 126, 110, 126}, new sbyte[]{0}, new sbyte[]{0}};
