@@ -210,11 +210,6 @@ public class Program
         return default(ushort[][]);
     }
 
-    static ushort M72()
-    {
-        return default(ushort);
-    }
-
     static ref int M76(ref ushort arg0, sbyte[] arg1, bool arg2)
     {
         return ref s_4[0][0];
