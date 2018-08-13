@@ -25,7 +25,7 @@ public class Program
     static short s_24 = 0;
     static byte s_25 = 1;
     static sbyte s_26;
-    static long s_29 = 0;
+    static long s_29;
     static int[,, ] s_32 = new int[,, ]{{{0}}};
     static uint s_33;
     static byte s_34 = 0;
