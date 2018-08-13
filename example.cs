@@ -155,9 +155,4 @@ public class Program
     {
         return default(ulong);
     }
-
-    static ulong[] M98()
-    {
-        return default(ulong[]);
-    }
 }
