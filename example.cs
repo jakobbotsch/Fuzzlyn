@@ -509,11 +509,6 @@ public class Program
         return default(long);
     }
 
-    static ref uint M82()
-    {
-        return ref s_33;
-    }
-
     static uint M83()
     {
         return default(uint);
