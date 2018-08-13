@@ -102,7 +102,7 @@ public class Program
     static sbyte s_99 = 0;
     static ulong[] s_100 = new ulong[]{0};
     static bool[, ] s_101 = new bool[, ]{{false}};
-    static short s_102 = -20649;
+    static short s_102 = 0;
     static byte s_103 = 0;
     static bool s_104 = true;
     static short s_105 = 0;
