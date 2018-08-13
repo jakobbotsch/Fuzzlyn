@@ -844,9 +844,7 @@ public class Program
 
     static uint M92(byte arg0)
     {
-        arg0 = arg0;
-        s_rt.Checksum("c_573", arg0);
-        return 0U;
+        return default(uint);
     }
 
     static short M93()
