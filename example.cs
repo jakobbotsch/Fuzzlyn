@@ -4,7 +4,6 @@ public class Program
     static uint[] s_1 = new uint[]{0};
     static int[][] s_4 = new int[][]{new int[]{0}};
     static bool s_7;
-    static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19;
