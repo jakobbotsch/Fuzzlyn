@@ -185,11 +185,6 @@ public class Program
         return arg2[0];
     }
 
-    static ulong M16()
-    {
-        return default(ulong);
-    }
-
     static short M17(sbyte arg0, ref uint arg1, short arg2, ulong arg3, int arg4, sbyte arg5)
     {
         return default(short);
