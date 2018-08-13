@@ -1290,40 +1290,6 @@ public class Program
         uint var1 = default(uint);
         uint var2 = default(uint);
         long var3 = default(long);
-        arg0 = arg0;
-        if (arg5)
-        {
-            var0 = 2147483646;
-            {
-                var1 = 0U;
-                if (arg5)
-                {
-                    arg3 = -53;
-                    var2 = var1;
-                    arg4 = arg4;
-                    var0 = var0;
-                    var0 = 415115690;
-                    s_rt.Checksum("c_342", var2);
-                }
-
-                s_rt.Checksum("c_343", var1);
-            }
-
-            M70();
-            s_rt.Checksum("c_488", var0);
-        }
-
-        M73(arg1, -127, ref arg3, arg5, -2029156729063870913L, M82()--) = M73(arg1, arg3, ref arg3, arg5, arg6, 4279521233U);
-        var3 = arg6;
-        M73(arg4 % (ushort)((ushort)M82() | 1), arg3, ref s_26, M80(s_35), (long)M76(ref s_17, new sbyte[]{-120}, M75(ref s_55, arg5, s_46, ref arg1, new bool[]{false, false, false, false, true, false, true})), M87()) = new ulong[]{1UL, 6094349442551970475UL, 12014132020281218584UL, 8298889677554800209UL};
-        s_rt.Checksum("c_489", arg0);
-        s_rt.Checksum("c_490", arg1);
-        s_rt.Checksum("c_491", arg2);
-        s_rt.Checksum("c_492", arg3);
-        s_rt.Checksum("c_493", arg4);
-        s_rt.Checksum("c_494", arg5);
-        s_rt.Checksum("c_495", arg6);
-        s_rt.Checksum("c_496", var3);
         return ref s_46;
     }
 
