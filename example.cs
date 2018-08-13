@@ -157,11 +157,6 @@ public class Program
         return ref s_2;
     }
 
-    static bool M6(bool arg0, ushort arg1, long arg2, ref ushort arg3, sbyte arg4, byte arg5)
-    {
-        return default(bool);
-    }
-
     static int M7()
     {
         return default(int);
