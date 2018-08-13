@@ -228,7 +228,6 @@ public class Program
                 try
                 {
                     {
-                        var0 = arg0[0, 0];
                         arg0[0, 0] = s_2[0];
                         arg0 = arg0;
                         var1 = -32767;
