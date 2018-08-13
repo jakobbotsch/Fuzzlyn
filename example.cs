@@ -178,11 +178,6 @@ public class Program
         return default(uint[]);
     }
 
-    static long[] M40(short arg0, int arg1)
-    {
-        return default(long[]);
-    }
-
     static ref uint M42()
     {
         return ref s_33;
