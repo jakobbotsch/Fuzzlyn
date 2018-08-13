@@ -65,15 +65,15 @@ public class Program
             sbyte var3 = arg0[0, 0];
             sbyte var4 = arg0[0, 0];
             s_rt.Checksum("c_28", var4);
-            M13(arg1, ref s_1[0], new int[]{450864205});
-            s_1[0] = (uint)M13(arg1, ref s_1[0], s_4[0]);
+            M13(ref s_1[0], new int[]{450864205});
+            s_1[0] = (uint)M13(ref s_1[0], s_4[0]);
             s_1[0] = 0;
         }
 
         s_7 = 0 >= arg1;
         if (!s_7)
         {
-            arg2 = (short)(51431005U | M13(arg1, ref s_1[0], new int[]{0}));
+            arg2 = (short)(51431005U | M13(ref s_1[0], new int[]{0}));
             short var8 = arg2;
             if (arg0[0, 0] > var8)
             {
@@ -86,7 +86,7 @@ public class Program
         return;
     }
 
-    static int M13(byte arg0, ref uint arg1, int[] arg2)
+    static int M13(ref uint arg1, int[] arg2)
     {
         return arg2[0];
     }
