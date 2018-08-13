@@ -495,11 +495,6 @@ public class Program
         return ref s_46;
     }
 
-    static long M70()
-    {
-        return default(long);
-    }
-
     static ushort[][] M71()
     {
         return default(ushort[][]);
