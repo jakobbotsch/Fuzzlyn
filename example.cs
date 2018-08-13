@@ -210,7 +210,7 @@ public class Program
             s_1[0] = 0;
         }
 
-        s_7 = 0 >= arg1++;
+        s_7 = 0 >= arg1;
         if (!s_7)
         {
             arg2 = (short)(51431005U | M13(arg1, ref s_1[0], new int[]{0}));
