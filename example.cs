@@ -660,7 +660,6 @@ public class Program
 
     static ref bool M69(sbyte arg0, int arg1, ulong arg2, ref sbyte arg3, byte arg4, bool arg5, long arg6)
     {
-        uint var2 = default(uint);
         long var3 = default(long);
         return ref s_46;
     }
