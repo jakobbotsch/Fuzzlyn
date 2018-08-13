@@ -221,7 +221,6 @@ public class Program
                 s_rt.Checksum("c_40", var11);
             }
 
-            s_rt.Checksum("c_260", 2147483647);
             s_rt.Checksum("c_261", var8);
         }
 
