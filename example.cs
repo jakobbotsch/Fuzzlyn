@@ -305,11 +305,6 @@ public class Program
         return default(short);
     }
 
-    static ulong M53(ref uint arg0)
-    {
-        return default(ulong);
-    }
-
     static ushort[][] M55(uint[] arg0, sbyte arg1)
     {
         return default(ushort[][]);
