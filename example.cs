@@ -93,7 +93,6 @@ public class Program
     static long s_116 = 0;
     static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{0}};
     static bool s_118 = true;
-    static byte[][] s_120 = new byte[][]{new byte[]{0}};
     static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}};
     static byte s_123 = 0;
     static uint s_124 = 0;
