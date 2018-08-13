@@ -245,11 +245,6 @@ public class Program
         return default(byte);
     }
 
-    static byte M23(byte arg0, int arg1, sbyte arg2, ref sbyte[, ] arg3, long arg4, ushort arg5, sbyte arg6, uint arg7, ushort[] arg8)
-    {
-        return default(byte);
-    }
-
     static int M24()
     {
         return default(int);
