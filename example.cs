@@ -389,7 +389,6 @@ public class Program
     static int M13(byte arg0, ref uint arg1, int[] arg2)
     {
         int var2 = default(int);
-        ref long var0 = ref s_6;
         if (arg0 > -406484741)
         {
         }
