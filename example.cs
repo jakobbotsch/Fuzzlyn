@@ -845,11 +845,7 @@ public class Program
 
     static ulong M89(int arg0)
     {
-        bool var0 = default(bool);
-        var0 = false;
-        s_rt.Checksum("c_513", arg0);
-        s_rt.Checksum("c_514", var0);
-        return s_57;
+        return default(ulong);
     }
 
     static bool[] M90(ref uint arg0, ref sbyte arg1, ref ushort arg2)
