@@ -93,7 +93,7 @@ public class Program
     static ulong s_90 = 0;
     static long s_91 = 0;
     static ushort s_92 = 0;
-    static int s_93 = 1817748138;
+    static int s_93 = 0;
     static bool s_94 = false;
     static long s_95 = -6719449326620905016L;
     static sbyte s_96 = 0;
