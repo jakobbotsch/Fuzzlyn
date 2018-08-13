@@ -198,7 +198,7 @@ public class Program
     {
         try
         {
-            sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
+            sbyte[] var2 = new sbyte[]{126};
         }
         finally
         {
