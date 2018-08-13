@@ -13,7 +13,6 @@ public class Program
     static long[] s_84 = new long[]{0};
     static bool s_94 = false;
     static ulong[] s_100 = new ulong[]{0};
-    static short s_113;
     static short[] s_115 = new short[]{0};
     static sbyte[][] s_117;
     static uint s_124 = 0;
