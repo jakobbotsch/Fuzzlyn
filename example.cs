@@ -101,7 +101,7 @@ public class Program
         return default(ushort[][]);
     }
 
-    static long[][] M65(sbyte arg0)
+    static long[][] M65()
     {
         return default(long[][]);
     }
