@@ -9,7 +9,7 @@ public class Program
     static long s_6 = 0;
     static bool s_7 = true;
     static short s_8 = 0;
-    static sbyte[] s_9 = new sbyte[]{-128};
+    static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10 = new ulong[]{15691583844157379322UL};
     static long s_11 = -9223372036854775808L;
     static int s_12 = 0;
