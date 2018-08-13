@@ -222,7 +222,6 @@ public class Program
             }
         }
 
-        s_rt.Checksum("c_262", arg0[0, 0]);
         s_rt.Checksum("c_263", arg1);
         s_rt.Checksum("c_264", arg2);
         return arg1;
