@@ -249,7 +249,6 @@ public class Program
                         {
                             arg1 = arg1++;
                             var3 = arg0[0, 0];
-                            var3 = arg0[0, 0];
                             ref sbyte var4 = ref arg0[0, 0];
                             s_rt.Checksum("c_27", var3);
                             s_rt.Checksum("c_28", var4);
