@@ -677,11 +677,7 @@ public class Program
 
     static int[] M60(ushort arg0)
     {
-        arg0 = arg0;
-        ref uint var0 = ref s_1[0];
-        s_rt.Checksum("c_332", arg0);
-        s_rt.Checksum("c_333", var0);
-        return s_4[0];
+        return default(int[]);
     }
 
     static ulong M61()
