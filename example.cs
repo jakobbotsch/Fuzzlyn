@@ -679,9 +679,6 @@ public class Program
 
     static ref long M63()
     {
-        s_38[0][0] = -2;
-        M64();
-        s_21 = s_31++;
         return ref s_35;
     }
 
