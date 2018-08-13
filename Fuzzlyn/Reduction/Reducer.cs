@@ -144,11 +144,16 @@ namespace Fuzzlyn.Reduction
 
                 bool SimplifyOne(string name, List<SyntaxNode> list)
                 {
-                    for (int i = 0; i < 2000; i++)
-                    {
-                        Console.Title = $"Simplifying {name}. Iter: {i}";
+                    int numIters = Math.Min(2000, list.Count);
+                    // Start at a random index. Otherwise we will simplify from the beginning and then reprocess them
+                    // every time.
+                    int startIndex = _rng.Next(list.Count);
 
-                        SyntaxNode node = list[_rng.Next(list.Count)];
+                    for (int i = 0; i < numIters; i++)
+                    {
+                        Console.Title = $"Simplifying {name}. Iter: {i}/{numIters}";
+
+                        SyntaxNode node = list[(startIndex + i) % list.Count];
                         // Do not optimize checksum args and call itself.
                         // We still want to remove these statements, however, so we focus on the expression only.
                         InvocationExpressionSyntax invocParent = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
