@@ -104,9 +104,4 @@ public class Program
     {
         return default(ushort[][]);
     }
-
-    static bool M80()
-    {
-        return default(bool);
-    }
 }
