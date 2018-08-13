@@ -7,7 +7,6 @@ public class Program
     static short s_8;
     static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10;
-    static byte s_15 = 0;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19;
     static byte[] s_20 = new byte[]{0};
