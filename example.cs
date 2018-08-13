@@ -211,7 +211,6 @@ public class Program
             s_1[0] = 0U;
         }
 
-        s_1[0] = s_1[0]++;
         arg1 = arg1;
         s_7 = -21984 >= arg1++;
         arg1 = (byte)M13(arg1, ref s_1[0], s_4[0]);
