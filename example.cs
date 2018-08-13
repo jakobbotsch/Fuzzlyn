@@ -63,7 +63,7 @@ public class Program
     static byte s_60 = 183;
     static bool s_61 = true;
     static byte s_62 = 221;
-    static ushort s_63 = 10;
+    static ushort s_63 = 0;
     static byte[] s_64 = new byte[]{137};
     static byte s_65 = 115;
     static ushort s_66 = 1;
