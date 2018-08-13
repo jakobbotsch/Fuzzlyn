@@ -38,6 +38,7 @@ namespace Fuzzlyn
             bool? enableChecksumming = null;
             bool? reduce = null;
             bool? reduceInChildProcesses = null;
+            string reduceDebugGitDir = null;
             string removeFixed = null;
             bool? stats = null;
             OptionSet optionSet = new OptionSet
@@ -56,6 +57,7 @@ namespace Fuzzlyn
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "reduce-use-child-processes", "Check reduced example candidates in child processes", v => reduceInChildProcesses = v != null },
+                { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
                 { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
                 { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
                 { "help|h", v => help = v != null }
@@ -134,7 +136,7 @@ namespace Fuzzlyn
             if (removeFixed != null)
                 RemoveFixedPrograms(options, removeFixed);
             else if (options.Reduce)
-                ReduceProgram(options);
+                ReduceProgram(options, reduceDebugGitDir);
             else if (options.Stats)
                 GenerateProgramsAndGetStats(options);
             else if (options.Output)
@@ -250,12 +252,12 @@ namespace Fuzzlyn
             }
         }
 
-        private static void ReduceProgram(FuzzlynOptions options)
+        private static void ReduceProgram(FuzzlynOptions options, string reduceDebugGitDir)
         {
             var cg = new CodeGenerator(options);
             CompilationUnitSyntax original = cg.GenerateProgram();
 
-            Reducer reducer = new Reducer(original, options.Seed.Value, options.ReduceWithChildProcesses);
+            Reducer reducer = new Reducer(original, options.Seed.Value, options.ReduceWithChildProcesses, reduceDebugGitDir);
             CompilationUnitSyntax reduced = reducer.Reduce();
             Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
         }

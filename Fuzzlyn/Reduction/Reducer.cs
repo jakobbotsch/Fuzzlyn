@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -19,12 +20,15 @@ namespace Fuzzlyn.Reduction
         private readonly Rng _rng;
         private int _varCounter;
         private readonly bool _reduceWithChildProcesses;
+        private readonly string _reduceDebugGitDir;
+        private readonly Stopwatch _timer = new Stopwatch();
 
-        public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses)
+        public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses, string reduceDebugGitDir)
         {
             Original = original;
             _rng = Rng.FromSplitMix64Seed(reducerSeed);
             _reduceWithChildProcesses = reduceWithChildProcesses;
+            _reduceDebugGitDir = reduceDebugGitDir;
         }
 
         public FuzzlynOptions Options { get; }
@@ -33,6 +37,7 @@ namespace Fuzzlyn.Reduction
 
         public CompilationUnitSyntax Reduce()
         {
+            _timer.Restart();
             CompileResult debug = Compiler.Compile(Original, Compiler.DebugOptions);
             CompileResult release = Compiler.Compile(Original, Compiler.ReleaseOptions);
 
@@ -107,10 +112,10 @@ namespace Fuzzlyn.Reduction
 
             // Save original comments as simplification may remove it by removing an unnecessary type.
             SyntaxTriviaList originalTrivia = Original.GetLeadingTrivia();
-            Reduced = Original.WithLeadingTrivia();
+            UpdateReduced("Removing header comments", Original.WithLeadingTrivia());
+            CoarseSimplify(isInteresting);
 
-            Reduced = CoarseSimplify(Reduced, isInteresting);
-            List<SyntaxNode> simplifiedNodes = new List<SyntaxNode>();
+            List<(string, IEnumerator<SyntaxNode>)> simplifierEnumerators = new List<(string, IEnumerator<SyntaxNode>)>();
             bool first = true;
             bool any = true;
             while (any)
@@ -118,14 +123,14 @@ namespace Fuzzlyn.Reduction
                 any = false;
                 while (true)
                 {
-                    if (!SimplifyOne("Statements", Reduced.DescendantNodes().Where(n => n is StatementSyntax).ToList()))
+                    if (!SimplifyFromList("Statements", Reduced.DescendantNodes().Where(n => n is StatementSyntax).ToList()))
                         break;
                     any = true;
                 }
 
                 while (true)
                 {
-                    if (!SimplifyOne("Expressions", Reduced.DescendantNodes().Where(n => n is ExpressionSyntax).ToList()))
+                    if (!SimplifyFromList("Expressions", Reduced.DescendantNodes().Where(n => n is ExpressionSyntax).ToList()))
                         break;
                     any = true;
                 }
@@ -135,49 +140,69 @@ namespace Fuzzlyn.Reduction
                     List<SyntaxNode> members =
                         Reduced.DescendantNodesAndSelf().Where(n => n is MemberDeclarationSyntax || n is CompilationUnitSyntax).ToList();
 
-                    if (!SimplifyOne("Members", members))
+                    if (!SimplifyFromList("Members", members))
                         break;
                     any = true;
                 }
 
                 first = false;
 
-                bool SimplifyOne(string name, List<SyntaxNode> list)
+                bool SimplifyFromList(string simplifyType, List<SyntaxNode> list)
                 {
-                    int numIters = Math.Min(2000, list.Count);
-                    // Start at a random index. Otherwise we will simplify from the beginning and then reprocess them
-                    // every time.
-                    int startIndex = _rng.Next(list.Count);
-
-                    for (int i = 0; i < numIters; i++)
+                    for (int i = 0; i < list.Count; i++)
                     {
-                        Console.Title = $"Simplifying {name}. Iter: {i}/{numIters}";
+                        Console.Title = $"Simplifying {simplifyType}. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {i}/{list.Count}";
 
-                        SyntaxNode node = list[(startIndex + i) % list.Count];
+                        // Fisher-Yates shuffle.
+                        int nodeIndex = _rng.Next(i, list.Count);
+                        SyntaxNode node = list[nodeIndex];
+                        list[nodeIndex] = list[i];
+
                         // Do not optimize checksum args and call itself.
                         // We still want to remove these statements, however, so we focus on the expression only.
                         InvocationExpressionSyntax invocParent = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
                         if (invocParent != null && IsChecksumCall(invocParent))
                             continue;
 
-                        // If we fail at creating a new bad example, then we want to be able to restore the state
-                        // so the reducer will not blow these up unnecessarily.
-                        int origVarCounter = _varCounter;
-
-                        simplifiedNodes.Clear();
-                        SimplifyNode(node, !first, simplifiedNodes);
-
-                        foreach (SyntaxNode candidateNode in simplifiedNodes)
+                        try
                         {
-                            CompilationUnitSyntax candidate = Reduced.ReplaceNode(node, candidateNode);
-                            if (isInteresting(candidate))
+                            GetSimplifierEnumerators(node, !first, simplifierEnumerators);
+
+                            while (simplifierEnumerators.Count > 0)
                             {
-                                Reduced = candidate;
-                                return true;
+                                for (int j = 0; j < simplifierEnumerators.Count; j++)
+                                {
+                                    // Avoid blowing the variable counts up too much. Save it so we can restore it
+                                    // if the new node is not interesting.
+                                    int origVarCounter = _varCounter;
+
+                                    (string name, IEnumerator<SyntaxNode> enumerator) = simplifierEnumerators[j];
+                                    if (!enumerator.MoveNext())
+                                    {
+                                        enumerator.Dispose();
+                                        simplifierEnumerators.RemoveAt(j);
+                                        j--;
+                                        continue;
+                                    }
+
+                                    CompilationUnitSyntax candidate = Reduced.ReplaceNode(node, enumerator.Current);
+                                    if (isInteresting(candidate))
+                                    {
+                                        UpdateReduced($"Simplify with {name}", candidate, true);
+                                        return true;
+                                    }
+
+                                    _varCounter = origVarCounter;
+                                }
                             }
                         }
+                        finally
+                        {
+                            foreach (var (_, enumerator) in simplifierEnumerators)
+                                enumerator.Dispose();
 
-                        _varCounter = origVarCounter;
+                            simplifierEnumerators.Clear();
+                        }
                     }
 
                     return false;
@@ -189,11 +214,13 @@ namespace Fuzzlyn.Reduction
             SimplifyRuntime();
             double oldSizeKiB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
             double newSizeKiB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
-            SyntaxTriviaList newTrivia =
-                originalTrivia.Add(Comment(FormattableString.Invariant($"// Reduced from {oldSizeKiB:F1} KiB to {newSizeKiB:F1} KiB")))
-                              .AddRange(outputComments);
+            string sizeComment =
+                FormattableString.Invariant(
+                    $"// Reduced from {oldSizeKiB:F1} KiB to {newSizeKiB:F1} KiB in {_timer.Elapsed:hh\\:mm\\:ss}");
 
-            Reduced = Reduced.WithLeadingTrivia(newTrivia);
+            SyntaxTriviaList newTrivia = originalTrivia.Add(Comment(sizeComment)).AddRange(outputComments);
+
+            UpdateReduced("Add header comments", Reduced.WithLeadingTrivia(newTrivia));
 
             return Reduced;
         }
@@ -222,16 +249,56 @@ namespace Fuzzlyn.Reduction
             return results;
         }
 
+        private void UpdateReduced(string update, CompilationUnitSyntax newReduced, bool checkNew = false)
+        {
+            Trace.Assert(!checkNew || newReduced != Reduced);
+            Reduced = newReduced;
+            if (_reduceDebugGitDir == null)
+                return;
+
+            string path = Path.Combine(_reduceDebugGitDir, "example.cs");
+            if (!Directory.Exists(_reduceDebugGitDir))
+            {
+                Directory.CreateDirectory(_reduceDebugGitDir);
+                Git("init");
+                File.WriteAllText(path, Original.NormalizeWhitespace().ToFullString());
+                Git("add .");
+                Git("commit -m Original");
+            }
+
+            File.WriteAllText(path, newReduced.NormalizeWhitespace().ToFullString());
+            Git("add .");
+            Git($"commit --allow-empty -m \"{update}\"");
+
+            void Git(string cmd)
+            {
+                using (Process process = new Process())
+                {
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        FileName = "cmd.exe",
+                        Arguments = $"/C git {cmd}",
+                        WorkingDirectory = _reduceDebugGitDir,
+                    };
+                    process.StartInfo = startInfo;
+                    process.Start();
+                    process.WaitForExit();
+                }
+            }
+        }
+
+
         /// <summary>
         /// Perform coarse simplification by removing statements with a binary search.
         /// </summary>
-        private CompilationUnitSyntax CoarseSimplify(CompilationUnitSyntax reduced, Func<CompilationUnitSyntax, bool> isInteresting)
+        private void CoarseSimplify(Func<CompilationUnitSyntax, bool> isInteresting)
         {
             // Step 1: Declare all non-ref variables at the start of the methods with a default value.
             // This will hopefully allow us to remove more assignments than otherwise.
             Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
 
-            foreach (MethodDeclarationSyntax method in reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
+            foreach (MethodDeclarationSyntax method in Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
             {
                 List<LocalDeclarationStatementSyntax> decls =
                     method.DescendantNodes()
@@ -278,13 +345,13 @@ namespace Fuzzlyn.Reduction
                 replacements.Add(method, withLocalsAtTop);
             }
 
-            CompilationUnitSyntax candidate = reduced.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
-            if (!isInteresting(candidate))
-                candidate = reduced;
+            CompilationUnitSyntax localsMoved = Reduced.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+            if (isInteresting(localsMoved))
+                UpdateReduced("Move locals up", localsMoved);
 
             // Step 2: Remove by binary searches. Prefer large ones first to remove as much as fast as possible.
             List<string> names =
-                candidate.DescendantNodes()
+                Reduced.DescendantNodes()
                 .OfType<MethodDeclarationSyntax>()
                 .OrderByDescending(m => m.DescendantNodes().Count())
                 .Select(m => m.Identifier.Text)
@@ -292,16 +359,14 @@ namespace Fuzzlyn.Reduction
 
             for (int i = 0; i < names.Count; i++)
             {
-                Console.Title = $"Simplifying coarsely. Method {i + 1}/{names.Count}.";
+                Console.Title = $"Simplifying coarsely. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Method {i + 1}/{names.Count}.";
                 bool isMethodInteresting(MethodDeclarationSyntax orig, MethodDeclarationSyntax @new)
-                    => isInteresting(candidate.ReplaceNode(orig, @new));
+                    => isInteresting(Reduced.ReplaceNode(orig, @new));
 
-                var method = candidate.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == names[i]);
+                var method = Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == names[i]);
                 var newMethod = (MethodDeclarationSyntax)new CoarseStatementRemover(isMethodInteresting).Visit(method);
-                candidate = candidate.ReplaceNode(method, newMethod);
+                UpdateReduced($"Bulk remove statements in {names[i]}", Reduced.ReplaceNode(method, newMethod));
             }
-
-            return candidate;
         }
 
         private IEnumerable<string> GetOutputComments(CompileResult ogDebugCompile, CompileResult ogRelCompile)
@@ -371,10 +436,11 @@ namespace Fuzzlyn.Reduction
             MethodDeclarationSyntax mainMethod =
                 Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "Main");
 
-            Reduced = Reduced.ReplaceNode(mainMethod, mainMethod.WithParameterList(ParameterList()));
+            CompilationUnitSyntax withArgRemoved =
+                Reduced.ReplaceNode(mainMethod, mainMethod.WithParameterList(ParameterList()));
 
             Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
-            foreach (SyntaxNode node in Reduced.DescendantNodes())
+            foreach (SyntaxNode node in withArgRemoved.DescendantNodes())
             {
                 // Remove s_rt field
                 if (node is FieldDeclarationSyntax field && field.Declaration.Variables.Count == 1 &&
@@ -410,7 +476,7 @@ namespace Fuzzlyn.Reduction
                 }
             }
 
-            Reduced = Reduced.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+            UpdateReduced("Remove runtime code", withArgRemoved.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]));
         }
 
         private bool IsChecksumCall(InvocationExpressionSyntax invoc)
@@ -419,10 +485,11 @@ namespace Fuzzlyn.Reduction
                    mem.Name.Identifier.Text == "Checksum";
         }
 
-        private readonly List<(bool late, Func<SyntaxNode, SyntaxNode> simp)> _simplifiers =
-            new List<(bool late, Func<SyntaxNode, SyntaxNode> simp)>();
+        private readonly List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)> _simplifiers =
+            new List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)>();
 
-        private void SimplifyNode(SyntaxNode node, bool late, List<SyntaxNode> simplifiedNodes)
+        private void GetSimplifierEnumerators(
+            SyntaxNode node, bool late, List<(string name, IEnumerator<SyntaxNode> enumerator)> simplifyEnumerators)
         {
             if (_simplifiers.Count == 0)
             {
@@ -440,35 +507,50 @@ namespace Fuzzlyn.Reduction
                     if (attrib == null)
                         continue;
 
-                    Delegate dlg = Delegate.CreateDelegate(typeof(Func<SyntaxNode, SyntaxNode>), this, method);
-                    _simplifiers.Add((attrib.Late, (Func<SyntaxNode, SyntaxNode>)dlg));
+                    Delegate dlg;
+                    if (method.ReturnType == typeof(SyntaxNode))
+                        dlg = Delegate.CreateDelegate(typeof(Func<SyntaxNode, SyntaxNode>), this, method);
+                    else
+                        dlg = Delegate.CreateDelegate(typeof(Func<SyntaxNode, IEnumerable<SyntaxNode>>), this, method);
+
+                    _simplifiers.Add((method.Name, attrib, (Func<SyntaxNode, object>)dlg));
                 }
             }
 
-            foreach (var (simpLate, simplifier) in _simplifiers)
+            foreach (var (name, info, simplifier) in _simplifiers)
             {
-                if (simpLate && !late)
+                if (info.Late && !late)
                     continue;
 
-                SyntaxNode simplified = simplifier(node);
-                if (simplified != node)
-                    simplifiedNodes.Add(simplified);
+                object simplified = simplifier(node);
+                IEnumerator<SyntaxNode> enumerator = null;
+                if (simplified == null || simplified is SyntaxNode)
+                {
+                    if (simplified != node)
+                        enumerator = new List<SyntaxNode>(1) { (SyntaxNode)simplified }.GetEnumerator();
+                }
+                else
+                    enumerator = ((IEnumerable<SyntaxNode>)simplified).GetEnumerator();
+
+                if (enumerator != null)
+                    simplifyEnumerators.Add((name, enumerator));
             }
         }
 
         // Simplify statement containing call to just the call.
         [Simplifier]
-        private SyntaxNode SimplifyStatementWithCall(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyStatementWithCall(SyntaxNode node)
         {
             if (!(node is ExpressionStatementSyntax stmt))
-                return node;
+                yield break;
 
             // Take descendant nodes of expression to avoid simplifying M(); to M();
             List<InvocationExpressionSyntax> calls = stmt.Expression.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
             if (calls.Count <= 0)
-                return node;
+                yield break;
 
-            return ExpressionStatement(calls[_rng.Next(calls.Count)]);
+            foreach (InvocationExpressionSyntax invoc in calls)
+                yield return ExpressionStatement(invoc);
         }
 
         // Simplify "int a = expr;" to "int a;"
@@ -488,97 +570,94 @@ namespace Fuzzlyn.Reduction
 
         // Inline calls. We only do this late since it is better to reduce each call before inlining.
         [Simplifier(Late = true)]
-        private SyntaxNode InlineCall(SyntaxNode node)
+        private IEnumerable<SyntaxNode> InlineCall(SyntaxNode node)
         {
             if (!(node is ClassDeclarationSyntax cls))
-                return node;
+                yield break;
 
-            List<InvocationExpressionSyntax> invocs =
+            IEnumerable<InvocationExpressionSyntax> invocs =
                 cls.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
-                .Where(i => i.Expression is IdentifierNameSyntax)
-                .ToList();
+                .Where(i => i.Expression is IdentifierNameSyntax);
 
-            if (invocs.Count <= 0)
-                return node;
-
-            InvocationExpressionSyntax invoc = invocs[_rng.Next(invocs.Count)];
-
-            MethodDeclarationSyntax target =
-                cls.DescendantNodes()
-                .OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
-
-            // Cannot yet inline functions that have multiple returns, or returns in different position than last...
-            int numReturns = target.Body.Statements.Count(s => s is ReturnStatementSyntax);
-            if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
-                return node;
-
-            Debug.Assert(target != null);
-
-            List<StatementSyntax> finalStatements = new List<StatementSyntax>();
-            Dictionary<string, string> idReplacements = new Dictionary<string, string>();
-            // Since we may assign to arguments, we need to introduce a local for each argument.
-            // We also need to do this because a variable may go through an implicit conversion when
-            // being passed as an arg, so the assignments here replicate that as well.
-            foreach (var (param, arg) in target.ParameterList.Parameters.Zip(invoc.ArgumentList.Arguments, (p, a) => (p, a)))
+            foreach (InvocationExpressionSyntax invoc in invocs)
             {
-                LocalDeclarationStatementSyntax argLocal;
-                string argLocalName;
-                if (arg.RefKindKeyword != null)
-                    (argLocal, argLocalName) = MakeLocalDecl(RefExpression(arg.Expression), RefType(param.Type));
-                else
-                    (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
+                MethodDeclarationSyntax target =
+                    cls.DescendantNodes()
+                    .OfType<MethodDeclarationSyntax>()
+                    .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
 
-                finalStatements.Add(argLocal);
-                idReplacements.Add(param.Identifier.Text, argLocalName);
-            }
+                // Cannot yet inline functions that have multiple returns, or returns in different position than last...
+                int numReturns = target.Body.Statements.Count(s => s is ReturnStatementSyntax);
+                if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
+                    continue;
 
-            // Rename locals to avoid clashes
-            foreach (VariableDeclaratorSyntax varDecl in
-                target.Body.DescendantNodes().OfType<VariableDeclaratorSyntax>())
-            {
-                idReplacements.Add(varDecl.Identifier.Text, MakeLocalName());
-            }
+                Debug.Assert(target != null);
 
-            string valueName = null;
-            foreach (StatementSyntax stmt in target.Body.Statements)
-            {
-                IEnumerable<SyntaxToken> tokens =
-                    stmt.DescendantTokens()
-                        .Where(t => t.IsKind(SyntaxKind.IdentifierToken) && idReplacements.ContainsKey(t.Text));
-
-                StatementSyntax newStmt =
-                    stmt.ReplaceTokens(tokens, (orig, _) => Identifier(idReplacements[orig.Text]));
-
-                if (newStmt is ReturnStatementSyntax ret)
+                List<StatementSyntax> finalStatements = new List<StatementSyntax>();
+                Dictionary<string, string> idReplacements = new Dictionary<string, string>();
+                // Since we may assign to arguments, we need to introduce a local for each argument.
+                // We also need to do this because a variable may go through an implicit conversion when
+                // being passed as an arg, so the assignments here replicate that as well.
+                foreach (var (param, arg) in target.ParameterList.Parameters.Zip(invoc.ArgumentList.Arguments, (p, a) => (p, a)))
                 {
-                    if (ret.Expression == null)
-                        continue;
+                    LocalDeclarationStatementSyntax argLocal;
+                    string argLocalName;
+                    if (arg.RefKindKeyword != null)
+                        (argLocal, argLocalName) = MakeLocalDecl(RefExpression(arg.Expression), RefType(param.Type));
+                    else
+                        (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
 
-                    (newStmt, valueName) = MakeLocalDecl(ret.Expression, target.ReturnType);
+                    finalStatements.Add(argLocal);
+                    idReplacements.Add(param.Identifier.Text, argLocalName);
                 }
 
-                finalStatements.Add(newStmt);
+                // Rename locals to avoid clashes
+                foreach (VariableDeclaratorSyntax varDecl in
+                    target.Body.DescendantNodes().OfType<VariableDeclaratorSyntax>())
+                {
+                    idReplacements.Add(varDecl.Identifier.Text, MakeLocalName());
+                }
+
+                string valueName = null;
+                foreach (StatementSyntax stmt in target.Body.Statements)
+                {
+                    IEnumerable<SyntaxToken> tokens =
+                        stmt.DescendantTokens()
+                            .Where(t => t.IsKind(SyntaxKind.IdentifierToken) && idReplacements.ContainsKey(t.Text));
+
+                    StatementSyntax newStmt =
+                        stmt.ReplaceTokens(tokens, (orig, _) => Identifier(idReplacements[orig.Text]));
+
+                    if (newStmt is ReturnStatementSyntax ret)
+                    {
+                        if (ret.Expression == null)
+                            continue;
+
+                        (newStmt, valueName) = MakeLocalDecl(ret.Expression, target.ReturnType);
+                    }
+
+                    finalStatements.Add(newStmt);
+                }
+
+                bool replaceUsage = !(invoc.Parent is ExpressionStatementSyntax);
+                Debug.Assert(!replaceUsage || valueName != null, "We need to replace usage but no return statement was found");
+
+                StatementSyntax containingInvoc = invoc.FirstAncestorOrSelf<StatementSyntax>();
+                if (replaceUsage)
+                {
+                    finalStatements.Add(containingInvoc.ReplaceNode(invoc, IdentifierName(valueName)));
+                }
+
+                BlockSyntax containingBlock = invoc.FirstAncestorOrSelf<BlockSyntax>();
+                SyntaxNode newNode =
+                    node.ReplaceNode(
+                        containingBlock,
+                        containingBlock.WithStatements(
+                            containingBlock.Statements.ReplaceRange(containingInvoc, finalStatements)));
+
+                yield return newNode;
             }
-
-            bool replaceUsage = !(invoc.Parent is ExpressionStatementSyntax);
-            Debug.Assert(!replaceUsage || valueName != null, "We need to replace usage but no return statement was found");
-
-            StatementSyntax containingInvoc = invoc.FirstAncestorOrSelf<StatementSyntax>();
-            if (replaceUsage)
-            {
-                finalStatements.Add(containingInvoc.ReplaceNode(invoc, IdentifierName(valueName)));
-            }
-
-            BlockSyntax containingBlock = invoc.FirstAncestorOrSelf<BlockSyntax>();
-            SyntaxNode newNode =
-                node.ReplaceNode(
-                    containingBlock,
-                    containingBlock.WithStatements(
-                        containingBlock.Statements.ReplaceRange(containingInvoc, finalStatements)));
-
-            return newNode;
         }
 
         // Remove statements
@@ -741,88 +820,76 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
-        private SyntaxNode RemoveMethodArgument(SyntaxNode node)
+        private IEnumerable<SyntaxNode> RemoveMethodArgument(SyntaxNode node)
         {
             if (!(node is CompilationUnitSyntax unit))
-                return node;
+                yield break;
 
-            List<(ParameterSyntax pm, int index)> methodParams =
+            IEnumerable<(ParameterSyntax pm, int index)> methodParams =
                 unit.DescendantNodes().OfType<BaseMethodDeclarationSyntax>()
                 .Where(m => !(m is MethodDeclarationSyntax normalMethod) || normalMethod.Identifier.Text != "Main")
-                .SelectMany(m => m.ParameterList.Parameters.Select((p, i) => (p, i))).ToList();
+                .SelectMany(m => m.ParameterList.Parameters.Select((p, i) => (p, i)));
 
-            if (methodParams.Count == 0)
-                return node;
-
-            var (parameter, index) = methodParams[_rng.Next(methodParams.Count)];
-            BaseMethodDeclarationSyntax method = (BaseMethodDeclarationSyntax)parameter.Parent.Parent;
-            Func<SyntaxNode, bool> isInvoc;
-            Func<SyntaxNode, ArgumentListSyntax> getInvocArgs;
-            if (method is MethodDeclarationSyntax)
+            foreach (var (parameter, index) in methodParams)
             {
-                isInvoc = n => n is InvocationExpressionSyntax invoc &&
-                          invoc.Expression is IdentifierNameSyntax id &&
-                          id.Identifier.Text == ((MethodDeclarationSyntax)method).Identifier.Text;
-                getInvocArgs = n => ((InvocationExpressionSyntax)n).ArgumentList;
-            }
-            else if (method is ConstructorDeclarationSyntax)
-            {
-                isInvoc = n => n is ObjectCreationExpressionSyntax creation &&
-                               creation.Type is IdentifierNameSyntax id &&
-                               id.Identifier.Text == ((ConstructorDeclarationSyntax)method).Identifier.Text;
-                getInvocArgs = n => ((ObjectCreationExpressionSyntax)n).ArgumentList;
-            }
-            else
-                return node;
+                BaseMethodDeclarationSyntax method = (BaseMethodDeclarationSyntax)parameter.Parent.Parent;
+                Func<SyntaxNode, bool> isInvoc;
+                Func<SyntaxNode, ArgumentListSyntax> getInvocArgs;
+                if (method is MethodDeclarationSyntax)
+                {
+                    isInvoc = n => n is InvocationExpressionSyntax invoc &&
+                              invoc.Expression is IdentifierNameSyntax id &&
+                              id.Identifier.Text == ((MethodDeclarationSyntax)method).Identifier.Text;
+                    getInvocArgs = n => ((InvocationExpressionSyntax)n).ArgumentList;
+                }
+                else if (method is ConstructorDeclarationSyntax)
+                {
+                    isInvoc = n => n is ObjectCreationExpressionSyntax creation &&
+                                   creation.Type is IdentifierNameSyntax id &&
+                                   id.Identifier.Text == ((ConstructorDeclarationSyntax)method).Identifier.Text;
+                    getInvocArgs = n => ((ObjectCreationExpressionSyntax)n).ArgumentList;
+                }
+                else
+                    continue;
 
-            SyntaxNode methodWithoutParam;
-            if (method is ConstructorDeclarationSyntax && method.ParameterList.Parameters.Count == 1)
-            {
-                // Remove constructors if they get 0 args
-                methodWithoutParam = null;
+                SyntaxNode methodWithoutParam;
+                if (method is ConstructorDeclarationSyntax && method.ParameterList.Parameters.Count == 1)
+                {
+                    // Remove constructors if they get 0 args
+                    methodWithoutParam = null;
+                }
+                else
+                {
+                    methodWithoutParam =
+                        method.ReplaceNode(
+                            method.ParameterList,
+                            method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
+                }
+
+                SyntaxNode newNode = unit.ReplaceNode(method, methodWithoutParam);
+                while (true)
+                {
+                    SyntaxNode invoc =
+                        newNode.DescendantNodes().FirstOrDefault(
+                            i => isInvoc(i) && getInvocArgs(i).Arguments.Count == method.ParameterList.Parameters.Count);
+
+                    if (invoc == null)
+                        break;
+
+                    ArgumentListSyntax args = getInvocArgs(invoc);
+                    ArgumentListSyntax newArgs = args.WithArguments(args.Arguments.RemoveAt(index));
+                    newNode = newNode.ReplaceNode(args, newArgs);
+                }
+
+                yield return newNode;
             }
-            else
-            {
-                methodWithoutParam =
-                    method.ReplaceNode(
-                        method.ParameterList,
-                        method.ParameterList.WithParameters(method.ParameterList.Parameters.RemoveAt(index)));
-            }
-
-            SyntaxNode newNode = unit.ReplaceNode(method, methodWithoutParam);
-            while (true)
-            {
-                SyntaxNode invoc =
-                    newNode.DescendantNodes().FirstOrDefault(
-                        i => isInvoc(i) && getInvocArgs(i).Arguments.Count == method.ParameterList.Parameters.Count);
-
-                if (invoc == null)
-                    break;
-
-                ArgumentListSyntax args = getInvocArgs(invoc);
-                ArgumentListSyntax newArgs = args.WithArguments(args.Arguments.RemoveAt(index));
-                newNode = newNode.ReplaceNode(args, newArgs);
-            }
-
-            return newNode;
         }
 
-        [Simplifier]
-        private SyntaxNode SimplifyInvocationExtractArgs(SyntaxNode node)
-        {
-            return SimplifyInvocationExtractArgsCore(node, false);
-        }
-
-        // Simplify an invocation by extracting only a single arg. In some cases
+        // Simplify an invocation by extracting only a arg. In some cases
         // we get rid of the interesting behavior by extracting all args, so we can
         // fall back to this in that case (which is also why this is marked late).
         [Simplifier(Late = true)]
-        private SyntaxNode SimplifyInvocationExtractArg(SyntaxNode node)
-        {
-            return SimplifyInvocationExtractArgsCore(node, true);
-        }
-
-        private SyntaxNode SimplifyInvocationExtractArgsCore(SyntaxNode node, bool single)
+        private IEnumerable<SyntaxNode> SimplifyInvocationExtractArg(SyntaxNode node)
         {
             // Simplify a random invocation in a block from
             // M(expr1, expr2)
@@ -832,100 +899,47 @@ namespace Fuzzlyn.Reduction
             // var a = M(expr1, expr2)
             // to
             // var arg1 = expr1;
-            // var arg2 = expr2;
-            // [var a = ] M(arg1, arg2)
-            // If 'single' is specified, only extract one random arg
+            // [var a = ] M(arg1, expr2)
+            // for each argument
 
             if (!(node is BlockSyntax block))
-                return node;
+                yield break;
 
-            List<InvocationExpressionSyntax> invocs = new List<InvocationExpressionSyntax>();
-            if (single)
+            IEnumerable<InvocationExpressionSyntax> invocs =
+                block.DescendantNodes()
+                .OfType<InvocationExpressionSyntax>()
+                .Where(i => i.FirstAncestorOrSelf<BlockSyntax>() == block);
+
+            foreach (InvocationExpressionSyntax invoc in invocs)
             {
-                invocs.AddRange(
-                    block.DescendantNodes()
-                    .OfType<InvocationExpressionSyntax>()
-                    .Where(i => i.FirstAncestorOrSelf<BlockSyntax>() == block));
-            }
-            else
-            {
-                foreach (StatementSyntax stmt in block.Statements)
-                {
-                    if (stmt is ExpressionStatementSyntax expStmt)
-                    {
-                        if (expStmt.Expression is InvocationExpressionSyntax inv1)
-                            invocs.Add(inv1);
-                        else if (expStmt.Expression is AssignmentExpressionSyntax asgn &&
-                                 asgn.Right is InvocationExpressionSyntax inv2)
-                        {
-                            invocs.Add(inv2);
-                        }
-                    }
-                    else if (stmt is LocalDeclarationStatementSyntax local &&
-                             local.Declaration.Variables.Count == 1 &&
-                             local.Declaration.Variables[0].Initializer?.Value is InvocationExpressionSyntax inv3)
-                    {
-                        invocs.Add(inv3);
-                    }
-                }
-            }
-
-            // Remove ones that already have only variables as arguments, including ones with 0 arguments.
-            invocs.RemoveAll(inv => inv.ArgumentList.Arguments.All(a => a.Expression is IdentifierNameSyntax || a.Expression is LiteralExpressionSyntax));
-            // Remove checksums
-            invocs.RemoveAll(IsChecksumCall);
-
-            if (invocs.Count <= 0)
-                return node;
-
-            InvocationExpressionSyntax invoc = invocs[_rng.Next(invocs.Count)];
-            int statementIndex =
-                block.Statements.Select((s, i) => (s, i)).Single(t => t.s.Contains(invoc)).i;
-
-            int simplifyIndex = -1;
-            if (single)
-            {
-                List<int> simplifiableArgIndices =
-                    invoc.ArgumentList.Arguments
-                    .Select((a, i) => (a, i))
-                    .Where(t => !(t.a.Expression is IdentifierNameSyntax || t.a.Expression is LiteralExpressionSyntax))
-                    .Select(t => t.i)
-                    .ToList();
-                if (simplifiableArgIndices.Count <= 0)
-                    return node;
-
-                simplifyIndex = simplifiableArgIndices[_rng.Next(simplifiableArgIndices.Count)];
-            }
-
-            List<StatementSyntax> newVars = new List<StatementSyntax>();
-            List<ArgumentSyntax> newArgs = new List<ArgumentSyntax>();
-
-            for (int i = 0; i < invoc.ArgumentList.Arguments.Count; i++)
-            {
-                ArgumentSyntax arg = invoc.ArgumentList.Arguments[i];
-                if (arg.Expression is IdentifierNameSyntax ||
-                    arg.Expression is LiteralExpressionSyntax ||
-                    (single && simplifyIndex != i))
-                {
-                    newArgs.Add(arg);
+                if (IsChecksumCall(invoc))
                     continue;
+
+                int statementIndex =
+                    block.Statements.Select((s, i) => (s, i)).Single(t => t.s.Contains(invoc)).i;
+
+                // If we enumerate in order we will always extract args so that the evaluation order is still correct.
+                foreach (ArgumentSyntax arg in invoc.ArgumentList.Arguments)
+                {
+                    if (arg.Expression is IdentifierNameSyntax || arg.Expression is LiteralExpressionSyntax)
+                        continue;
+
+                    var (local, name) = MakeLocalDecl(arg.Expression);
+                    BlockSyntax newBlock = block.ReplaceNode(arg, Argument(IdentifierName(name)));
+                    newBlock = newBlock.WithStatements(newBlock.Statements.Insert(statementIndex, local));
+                    yield return newBlock;
                 }
-
-                var (local, name) = MakeLocalDecl(arg.Expression);
-                newVars.Add(local);
-                newArgs.Add(Argument(IdentifierName(name)));
             }
-
-            BlockSyntax newBlock = block.ReplaceNode(invoc, invoc.WithArgumentList(ArgumentList(SeparatedList(newArgs))));
-            newBlock = newBlock.WithStatements(newBlock.Statements.InsertRange(statementIndex, newVars));
-            return newBlock;
         }
 
-        // Extract a condition in an 'if' into a local variable.
+        // Extract a condition in an empty 'if' into a local variable.
         [Simplifier]
         private SyntaxNode SimplifyIfExtractCondition(SyntaxNode node)
         {
             if (!(node is IfStatementSyntax @if) || @if.Condition is IdentifierNameSyntax || @if.Condition is LiteralExpressionSyntax)
+                return node;
+
+            if (!(@if.Statement is BlockSyntax thenBlock) || thenBlock.Statements.Count > 0 || @if.Else != null)
                 return node;
 
             var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
@@ -933,64 +947,73 @@ namespace Fuzzlyn.Reduction
             return Block(local, newIf);
         }
 
-        // Combine code like "ulong var0; var0 = 123" to "ulong var0 = 123"
+        // Flip if (expr) { } else { else; }  to "if (!expr) { else; }"
         [Simplifier]
-        private SyntaxNode CombineLocalAssignmentInBlock(SyntaxNode node)
+        private SyntaxNode SimplifyIfFlipWithEmptyThen(SyntaxNode node)
         {
-            if (!(node is BlockSyntax block))
+            if (!(node is IfStatementSyntax @if))
                 return node;
 
-            List<(LocalDeclarationStatementSyntax local, ExpressionSyntax exp)> candidates
-                = new List<(LocalDeclarationStatementSyntax local, ExpressionSyntax exp)>();
+            if (@if.Else == null || !(@if.Statement is BlockSyntax thenBlock) || thenBlock.Statements.Count > 0)
+                return node;
 
-            for (int i = 0; i < block.Statements.Count - 1; i++)
+            IfStatementSyntax newIf =
+                IfStatement(
+                    PrefixUnaryExpression(
+                        SyntaxKind.LogicalNotExpression,
+                        @if.Condition),
+                @if.Else.Statement);
+
+            return newIf;
+        }
+
+        // Combine code like "ulong var0; var0 = 123" to "ulong var0 = 123"
+        [Simplifier]
+        private IEnumerable<SyntaxNode> CombineLocalAssignmentsInBlock(SyntaxNode node)
+        {
+            if (!(node is BlockSyntax block))
+                yield break;
+
+            foreach (StatementSyntax statement in block.Statements)
             {
-                StatementSyntax s1 = block.Statements[i];
+                if (!(statement is LocalDeclarationStatementSyntax local))
+                    continue;
 
-                if (!(s1 is LocalDeclarationStatementSyntax local) ||
-                    local.Declaration.Variables.Count != 1 ||
+                if (local.Declaration.Variables.Count != 1 ||
                     local.Declaration.Variables[0].Initializer != null)
                     continue;
 
-                for (int j = i + 1; j < block.Statements.Count; j++)
+                string localId = local.Declaration.Variables[0].Identifier.Text;
+                foreach (ExpressionStatementSyntax expStmt in block.DescendantNodes().OfType<ExpressionStatementSyntax>())
                 {
-                    StatementSyntax s2 = block.Statements[j];
-                    if (!(s2 is ExpressionStatementSyntax expStmt) ||
-                        !(expStmt.Expression is AssignmentExpressionSyntax asgn) ||
-                        !(asgn.Left is IdentifierNameSyntax id) ||
-                        id.Identifier.Text != local.Declaration.Variables[0].Identifier.Text)
+                    if (!(expStmt.Expression is AssignmentExpressionSyntax asgn))
                         continue;
 
-                    candidates.Add((local, asgn.Right));
+                    if (!(asgn.Left is IdentifierNameSyntax id))
+                        continue;
+
+                    if (id.Identifier.Text != localId)
+                        continue;
+
+                    LocalDeclarationStatementSyntax newLocal =
+                        local
+                        .WithDeclaration(
+                            local.Declaration.WithVariables(
+                                SingletonSeparatedList(
+                                    local.Declaration.Variables[0].WithInitializer(
+                                        EqualsValueClause(asgn.Right)))));
+
+                    int localIndex = block.Statements.IndexOf(local);
+
+                    BlockSyntax newBlock =
+                        block.ReplaceNode(expStmt, newLocal);
+
+                    newBlock = newBlock.WithStatements(newBlock.Statements.RemoveAt(localIndex));
+                    yield return newBlock;
+                    // Only check with first assignment
                     break;
                 }
             }
-
-            if (candidates.Count <= 0)
-                return node;
-
-            var candidate = candidates[_rng.Next(candidates.Count)];
-            LocalDeclarationStatementSyntax newLocal =
-                candidate.local
-                .WithDeclaration(
-                    candidate.local.Declaration.WithVariables(
-                        SingletonSeparatedList(
-                            candidate.local.Declaration.Variables[0].WithInitializer(
-                                EqualsValueClause(candidate.exp)))));
-
-            StatementSyntax asgnStmt = (StatementSyntax)candidate.exp.Parent.Parent;
-            int localIndex = block.Statements.IndexOf(candidate.local);
-
-            BlockSyntax newBlock =
-                block.WithStatements(
-                    block.Statements
-                    .Replace(asgnStmt, newLocal)
-                    // for some reason this does not work with Remove(candidate.local)
-                    // I think the node changes with the parent for some reason.
-                    .RemoveAt(localIndex) 
-                    );
-
-            return newBlock;
         }
 
         // Inlines locals of the forms
@@ -999,48 +1022,44 @@ namespace Fuzzlyn.Reduction
         // ref int a = ref b;
         // All occurences of a are replaced by the right-hand side.
         [Simplifier]
-        private SyntaxNode InlineLocal(SyntaxNode node)
+        private IEnumerable<SyntaxNode> InlineLocals(SyntaxNode node)
         {
             if (!(node is BlockSyntax block))
-                return node;
+                yield break;
 
-            List<LocalDeclarationStatementSyntax> candidates =
-                block.Statements.OfType<LocalDeclarationStatementSyntax>()
-                .Where(l =>
-                {
-                    if (l.Declaration.Variables.Count != 1)
-                        return false;
+            foreach (LocalDeclarationStatementSyntax local in block.Statements.OfType<LocalDeclarationStatementSyntax>())
+            {
+                if (local.Declaration.Variables.Count != 1)
+                    continue;
 
-                    VariableDeclaratorSyntax var = l.Declaration.Variables[0];
-                    if (var.Initializer == null)
-                        return false;
+                VariableDeclaratorSyntax var = local.Declaration.Variables[0];
+                if (var.Initializer == null)
+                    continue;
 
-                    return
-                        var.Initializer.Value is IdentifierNameSyntax ||
-                        var.Initializer.Value is LiteralExpressionSyntax ||
-                        (var.Initializer.Value is RefExpressionSyntax lclRes && lclRes.Expression is IdentifierNameSyntax);
-                })
-                .ToList();
+                bool isIdentifier = var.Initializer.Value is IdentifierNameSyntax;
+                bool isLiteral = var.Initializer.Value is LiteralExpressionSyntax;
+                bool isRefIdentifier = var.Initializer.Value is RefExpressionSyntax lclRes &&
+                                       lclRes.Expression is IdentifierNameSyntax;
 
-            if (candidates.Count <= 0)
-                return node;
+                if (!isIdentifier && !isLiteral && !isRefIdentifier)
+                    continue;
 
-            LocalDeclarationStatementSyntax local = candidates[_rng.Next(candidates.Count)];
-            string toReplace = local.Declaration.Variables[0].Identifier.Text;
-            SyntaxNode replaceWith = local.Declaration.Variables[0].Initializer.Value;
+                string toReplace = local.Declaration.Variables[0].Identifier.Text;
+                SyntaxNode replaceWith = local.Declaration.Variables[0].Initializer.Value;
 
-            if (replaceWith is RefExpressionSyntax res)
-                replaceWith = res.Expression;
+                if (replaceWith is RefExpressionSyntax res)
+                    replaceWith = res.Expression;
 
-            BlockSyntax newNode =
-                block.WithStatements(block.Statements.Remove(local));
+                BlockSyntax newNode =
+                    block.WithStatements(block.Statements.Remove(local));
 
-            newNode =
-                newNode.ReplaceNodes(
-                    newNode.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id => id.Identifier.Text == toReplace),
-                    (orig, _) => replaceWith);
+                newNode =
+                    newNode.ReplaceNodes(
+                        newNode.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id => id.Identifier.Text == toReplace),
+                        (orig, _) => replaceWith);
 
-            return newNode;
+                yield return newNode;
+            }
         }
 
         [Simplifier]
