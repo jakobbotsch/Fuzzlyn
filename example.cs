@@ -307,7 +307,6 @@ public class Program
             }
             else
             {
-                s_9 = new sbyte[]{127, -19};
                 var7 = 1181877853;
             }
 
