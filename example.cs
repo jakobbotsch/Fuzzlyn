@@ -632,62 +632,7 @@ public class Program
 
     static byte M23(byte arg0, int arg1, sbyte arg2, ref sbyte[, ] arg3, long arg4, ushort arg5, sbyte arg6, uint arg7, ushort[] arg8)
     {
-        int var0 = default(int);
-        sbyte var1 = default(sbyte);
-        bool var2 = default(bool);
-        ulong[] var3 = default(ulong[]);
-        sbyte var4 = default(sbyte);
-        int var5 = default(int);
-        M24();
-        s_3[0] = arg8[0];
-        {
-            s_6 = -4132708345189436987L;
-            M24();
-            {
-                {
-                    var0 = arg1--;
-                    arg0 = s_15;
-                    s_rt.Checksum("c_65", var0);
-                }
-
-                M24();
-            }
-
-            {
-                M24();
-                var1 = -93;
-                var2 = true;
-                arg8 = s_3;
-                arg3 = arg3;
-                var3 = new ulong[]{0UL, 11769882297530445718UL, 16460209444906240365UL};
-                var4 = arg2;
-                M24();
-                var5 = (int)(1484787614U ^ (ulong)M24());
-                M24();
-                if (var2)
-                {
-                    s_3[0] = arg5;
-                    arg3[0, 0] = (sbyte)(0 ^ arg8[0]);
-                }
-
-                s_rt.Checksum("c_66", var1);
-                s_rt.Checksum("c_67", var2);
-                s_rt.Checksum("c_68", var3[0]);
-                s_rt.Checksum("c_69", var4);
-                s_rt.Checksum("c_70", var5);
-            }
-        }
-
-        s_rt.Checksum("c_71", arg0);
-        s_rt.Checksum("c_72", arg1);
-        s_rt.Checksum("c_73", arg2);
-        s_rt.Checksum("c_74", arg3[0, 0]);
-        s_rt.Checksum("c_75", arg4);
-        s_rt.Checksum("c_76", arg5);
-        s_rt.Checksum("c_77", arg6);
-        s_rt.Checksum("c_78", arg7);
-        s_rt.Checksum("c_79", arg8[0]);
-        return arg0;
+        return default(byte);
     }
 
     static int M24()
