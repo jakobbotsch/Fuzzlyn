@@ -19,7 +19,7 @@ public class Program
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static ushort s_17 = 0;
     static byte s_18 = 0;
-    static short s_19 = 1;
+    static short s_19 = 0;
     static byte[] s_20 = new byte[]{143, 16, 1, 172, 109};
     static int s_21 = 2147483646;
     static uint[][] s_22 = new uint[][]{new uint[]{1U, 0U, 132292939U, 1541317924U}};
