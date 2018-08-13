@@ -637,11 +637,6 @@ public class Program
         return default(long);
     }
 
-    static short M100()
-    {
-        return default(short);
-    }
-
     static uint M101()
     {
         return default(uint);
