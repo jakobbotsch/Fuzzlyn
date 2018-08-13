@@ -240,11 +240,6 @@ public class Program
         return default(ulong);
     }
 
-    static int M96(short arg0)
-    {
-        return default(int);
-    }
-
     static ulong[] M98()
     {
         return default(ulong[]);
