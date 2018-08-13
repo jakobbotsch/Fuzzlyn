@@ -57,7 +57,7 @@ public class Program
     static short[] s_54 = new short[]{0};
     static bool[] s_55 = new bool[]{false};
     static sbyte s_56 = 0;
-    static ulong s_57 = 18446744073709551615UL;
+    static ulong s_57 = 0;
     static byte s_58 = 0;
     static long[] s_59 = new long[]{-2L};
     static byte s_60 = 183;
