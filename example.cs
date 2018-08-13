@@ -197,7 +197,7 @@ public class Program
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
         sbyte var0 = default(sbyte);
-        long var5 = default(long);
+        long var5;
         ushort var6 = default(ushort);
         int var7 = default(int);
         short var8 = default(short);
