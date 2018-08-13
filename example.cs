@@ -547,43 +547,7 @@ public class Program
 
     static ulong[] M19(ref uint arg0, short arg1, uint[] arg2)
     {
-        long var0 = default(long);
-        long var2 = default(long);
-        int var3 = default(int);
-        long var5 = default(long);
-        var0 = arg2[0] ^ -32665;
-        ref uint var1 = ref arg2[0];
-        var2 = var0;
-        arg0 = 2U;
-        M20();
-        var3 = s_12++;
-        s_14 = new long[]{9223372036854775806L, -3281498678345351126L, -9223372036854775808L, -3122657114242456583L, 5695272276153936953L, 2176666584825965377L, -6551355637144547308L, 2L, 1L};
-        ref sbyte var4 = ref s_2[0];
-        s_3 = new ushort[]{65535, 57626, 38477, 63700, 34501, 0, 65534, 1, 39454};
-        var5 = 9173985135957611349L;
-        try
-        {
-            var1 = arg2[0];
-        }
-        finally
-        {
-            s_7 = s_7;
-        }
-
-        var2 = var5;
-        M21(var3);
-        arg2[0] = (uint)M22();
-        s_8 = arg1;
-        s_rt.Checksum("c_53", arg0);
-        s_rt.Checksum("c_54", arg1);
-        s_rt.Checksum("c_55", arg2[0]);
-        s_rt.Checksum("c_56", var0);
-        s_rt.Checksum("c_57", var1);
-        s_rt.Checksum("c_58", var2);
-        s_rt.Checksum("c_59", var3);
-        s_rt.Checksum("c_60", var4);
-        s_rt.Checksum("c_61", var5);
-        return new ulong[]{1UL, 1UL, 0UL, 15423146024344056026UL, 1UL, 18446744073709551615UL};
+        return default(ulong[]);
     }
 
     static ref uint[, ] M20()
