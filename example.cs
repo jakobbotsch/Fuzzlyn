@@ -14,7 +14,6 @@ public class Program
     static sbyte[] s_78;
     static long[] s_84 = new long[]{0};
     static bool s_94 = false;
-    static short[] s_97 = new short[]{0};
     static ulong[] s_100 = new ulong[]{0};
     static short s_113;
     static short[] s_115 = new short[]{0};
