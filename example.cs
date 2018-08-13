@@ -275,7 +275,6 @@ public class Program
                     M13(1, ref s_1[0], s_4[0]);
                     s_4[0][0] = 1;
                     M13(arg1, ref s_1[0], s_4[0]);
-                    arg2 = 14599;
                 }
 
                 s_rt.Checksum("c_40", var11);
