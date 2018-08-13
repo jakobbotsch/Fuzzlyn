@@ -73,7 +73,6 @@ public class Program
     static short s_102 = 0;
     static int[][] s_106 = new int[][]{new int[]{0}};
     static int s_108 = 0;
-    static byte s_110 = 0;
     static ulong s_111 = 0;
     static short s_112 = 0;
     static short s_113 = 0;
