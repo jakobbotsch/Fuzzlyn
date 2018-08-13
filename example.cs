@@ -247,11 +247,6 @@ public class Program
         return default(long[]);
     }
 
-    static bool M41(short arg0)
-    {
-        return default(bool);
-    }
-
     static ref uint M42()
     {
         return ref s_33;
