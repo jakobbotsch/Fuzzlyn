@@ -560,11 +560,6 @@ public class Program
         return default(int);
     }
 
-    static int M97()
-    {
-        return default(int);
-    }
-
     static ulong[] M98()
     {
         return default(ulong[]);
