@@ -48,7 +48,8 @@ public class Program
             s_rt.Checksum("c_28", var4);
             var vr2 = new int[]{450864205};
             M13(ref s_1[0], vr2);
-            s_1[0] = (uint)M13(ref s_1[0], s_4[0]);
+            var vr3 = s_4[0];
+            s_1[0] = (uint)M13(ref s_1[0], vr3);
             s_1[0] = 0;
         }
 
