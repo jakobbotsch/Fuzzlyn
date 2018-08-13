@@ -352,7 +352,6 @@ public class Program
                 s_rt.Checksum("c_259", var14);
             }
 
-            s_45[0, 0] = s_45[0, 0];
             s_rt.Checksum("c_260", var7);
             s_rt.Checksum("c_261", var8);
         }
