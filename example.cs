@@ -56,7 +56,6 @@ public class Program
     static int[][] s_106 = new int[][]{new int[]{0}};
     static int s_108 = 0;
     static ulong s_111 = 0;
-    static short s_112 = 0;
     static short s_113;
     static short[] s_115 = new short[]{0};
     static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{0}};
