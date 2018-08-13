@@ -90,7 +90,7 @@ public class Program
     static bool s_87 = true;
     static ushort[] s_88 = new ushort[]{0};
     static bool s_89 = true;
-    static ulong s_90 = 1UL;
+    static ulong s_90 = 0;
     static long s_91 = -10L;
     static ushort s_92 = 0;
     static int s_93 = 1817748138;
