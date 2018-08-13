@@ -637,27 +637,7 @@ public class Program
 
     static bool M37(ref long arg0, short[, ][][, ] arg1, sbyte arg2, sbyte arg3)
     {
-        bool var0 = default(bool);
-        arg0 = arg0;
-        arg2 = 14;
-        if (s_23[0])
-        {
-            s_33 = 3690277061U;
-            arg1 = arg1;
-        }
-        else
-        {
-            var0 = false && (arg2 != arg1[0, 0][0][0, 0]);
-            arg2 = arg3;
-            s_rt.Checksum("c_148", var0);
-        }
-
-        arg1[0, 0][0][0, 0]--;
-        s_rt.Checksum("c_149", arg0);
-        s_rt.Checksum("c_150", arg1[0, 0][0][0, 0]);
-        s_rt.Checksum("c_151", arg2);
-        s_rt.Checksum("c_152", arg3);
-        return false;
+        return default(bool);
     }
 
     static bool M38(sbyte arg0, ushort arg1)
