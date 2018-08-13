@@ -477,19 +477,7 @@ public class Program
 
     static int M27()
     {
-        ref sbyte var0 = ref s_9[0];
-        if (var0 != s_11)
-        {
-            var0 = ref var0;
-        }
-        else
-        {
-            var0 = var0--;
-            var0 = ref var0;
-        }
-
-        s_rt.Checksum("c_87", var0);
-        return s_4[0][0]--;
+        return default(int);
     }
 
     static ref short M28(long arg0)
