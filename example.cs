@@ -44,7 +44,6 @@ public class Program
     static ulong s_47 = 0;
     static bool s_48 = false;
     static byte s_49 = 0;
-    static ushort[][] s_50 = new ushort[][]{new ushort[]{0}};
     static ulong s_51 = 0;
     static byte[] s_52 = new byte[]{0};
     static bool[,, ] s_53 = new bool[,, ]{{{false}}};
