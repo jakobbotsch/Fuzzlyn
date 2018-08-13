@@ -25,7 +25,7 @@ public class Program
     static bool[] s_23 = new bool[]{false};
     static short s_24 = 0;
     static byte s_25 = 1;
-    static sbyte s_26 = 0;
+    static sbyte s_26;
     static long s_29 = 0;
     static short[] s_30 = new short[]{0};
     static int s_31 = 0;
