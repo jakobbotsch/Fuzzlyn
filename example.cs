@@ -234,7 +234,6 @@ public class Program
             {
                 try
                 {
-                    if (s_4[0][0] != 1)
                     {
                         var0 = arg0[0, 0];
                         arg0[0, 0] = s_2[0];
