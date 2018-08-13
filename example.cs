@@ -73,7 +73,6 @@ public class Program
     static ushort s_92 = 0;
     static int s_93 = 0;
     static bool s_94 = false;
-    static long s_95 = 0;
     static sbyte s_96 = 0;
     static short[] s_97 = new short[]{0};
     static sbyte s_99 = 0;
