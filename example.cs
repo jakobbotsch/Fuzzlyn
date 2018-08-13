@@ -1,14 +1,12 @@
 public class Program
 {
-    static Fuzzlyn.Execution.IRuntime s_rt;
     static uint[] s_1 = new uint[]{0};
     static int[][] s_4 = new int[][]{new int[]{0}};
     static bool s_7;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19;
-    public static void Main(Fuzzlyn.Execution.IRuntime rt)
+    public static void Main()
     {
-        s_rt = rt;
         M12(s_16, s_19);
     }
 
@@ -22,7 +20,7 @@ public class Program
         {
             sbyte var3 = arg0[0, 0];
             sbyte var4 = arg0[0, 0];
-            s_rt.Checksum("c_28", var4);
+            System.Console.WriteLine(var4);
             var vr2 = new int[]{450864205};
             uint vr87 = s_1[0];
             ref int[] vr88 = ref vr2;
@@ -40,11 +38,11 @@ public class Program
             if (arg0[0, 0] > var8)
             {
                 uint var11 = s_1[0];
-                s_rt.Checksum("c_40", var11);
+                System.Console.WriteLine(var11);
             }
         }
 
-        s_rt.Checksum("c_264", arg2);
+        System.Console.WriteLine(arg2);
     }
 
     static int M13(ref uint arg1, int[] arg2)
