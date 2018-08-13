@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction
 {
@@ -21,10 +22,25 @@ namespace Fuzzlyn.Reduction
             // Annotate all nodes
             var annotated = (MethodDeclarationSyntax)new IdAnnotator().Visit(orig);
 
-            // Try removing all first
-            MethodDeclarationSyntax withAllRemoved = Remove(annotated, GetRemovableNodes(annotated));
-            if (IsInteresting(orig, withAllRemoved))
-                return withAllRemoved;
+            // First try out if we can quickly remove a bunch of statements.
+            MethodDeclarationSyntax withRemovedQuick;
+            if (orig.ReturnType is RefTypeSyntax)
+            {
+                // Remove everything except locals and returns. We cannot create our own return.
+                withRemovedQuick = Remove(annotated, GetRemovableNodes(annotated));
+            }
+            else
+            {
+                // Remove everything but insert an insert statement.
+                List<StatementSyntax> stmts = new List<StatementSyntax>();
+                if (!(orig.ReturnType is PredefinedTypeSyntax preType && preType.Keyword.IsKind(SyntaxKind.VoidKeyword)))
+                    stmts.Add(ReturnStatement(DefaultExpression(orig.ReturnType)));
+
+                withRemovedQuick = orig.WithBody(Block(stmts));
+            }
+
+            if (IsInteresting(orig, withRemovedQuick))
+                return withRemovedQuick;
 
             MethodDeclarationSyntax candidate = BinarySearch(orig, annotated, true);
             candidate = BinarySearch(orig, candidate, false);

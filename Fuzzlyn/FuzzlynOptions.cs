@@ -15,12 +15,20 @@ namespace Fuzzlyn
         public bool Output { get; set; } = false;
         public bool EnableChecksumming { get; set; } = true;
         public bool Reduce { get; set; } = false;
+        public bool ReduceWithChildProcesses { get; set; } = false;
         public bool Stats { get; set; } = false;
         // Probability that we pick a class when generating a new type. Otherwise we make a struct.
         public double MakeClassProb { get; set; } = 0.5;
         // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
         public double PrimitiveFieldProb { get; set; } = 0.8;
         public int ProgramMinStatements { get; set; } = 50;
+        /// <summary>
+        /// Max total number of calls for a single function in the program.
+        /// Without such a cap we can easily generate programs that will run until the end of the
+        /// universe, for example M0 calling M1 twice, M1 calling M2 twice, M2 calling M3 twice,
+        /// etc. until some big N.
+        /// </summary>
+        public int SingleFunctionMaxTotalCalls { get; set; } = 50000;
         public double AssignToNewVarProb { get; set; } = 0.4;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double CompoundAssignmentProb { get; set; } = 0.1;
