@@ -162,9 +162,4 @@ public class Program
     {
         return default(ulong[]);
     }
-
-    static uint M101()
-    {
-        return default(uint);
-    }
 }
