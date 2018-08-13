@@ -106,7 +106,7 @@ public class Program
 
     static void M2()
     {
-        M11();
+        M12(s_16, s_25, s_19);
     }
 
     static void M11()
