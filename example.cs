@@ -111,7 +111,7 @@ public class Program
     static int s_108 = 0;
     static byte s_109 = 0;
     static byte s_110 = 0;
-    static ulong s_111 = 8400943349787705141UL;
+    static ulong s_111 = 0;
     static short s_112 = -21694;
     static short s_113 = 1;
     static byte s_114 = 236;
