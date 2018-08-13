@@ -842,17 +842,6 @@ public class Program
     static ref uint M82()
     {
         uint var0 = default(uint);
-        M83();
-        s_18 *= (byte)M84();
-        s_64[0] = 100;
-        {
-            s_62 = (byte)M84();
-        }
-
-        var0 = s_67--;
-        var0 = var0--;
-        var0 = var0;
-        s_rt.Checksum("c_368", var0);
         return ref s_33;
     }
 
