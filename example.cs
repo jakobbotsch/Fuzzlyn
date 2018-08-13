@@ -140,11 +140,6 @@ public class Program
         return default(int);
     }
 
-    static bool M4(ref ulong[, ] arg0)
-    {
-        return default(bool);
-    }
-
     static ref sbyte[] M5(ushort arg0, long arg1, long[] arg2)
     {
         return ref s_2;
