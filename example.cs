@@ -39,7 +39,6 @@ public class Program
     static bool[][] s_36 = new bool[][]{new bool[]{true}};
     static int s_37 = 0;
     static int[][] s_38 = new int[][]{new int[]{0}};
-    static bool s_39 = true;
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
     static ulong s_41 = 0;
     static short s_42 = 0;
