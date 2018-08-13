@@ -92,9 +92,4 @@ public class Program
     {
         return default(ulong);
     }
-
-    static ushort[][] M71()
-    {
-        return default(ushort[][]);
-    }
 }
