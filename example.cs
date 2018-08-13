@@ -858,25 +858,7 @@ public class Program
 
     static uint M83()
     {
-        uint var0 = default(uint);
-        if (s_46)
-        {
-            M84();
-            var0 = 228150594U;
-            var0 = var0;
-            s_6 = 9223372036854775806L;
-            var0 *= var0--;
-            var0 = (uint)M84();
-            var0 = var0;
-            var0 = 2751273067U;
-            s_rt.Checksum("c_367", var0);
-        }
-        else
-        {
-            s_67 ^= 1U;
-        }
-
-        return (uint)M84();
+        return default(uint);
     }
 
     static int M84()
