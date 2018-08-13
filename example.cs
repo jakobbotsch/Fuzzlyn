@@ -75,7 +75,6 @@ public class Program
     static bool s_94 = false;
     static sbyte s_96 = 0;
     static short[] s_97 = new short[]{0};
-    static sbyte s_99 = 0;
     static ulong[] s_100 = new ulong[]{0};
     static bool[, ] s_101 = new bool[, ]{{false}};
     static short s_102 = 0;
