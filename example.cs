@@ -298,11 +298,6 @@ public class Program
         return default(bool[]);
     }
 
-    static uint M92(byte arg0)
-    {
-        return default(uint);
-    }
-
     static short M93()
     {
         return default(short);
