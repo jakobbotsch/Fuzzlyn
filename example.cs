@@ -62,7 +62,7 @@ public class Program
 
     static uint M1()
     {
-        M11();
+        M12(s_16, s_25, s_19);
         return 0;
     }
 
