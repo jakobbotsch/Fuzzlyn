@@ -108,11 +108,6 @@ public class Program
         return arg2[0];
     }
 
-    static sbyte M18()
-    {
-        return default(sbyte);
-    }
-
     static byte M22()
     {
         return default(byte);
