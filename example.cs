@@ -3,7 +3,7 @@ public class Program
     static Fuzzlyn.Execution.IRuntime s_rt;
     static uint[] s_1 = new uint[]{0};
     static int[][] s_4 = new int[][]{new int[]{0}};
-    static bool s_7 = true;
+    static bool s_7;
     static short s_8;
     static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10;
