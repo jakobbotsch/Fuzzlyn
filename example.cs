@@ -382,7 +382,6 @@ public class Program
 
     static ref short M28(long arg0)
     {
-        byte var3 = default(byte);
         long var4 = default(long);
         sbyte var5 = default(sbyte);
         byte var6 = default(byte);
