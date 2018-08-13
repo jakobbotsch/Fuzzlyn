@@ -465,11 +465,6 @@ public class Program
         return ref s_35;
     }
 
-    static short M64()
-    {
-        return default(short);
-    }
-
     static long[][] M65(sbyte arg0)
     {
         return default(long[][]);
