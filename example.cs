@@ -70,11 +70,6 @@ public class Program
         return;
     }
 
-    static long M10(ref ulong arg0, ref bool arg1)
-    {
-        return default(long);
-    }
-
     static void M11(uint[] arg0)
     {
         M12(s_16, s_25, s_19);
