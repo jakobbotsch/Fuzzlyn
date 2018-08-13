@@ -198,7 +198,6 @@ public class Program
     {
         sbyte var0 = default(sbyte);
         ushort var6 = default(ushort);
-        short var8;
         byte var9 = default(byte);
         int var10 = default(int);
         uint var11 = default(uint);
@@ -261,7 +260,7 @@ public class Program
         {
             int var7 = 2147483647;
             arg2 = (short)(51431005U | (short)M13(arg1, ref s_1[0], new int[]{751191425, 1, -2147483647, -2003659586, 0, -595842771}));
-            var8 = arg2;
+            short var8 = arg2;
             arg0 = new sbyte[, ]{{0, 48, -128}, {126, -104, -4}, {-1, 10, 126}, {-95, 1, -64}, {-90, 20, 127}, {-67, 126, -62}, {65, -128, 1}, {-1, 0, 0}, {92, 31, 127}};
             if (arg0[0, 0] > var8)
             {
