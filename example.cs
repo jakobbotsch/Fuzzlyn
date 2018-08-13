@@ -313,7 +313,6 @@ public class Program
 
     static ref short M28(long arg0)
     {
-        byte var6 = default(byte);
         return ref s_8;
     }
 
