@@ -422,32 +422,8 @@ public class Program
         ref long var0 = ref s_6;
         if (arg0 > -406484741)
         {
-            if (true && (25431 < (short)(1U * arg1)))
-            {
-                ref bool var1 = ref s_7;
-                s_rt.Checksum("c_29", var1);
-            }
-            else
-            {
-                s_3 = new ushort[]{65535};
-                if (true || (true || s_7))
-                {
-                    if (s_7)
-                    {
-                        arg1 = arg1;
-                        var2 = arg2[0];
-                        s_rt.Checksum("c_30", var2);
-                    }
-                }
-
-                var0 = -7078116301479133748L;
-            }
         }
 
-        s_rt.Checksum("c_31", arg0);
-        s_rt.Checksum("c_32", arg1);
-        s_rt.Checksum("c_33", arg2[0]);
-        s_rt.Checksum("c_34", var0);
         return arg2[0];
     }
 
