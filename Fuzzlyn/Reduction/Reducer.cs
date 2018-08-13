@@ -671,48 +671,54 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
-        private SyntaxNode SimplifyIfToThen(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyIf(SyntaxNode node)
         {
             if (!(node is IfStatementSyntax @if))
-                return node;
+                yield break;
 
-            return @if.Statement;
+            // Simplify to then block
+            yield return @if.Statement;
+
+            BlockSyntax thenBlock = @if.Statement as BlockSyntax;
+
+            // Extract condition for empty if
+            if (thenBlock != null && thenBlock.Statements.Count == 0 && @if.Else == null)
+            {
+                var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
+                IfStatementSyntax newIf = @if.WithCondition(IdentifierName(name));
+                yield return Block(local, newIf);
+            }
+
+            if (@if.Else == null)
+                yield break;
+
+            // Simplify to else block
+            yield return @if.Else.Statement;
+            // Remove else block
+            yield return @if.WithElse(null);
+
+            // Flip if (expr) { } else { else; }  to "if (!expr) { else; }"
+            if (thenBlock != null && thenBlock.Statements.Count <= 0)
+            {
+                IfStatementSyntax newIf =
+                    IfStatement(
+                        PrefixUnaryExpression(
+                            SyntaxKind.LogicalNotExpression,
+                            @if.Condition),
+                    @if.Else.Statement);
+
+                yield return newIf;
+            }
         }
 
         [Simplifier]
-        private SyntaxNode SimplifyIfToElse(SyntaxNode node)
-        {
-            if (!(node is IfStatementSyntax @if) || @if.Else == null)
-                return node;
-
-            return @if.Else.Statement;
-        }
-
-        [Simplifier]
-        private SyntaxNode SimplifyIfRemoveElse(SyntaxNode node)
-        {
-            if (!(node is IfStatementSyntax @if) || @if.Else == null)
-                return node;
-
-            return @if.WithElse(null);
-        }
-
-        [Simplifier]
-        private SyntaxNode SimplifyBinaryExpressionToLeft(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyBinaryExpression(SyntaxNode node)
         {
             if (!(node is BinaryExpressionSyntax bin))
-                return node;
+                yield break;
 
-            return bin.Left;
-        }
-
-        [Simplifier]
-        private SyntaxNode SimplifyBinaryExpressionToRight(SyntaxNode node)
-        {
-            if (!(node is BinaryExpressionSyntax bin))
-                return node;
-
-            return bin.Right;
+            yield return bin.Left;
+            yield return bin.Right;
         }
 
         [Simplifier]
@@ -798,25 +804,21 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
-        private SyntaxNode RemoveFieldDeclaration(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyField(SyntaxNode node)
         {
             if (!(node is FieldDeclarationSyntax field))
-                return node;
+                yield break;
 
-            return null;
-        }
+            // Remove
+            yield return null;
 
-        [Simplifier]
-        private SyntaxNode RemoveFieldInitializer(SyntaxNode node)
-        {
-            if (!(node is FieldDeclarationSyntax field))
-                return node;
+            if (field.Declaration.Variables.Count == 1 &&
+                field.Declaration.Variables[0].Initializer != null)
+            {
+                // Remove initializer
+                yield return field.ReplaceNode(field.Declaration.Variables[0].Initializer, (SyntaxNode)null);
+            }
 
-            if (field.Declaration.Variables.Count != 1 ||
-                field.Declaration.Variables[0].Initializer == null)
-                return node;
-
-            return field.ReplaceNode(field.Declaration.Variables[0].Initializer, (SyntaxNode)null);
         }
 
         [Simplifier]
@@ -932,41 +934,6 @@ namespace Fuzzlyn.Reduction
             }
         }
 
-        // Extract a condition in an empty 'if' into a local variable.
-        [Simplifier]
-        private SyntaxNode SimplifyIfExtractCondition(SyntaxNode node)
-        {
-            if (!(node is IfStatementSyntax @if) || @if.Condition is IdentifierNameSyntax || @if.Condition is LiteralExpressionSyntax)
-                return node;
-
-            if (!(@if.Statement is BlockSyntax thenBlock) || thenBlock.Statements.Count > 0 || @if.Else != null)
-                return node;
-
-            var (local, name) = MakeLocalDecl(@if.Condition, PredefinedType(Token(SyntaxKind.BoolKeyword)));
-            IfStatementSyntax newIf = @if.WithCondition(IdentifierName(name));
-            return Block(local, newIf);
-        }
-
-        // Flip if (expr) { } else { else; }  to "if (!expr) { else; }"
-        [Simplifier]
-        private SyntaxNode SimplifyIfFlipWithEmptyThen(SyntaxNode node)
-        {
-            if (!(node is IfStatementSyntax @if))
-                return node;
-
-            if (@if.Else == null || !(@if.Statement is BlockSyntax thenBlock) || thenBlock.Statements.Count > 0)
-                return node;
-
-            IfStatementSyntax newIf =
-                IfStatement(
-                    PrefixUnaryExpression(
-                        SyntaxKind.LogicalNotExpression,
-                        @if.Condition),
-                @if.Else.Statement);
-
-            return newIf;
-        }
-
         // Combine code like "ulong var0; var0 = 123" to "ulong var0 = 123"
         [Simplifier]
         private IEnumerable<SyntaxNode> CombineLocalAssignmentsInBlock(SyntaxNode node)
@@ -1063,13 +1030,17 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
-        private SyntaxNode SimplifyConstant(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyConstant(SyntaxNode node)
         {
-            if (!(node is LiteralExpressionSyntax literal) || literal.Kind() != SyntaxKind.NumericLiteralExpression ||
-                literal.Token.Text == "0")
-                return node;
+            if (!(node is LiteralExpressionSyntax literal) || literal.Kind() != SyntaxKind.NumericLiteralExpression)
+                yield break;
 
-            return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0));
+            if (literal.Token.Text == "0" || literal.Token.Text == "1" || literal.Token.Text == "-1")
+                yield break;
+
+            yield return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0));
+            yield return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(1));
+            yield return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(-1));
         }
 
         // Add ': this()' to struct constructor to allow further simplification of struct
@@ -1127,12 +1098,14 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
-        private SyntaxNode SimplifyTryFinally(SyntaxNode node)
+        private IEnumerable<SyntaxNode> SimplifyTryFinally(SyntaxNode node)
         {
             if (!(node is TryStatementSyntax @try) || @try.Catches.Any())
-                return node;
+                yield break;
 
-            return Block(@try.Block, @try.Finally.Block);
+            yield return @try.Block;
+            yield return @try.Finally.Block;
+            yield return Block(@try.Block, @try.Finally.Block);
         }
 
         [Simplifier]
