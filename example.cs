@@ -458,8 +458,7 @@ public class Program
 
     static int M24()
     {
-        s_10 = s_10;
-        return s_4[0][0];
+        return default(int);
     }
 
     static int[][] M25()
