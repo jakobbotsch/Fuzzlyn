@@ -42,7 +42,7 @@ public class Program
     static bool s_39 = true;
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
     static ulong s_41 = 0;
-    static short s_42 = -26110;
+    static short s_42 = 0;
     static uint s_43 = 0U;
     static long s_44 = 9223372036854775807L;
     static byte[, ][][][, ] s_45 = new byte[, ][][][, ]{{new byte[][][, ]{new byte[][, ]{new byte[, ]{{0}}}}}};
