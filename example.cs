@@ -723,8 +723,7 @@ public class Program
 
     static ushort[][] M71()
     {
-        s_50[0][0] = 0;
-        return s_50;
+        return default(ushort[][]);
     }
 
     static ushort M72()
