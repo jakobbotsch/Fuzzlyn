@@ -10,7 +10,7 @@ namespace Fuzzlyn.Execution
     {
         private readonly HashAlgorithm _hash = SHA256.Create();
 
-        public List<ChecksumSite> ChecksumSites { get; } = new List<ChecksumSite>();
+        public List<ChecksumSite> ChecksumSites { get; set; } = new List<ChecksumSite>();
 
         public string FinishHashCode()
         {

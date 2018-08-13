@@ -60,7 +60,11 @@ namespace Fuzzlyn.Execution
                         ex = caughtEx;
                     }
 
-                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, runtime.ChecksumSites);
+                    // A reference to the runtime stays in the loaded assembly and there may be a lot of checksum sites
+                    // so during reduction this can use a lot of memory.
+                    List<ChecksumSite> checksumSites = runtime.ChecksumSites;
+                    runtime.ChecksumSites = null;
+                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, checksumSites);
                 }
             }
         }
