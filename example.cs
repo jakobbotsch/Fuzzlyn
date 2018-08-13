@@ -935,13 +935,7 @@ public class Program
 
     static bool[] M90(ref uint arg0, ref sbyte arg1, ref ushort arg2)
     {
-        long var0 = default(long);
-        var0 = s_77--;
-        s_rt.Checksum("c_517", arg0);
-        s_rt.Checksum("c_518", arg1);
-        s_rt.Checksum("c_519", arg2);
-        s_rt.Checksum("c_520", var0);
-        return new bool[]{false, false, true};
+        return default(bool[]);
     }
 
     static short M91()
