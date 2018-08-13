@@ -564,8 +564,7 @@ public class Program
 
     static sbyte M44()
     {
-        s_1[0] = 4180879016U;
-        return -22;
+        return default(sbyte);
     }
 
     static ulong M45(int arg0, ushort arg1, ref bool arg2, int arg3, short[] arg4)
