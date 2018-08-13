@@ -174,20 +174,6 @@ public class Program
     static ref sbyte[] M5(ushort arg0, long arg1, long[] arg2)
     {
         long var0 = default(long);
-        arg0 = arg0;
-        if (255 < (short)(arg0++ ^ (92 | (short)(arg1 * 69))))
-        {
-            var0 = arg2[0]++;
-            arg2[0] = var0;
-            s_rt.Checksum("c_0", var0);
-        }
-
-        arg0 = arg0++;
-        arg2 = arg2;
-        arg1 = 9223372036854775807L;
-        s_rt.Checksum("c_1", arg0);
-        s_rt.Checksum("c_2", arg1);
-        s_rt.Checksum("c_3", arg2[0]);
         return ref s_2;
     }
 
