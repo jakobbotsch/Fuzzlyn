@@ -62,7 +62,37 @@ public class Program
 
     static uint M1()
     {
-        M12(s_16, s_25, s_19);
+        ref sbyte[, ] vr27 = ref s_16;
+        ref byte vr28 = ref s_25;
+        ref short vr29 = ref s_19;
+        try
+        {
+            sbyte[] vr30 = new sbyte[]{0};
+        }
+        finally
+        {
+            sbyte vr31 = vr27[0, 0];
+            sbyte vr32 = vr27[0, 0];
+            s_rt.Checksum("c_28", vr32);
+            var vr33 = new int[]{450864205};
+            M13(ref s_1[0], vr33);
+            var vr34 = s_4[0];
+            s_1[0] = (uint)M13(ref s_1[0], vr34);
+        }
+
+        if (!s_7)
+        {
+            var vr35 = new int[]{0};
+            vr29 = (short)(51431005U | M13(ref s_1[0], vr35));
+            short vr36 = vr29;
+            if (vr27[0, 0] > vr36)
+            {
+                uint vr37 = s_1[0];
+                s_rt.Checksum("c_40", vr37);
+            }
+        }
+
+        s_rt.Checksum("c_264", vr29);
         return 0;
     }
 
