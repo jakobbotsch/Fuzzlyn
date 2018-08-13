@@ -51,7 +51,7 @@ public class Program
     static bool s_48 = false;
     static byte s_49 = 0;
     static ushort[][] s_50 = new ushort[][]{new ushort[]{0}};
-    static ulong s_51 = 0UL;
+    static ulong s_51 = 0;
     static byte[] s_52 = new byte[]{210, 254, 1, 222, 0, 181};
     static bool[,, ] s_53 = new bool[,, ]{{{false, false, true, true, true}, {true, true, true, false, false}, {false, false, false, true, false}, {true, false, true, true, false}, {false, false, false, false, false}, {true, false, true, true, true}}};
     static short[] s_54 = new short[]{0};
