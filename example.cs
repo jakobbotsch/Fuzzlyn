@@ -569,7 +569,6 @@ public class Program
 
     static ref ulong M56()
     {
-        short[][][] var7 = default(short[][][]);
         ref short var0 = ref s_30[0];
         return ref s_10[0];
     }
