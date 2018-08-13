@@ -543,11 +543,7 @@ public class Program
 
     static bool M38(sbyte arg0, ushort arg1)
     {
-        s_28 = s_30[0];
-        s_34 = 1;
-        s_rt.Checksum("c_158", arg0);
-        s_rt.Checksum("c_159", arg1);
-        return true;
+        return default(bool);
     }
 
     static uint[] M39(ulong arg0, uint arg1)
