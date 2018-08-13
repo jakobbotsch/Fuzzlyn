@@ -442,16 +442,6 @@ public class Program
     static ref uint[, ] M20()
     {
         bool var0 = default(bool);
-        s_3 = new ushort[]{48756, 0, 1, 22371, 0, 3289, 1};
-        {
-            M21(s_4[0][0]++);
-            s_3 = new ushort[]{26922, 3046, 38349, 25841, 28119, 0, 57341};
-        }
-
-        var0 = false;
-        s_12 = (int)M21(1550332660);
-        var0 = s_7;
-        s_rt.Checksum("c_52", var0);
         return ref s_13;
     }
 
