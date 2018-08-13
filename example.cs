@@ -320,11 +320,6 @@ public class Program
         return ref s_32;
     }
 
-    static sbyte M35(ushort[][] arg0, ref ulong arg1, ref long arg2)
-    {
-        return default(sbyte);
-    }
-
     static uint M36()
     {
         return default(uint);
