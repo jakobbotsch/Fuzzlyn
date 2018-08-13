@@ -8,7 +8,7 @@ public class Program
     static ulong s_5 = 0;
     static long s_6 = 0;
     static bool s_7 = true;
-    static short s_8 = -32767;
+    static short s_8 = 0;
     static sbyte[] s_9 = new sbyte[]{-128, 125, -114, 0, 126, 0, 126, 2, 0};
     static ulong[] s_10 = new ulong[]{15691583844157379322UL};
     static long s_11 = -9223372036854775808L;
