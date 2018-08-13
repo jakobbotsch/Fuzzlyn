@@ -898,10 +898,7 @@ public class Program
 
     static short M100()
     {
-        sbyte[] var0 = default(sbyte[]);
-        var0 = s_78;
-        s_rt.Checksum("c_650", var0[0]);
-        return 32766;
+        return default(short);
     }
 
     static uint M101()
