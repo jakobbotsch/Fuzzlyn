@@ -1072,42 +1072,7 @@ public class Program
 
     static ushort[] M58(sbyte[] arg0)
     {
-        uint var0 = default(uint);
-        bool var1 = default(bool);
-        uint var3 = default(uint);
-        {
-            s_50 = new ushort[][]{new ushort[]{2497, 2, 12819, 39581}, new ushort[]{32380, 65535, 20199, 42307}, new ushort[]{29221, 1, 0, 0, 65535}, new ushort[]{51803, 1, 57618, 9955, 65535, 0, 9512, 61182, 62401}, new ushort[]{16481}, new ushort[]{65036, 65534, 380, 65535, 0, 47248, 0, 1, 11153, 13216}};
-            s_11++;
-            var0 = 3760342882U;
-            s_rt.Checksum("c_302", var0);
-        }
-
-        if (true || s_23[0])
-        {
-            arg0 = arg0;
-            arg0[0] = arg0[0];
-            var1 = (0L ^ s_15) != -30976;
-            s_rt.Checksum("c_303", var1);
-        }
-        else
-        {
-            if (s_7)
-            {
-                {
-                    ref int var2 = ref s_38[0][0];
-                    s_rt.Checksum("c_304", var2);
-                }
-            }
-            else
-            {
-                var3 = s_22[0][0]--;
-                s_rt.Checksum("c_305", var3);
-            }
-        }
-
-        arg0[0] = arg0[0];
-        s_rt.Checksum("c_306", arg0[0]);
-        return new ushort[]{14154, 14216, 0, 24818, 0, 0, 63899, 0, 6115, 65534};
+        return default(ushort[]);
     }
 
     static byte M59(ushort[][] arg0, ref ulong[, ] arg1, ref ulong arg2)
