@@ -6,7 +6,6 @@ public class Program
     static bool s_7;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19;
-    static uint[][] s_22 = new uint[][]{new uint[]{0}};
     static byte s_25 = 1;
     static long s_29;
     static ulong s_47;
