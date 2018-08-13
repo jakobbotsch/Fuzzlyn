@@ -16,7 +16,6 @@ public class Program
     static byte s_25 = 1;
     static sbyte s_26;
     static long s_29;
-    static uint s_33;
     static byte[, ][][][, ] s_45 = new byte[, ][][][, ]{{new byte[][][, ]{new byte[][, ]{new byte[, ]{{0}}}}}};
     static ulong s_47;
     static short[] s_54 = new short[]{0};
