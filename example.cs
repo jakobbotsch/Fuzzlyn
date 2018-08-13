@@ -85,11 +85,6 @@ public class Program
         return;
     }
 
-    static uint M8()
-    {
-        return default(uint);
-    }
-
     static long M10(ref ulong arg0, ref bool arg1)
     {
         return default(long);
