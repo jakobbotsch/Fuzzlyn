@@ -119,7 +119,7 @@ public class Program
     static long s_116 = 5852970427657993206L;
     static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{-127, -128, 0, -10, 126, -1, -23}, new sbyte[]{1, -2, -128, -93}, new sbyte[]{98, -7, 0, 1, 127, -41, 51}, new sbyte[]{103, 127, -123, 126, 110, 126}, new sbyte[]{0}, new sbyte[]{0}};
     static bool s_118 = true;
-    static short s_119 = -25405;
+    static short s_119 = 0;
     static byte[][] s_120 = new byte[][]{new byte[]{78, 0}, new byte[]{52}, new byte[]{87}, new byte[]{21}, new byte[]{0, 255}, new byte[]{0, 0}, new byte[]{81, 88}, new byte[]{1, 194}};
     static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}, new short[][]{new short[]{0}}, new short[][]{new short[]{23066, -32767}}, new short[][]{new short[]{1688, -28885, 0, 24573}}, new short[][]{new short[]{28217, -18541, -5536, -23457}}, new short[][]{new short[]{1, -1628, -2398}}, new short[][]{new short[]{-32768}}, new short[][]{new short[]{19793}}, new short[][]{new short[]{-18737}}, new short[][]{new short[]{0}}};
     static bool s_122 = false;
