@@ -212,16 +212,6 @@ public class Program
         }
 
         s_7 = -21984 >= arg1++;
-        try
-        {
-            arg0[0, 0] = arg0[0, 0]--;
-        }
-        finally
-        {
-            long var5 = (long)(1 / (short)((short)M13(arg1--, ref s_1[0], new int[]{2044349693, -2147483647, 1, -2147483648, -10, 1350566660, -71041840, 0, 450850015}) | 1));
-            s_rt.Checksum("c_35", var5);
-        }
-
         if (s_7)
         {
             s_rt.Checksum("c_36", var6);
