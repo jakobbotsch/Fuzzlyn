@@ -180,11 +180,6 @@ public class Program
         return ref s_10[0];
     }
 
-    static long[] M57(long arg0)
-    {
-        return default(long[]);
-    }
-
     static bool M62()
     {
         return default(bool);
