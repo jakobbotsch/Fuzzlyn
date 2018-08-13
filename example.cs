@@ -203,7 +203,7 @@ public class Program
     {
         sbyte var0 = default(sbyte);
         short var1;
-        sbyte[] var2 = default(sbyte[]);
+        sbyte[] var2;
         sbyte var3 = default(sbyte);
         long var5 = default(long);
         ushort var6 = default(ushort);
