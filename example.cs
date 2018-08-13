@@ -285,11 +285,6 @@ public class Program
         return default(uint);
     }
 
-    static bool M37(ref long arg0, short[, ][][, ] arg1, sbyte arg2, sbyte arg3)
-    {
-        return default(bool);
-    }
-
     static bool M38(sbyte arg0, ushort arg1)
     {
         return default(bool);
