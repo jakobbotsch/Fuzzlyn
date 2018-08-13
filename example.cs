@@ -2,7 +2,6 @@ public class Program
 {
     static Fuzzlyn.Execution.IRuntime s_rt;
     static uint[] s_1 = new uint[]{0};
-    static sbyte[] s_2;
     static int[][] s_4 = new int[][]{new int[]{0}};
     static bool s_7 = true;
     static short s_8;
