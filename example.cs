@@ -207,11 +207,6 @@ public class Program
         return ref s_13;
     }
 
-    static sbyte M21(int arg0)
-    {
-        return default(sbyte);
-    }
-
     static byte M22()
     {
         return default(byte);
