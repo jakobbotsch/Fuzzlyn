@@ -577,7 +577,6 @@ public class Program
 
     static ref ulong M56()
     {
-        long[, ] var3 = default(long[, ]);
         uint var4 = default(uint);
         ushort var5 = default(ushort);
         bool var6 = default(bool);
