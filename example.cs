@@ -36,7 +36,6 @@ public class Program
         if (!s_7)
         {
             var vr1 = new int[]{0};
-            ref uint vr90 = ref s_1[0];
             int vr92 = vr1[0];
             arg2 = (short)(51431005U | vr92);
             short var8 = arg2;
