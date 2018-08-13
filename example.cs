@@ -200,7 +200,6 @@ public class Program
         ushort var6 = default(ushort);
         try
         {
-            arg0[0, 0] = -1;
             sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
             s_rt.Checksum("c_24", var0);
             s_rt.Checksum("c_26", var2[0]);
