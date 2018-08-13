@@ -203,13 +203,8 @@ public class Program
     static long M11(uint[] arg0)
     {
         {
-            {
-                M12(s_16, s_25--, s_19);
-            }
-
-            {
-                ref short var0 = ref s_30[0];
-            }
+            M12(s_16, s_25--, s_19);
+            ref short var0 = ref s_30[0];
         }
 
         return M47((long)(arg0[0] / (ulong)(0UL | 1)));
