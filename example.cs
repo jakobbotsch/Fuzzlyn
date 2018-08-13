@@ -31,7 +31,7 @@ public class Program
     static long s_73 = 0;
     static short[] s_75 = new short[]{0};
     static ushort s_76 = 0;
-    static long s_77 = 0;
+    static long s_77;
     static sbyte[] s_78;
     static long s_79 = 0;
     static uint s_81 = 0;
