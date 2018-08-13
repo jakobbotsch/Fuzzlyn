@@ -124,7 +124,7 @@ public class Program
     static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}, new short[][]{new short[]{0}}, new short[][]{new short[]{23066, -32767}}, new short[][]{new short[]{1688, -28885, 0, 24573}}, new short[][]{new short[]{28217, -18541, -5536, -23457}}, new short[][]{new short[]{1, -1628, -2398}}, new short[][]{new short[]{-32768}}, new short[][]{new short[]{19793}}, new short[][]{new short[]{-18737, -2, 32766, 1}}, new short[][]{new short[]{32767}}};
     static bool s_122 = false;
     static byte s_123 = 1;
-    static uint s_124 = 4294967294U;
+    static uint s_124 = 0;
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
     {
         s_rt = rt;
