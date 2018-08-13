@@ -240,7 +240,6 @@ public class Program
                 finally
                 {
                     arg2 = 1;
-                    arg1 = arg1;
                     s_3 = s_3;
                     {
                         {
