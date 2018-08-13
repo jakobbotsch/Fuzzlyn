@@ -1793,52 +1793,6 @@ public class Program
         uint var0 = default(uint);
         short var1 = default(short);
         int var2 = default(int);
-        M77(new ulong[][]{new ulong[]{18446744073709551614UL, 1UL}, new ulong[]{15690541342769143181UL, 17398716044925779772UL, 18446744073709551614UL}, new ulong[]{1UL, 1UL}, new ulong[]{12234101859255155577UL, 7146523035169648723UL}}, -127, new ushort[]{32558, 1, 50193, 1, 2, 49502, 3585, 1, 0, 45353});
-        if (arg2)
-        {
-            {
-                M77(M78(), s_26, new ushort[]{53413, 41112, 0, 0, 1, 65534, 29114, 0});
-                var0 = (uint)((sbyte)M77(new ulong[][]{new ulong[]{1UL, 1UL, 10693355332976915320UL, 17412061499159957493UL, 0UL, 11348041743089135588UL, 18446744073709551614UL}, new ulong[]{13387153710988798828UL, 1UL, 3538027604935874308UL, 1UL}}, (sbyte)((ulong)(24 * (uint)M77(new ulong[][]{new ulong[]{4782453672055088607UL}, new ulong[]{8278111705394285194UL}}, arg1[0], new ushort[]{34915, 60307})) & 0UL), new ushort[]{0, 1, 1, 1, 1, 13670, 35393, 14785}) ^ (long)(s_5 * s_20[0]));
-                var1 = s_30[0];
-                s_rt.Checksum("c_352", var0);
-                s_rt.Checksum("c_353", var1);
-            }
-        }
-
-        s_62 = 176;
-        {
-            s_54 = new short[]{17171, 13604};
-            s_1 = new uint[]{3334331488U, 1426777118U, 3844801307U, 4294967294U, 1U};
-            {
-                arg1[0] = (sbyte)(-1 * (short)M77(new ulong[][]{new ulong[]{7115460865201064081UL}, new ulong[]{7949022291154700520UL, 17932050784366288617UL, 1UL, 4871809452878930427UL}, new ulong[]{1451268352715309490UL, 14326210775805572974UL}, new ulong[]{1080372670444987834UL, 16328322298710680654UL, 1UL, 8433657926570905288UL}, new ulong[]{1UL, 0UL}, new ulong[]{0UL}, new ulong[]{11636931010829965068UL, 18446744073709551615UL, 0UL, 14416040590337491369UL}, new ulong[]{13639506028580773539UL, 1175522868954493985UL, 2UL, 0UL, 0UL, 1UL, 10126600105743262869UL}, new ulong[]{12855657691930593886UL, 18446744073709551615UL}}, arg1[0], s_50[0]));
-                arg1 = arg1;
-                s_63 = arg0--;
-            }
-
-            arg1[0] = -45;
-            arg1[0] = arg1[0];
-            try
-            {
-                if (s_48)
-                {
-                    var2 = s_37--;
-                    s_rt.Checksum("c_354", var2);
-                }
-                else
-                {
-                    arg1 = arg1;
-                    M78();
-                }
-            }
-            finally
-            {
-                arg1[0] = s_56;
-            }
-        }
-
-        s_rt.Checksum("c_355", arg0);
-        s_rt.Checksum("c_356", arg1[0]);
-        s_rt.Checksum("c_357", arg2);
         return ref s_4[0][0];
     }
 
