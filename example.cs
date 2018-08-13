@@ -218,44 +218,45 @@ public class Program
         ulong var17;
         bool var18 = default(bool);
         {
-            try
             {
-                try
                 {
-                    {
-                        arg0[0, 0] = s_2[0];
-                        arg0 = arg0;
-                        var1 = -32767;
-                        arg0[0, 0] = -1;
-                        var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
-                        s_rt.Checksum("c_24", var0);
-                        s_rt.Checksum("c_26", var2[0]);
-                    }
-                }
-                finally
-                {
-                    arg2 = 1;
-                    s_3 = s_3;
+                    try
                     {
                         {
-                            arg1 = arg1++;
-                            var3 = arg0[0, 0];
-                            ref sbyte var4 = ref arg0[0, 0];
-                            s_rt.Checksum("c_27", var3);
-                            s_rt.Checksum("c_28", var4);
+                            arg0[0, 0] = s_2[0];
+                            arg0 = arg0;
+                            var1 = -32767;
+                            arg0[0, 0] = -1;
+                            var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
+                            s_rt.Checksum("c_24", var0);
+                            s_rt.Checksum("c_26", var2[0]);
+                        }
+                    }
+                    finally
+                    {
+                        arg2 = 1;
+                        s_3 = s_3;
+                        {
+                            {
+                                arg1 = arg1++;
+                                var3 = arg0[0, 0];
+                                ref sbyte var4 = ref arg0[0, 0];
+                                s_rt.Checksum("c_27", var3);
+                                s_rt.Checksum("c_28", var4);
+                            }
+
+                            M13(arg1, ref s_1[0], new int[]{450864205, -533136863, 547591822, 1, 1799500906, 2147483646});
+                            s_1[0] = (uint)M13(arg1, ref s_1[0], s_4[0]);
                         }
 
-                        M13(arg1, ref s_1[0], new int[]{450864205, -533136863, 547591822, 1, 1799500906, 2147483646});
-                        s_1[0] = (uint)M13(arg1, ref s_1[0], s_4[0]);
+                        s_1[0] = 0U;
                     }
-
-                    s_1[0] = 0U;
                 }
-            }
-            finally
-            {
-                s_1[0] = s_1[0]++;
-                arg1 = arg1;
+
+                {
+                    s_1[0] = s_1[0]++;
+                    arg1 = arg1;
+                }
             }
 
             s_7 = -21984 >= arg1++;
