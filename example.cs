@@ -851,8 +851,7 @@ public class Program
 
     static short M91()
     {
-        M92(254);
-        return (short)(0U / (ulong)(s_86[0][0][0][0] | 1));
+        return default(short);
     }
 
     static uint M92(byte arg0)
