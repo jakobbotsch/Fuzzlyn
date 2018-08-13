@@ -508,10 +508,7 @@ public class Program
 
     static uint[] M31()
     {
-        ulong var0 = default(ulong);
-        var0 = 4787032656520567745UL;
-        s_rt.Checksum("c_131", var0);
-        return new uint[]{3193491721U, 10421100U, 1506745144U, 3833949630U, 76394140U, 1U, 10U, 0U};
+        return default(uint[]);
     }
 
     static sbyte M32(byte arg0)
