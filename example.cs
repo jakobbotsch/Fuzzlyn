@@ -500,11 +500,6 @@ public class Program
         return default(ulong);
     }
 
-    static sbyte[] M68(sbyte arg0)
-    {
-        return default(sbyte[]);
-    }
-
     static ref bool M69(sbyte arg0, int arg1, ulong arg2, ref sbyte arg3, byte arg4, bool arg5, long arg6)
     {
         return ref s_46;
