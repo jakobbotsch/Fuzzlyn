@@ -202,7 +202,6 @@ public class Program
         {
             arg0[0, 0] = s_2[0];
             arg0 = arg0;
-            short var1 = -32767;
             arg0[0, 0] = -1;
             sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
             s_rt.Checksum("c_24", var0);
