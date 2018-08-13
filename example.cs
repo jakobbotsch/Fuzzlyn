@@ -203,7 +203,6 @@ public class Program
         }
         finally
         {
-            arg1 = arg1++;
             sbyte var3 = arg0[0, 0];
             sbyte var4 = arg0[0, 0];
             s_rt.Checksum("c_27", var3);
