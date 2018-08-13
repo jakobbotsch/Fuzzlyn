@@ -263,7 +263,6 @@ public class Program
 
     static ref uint[, ] M20()
     {
-        bool var0 = default(bool);
         return ref s_13;
     }
 
