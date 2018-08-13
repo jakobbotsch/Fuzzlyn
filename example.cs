@@ -234,7 +234,6 @@ public class Program
                         arg0[0, 0] = -1;
                         var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
                         s_rt.Checksum("c_24", var0);
-                        s_rt.Checksum("c_25", var1);
                         s_rt.Checksum("c_26", var2[0]);
                     }
                 }
