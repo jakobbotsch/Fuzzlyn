@@ -120,11 +120,6 @@ public class Program
         return default(uint);
     }
 
-    static long M9(ref bool arg0)
-    {
-        return default(long);
-    }
-
     static long M10(ref ulong arg0, ref bool arg1)
     {
         return default(long);
