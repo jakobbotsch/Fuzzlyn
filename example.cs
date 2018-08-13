@@ -257,7 +257,15 @@ public class Program
 
     static void M0()
     {
-        byte var0 = (byte)(-1592527126 | (byte)(1 % (sbyte)((sbyte)(1 - (int)(0UL * (uint)(0 % (ushort)((ushort)(0 % (int)((int)(M1(2, 880340794U, (byte)(490360998U - (long)((ulong)(s_113++ - (int)M72()) + (byte)M36())), 10L, ref s_117, ref s_9[0], ref s_26, 37, ref s_60, s_47, ref s_78, (byte)M81(), s_77++) + (sbyte)M3((ushort)M18(), ref s_70, (short)(s_108 / (long)(-6951955190531076674L | 1)), -2057119971763330565L)) | 1)) | 1)))) | 1)));
+        byte var0 = default(byte);
+        ushort[, ] var2 = default(ushort[, ]);
+        ushort[] var5 = default(ushort[]);
+        byte var6 = default(byte);
+        short var7 = default(short);
+        uint var8 = default(uint);
+        byte var9 = default(byte);
+        uint var10 = default(uint);
+        var0 = (byte)(-1592527126 | (byte)(1 % (sbyte)((sbyte)(1 - (int)(0UL * (uint)(0 % (ushort)((ushort)(0 % (int)((int)(M1(2, 880340794U, (byte)(490360998U - (long)((ulong)(s_113++ - (int)M72()) + (byte)M36())), 10L, ref s_117, ref s_9[0], ref s_26, 37, ref s_60, s_47, ref s_78, (byte)M81(), s_77++) + (sbyte)M3((ushort)M18(), ref s_70, (short)(s_108 / (long)(-6951955190531076674L | 1)), -2057119971763330565L)) | 1)) | 1)))) | 1)));
         if (M66())
         {
             var0 = 38;
@@ -273,7 +281,7 @@ public class Program
                     var1 = var1;
                     if (s_101[0, 0])
                     {
-                        ushort[, ] var2 = new ushort[, ]{{29529, 29730, 1}, {1944, 65534, 10}};
+                        var2 = new ushort[, ]{{29529, 29730, 1}, {1944, 65534, 10}};
                         s_rt.Checksum("c_644", var2[0, 0]);
                     }
                     else
@@ -303,7 +311,7 @@ public class Program
                     var0 = s_45[0, 0][0][0][0, 0];
                 }
 
-                ushort[] var5 = new ushort[]{15847, 7147, 9471, 24513, 65534};
+                var5 = new ushort[]{15847, 7147, 9471, 24513, 65534};
                 s_rt.Checksum("c_647", var1);
                 s_rt.Checksum("c_648", var5[0]);
             }
@@ -311,14 +319,14 @@ public class Program
             s_18 = var0;
             M27();
             M96(32767);
-            byte var6 = 83;
+            var6 = 83;
             if (s_118)
             {
                 M39((ulong)M13((byte)M46(new ushort[]{53798, 6343, 51158, 58865}, M101()), ref M102(), s_106[0]), (uint)M70());
                 M33(ref s_4);
-                short var7 = s_112++;
-                uint var8 = s_124;
-                byte var9 = (byte)(s_84[0] | (uint)M32(164));
+                var7 = s_112++;
+                var8 = s_124;
+                var9 = (byte)(s_84[0] | (uint)M32(164));
                 s_rt.Checksum("c_676", var7);
                 s_rt.Checksum("c_677", var8);
                 s_rt.Checksum("c_678", var9);
@@ -335,7 +343,7 @@ public class Program
             }
         }
 
-        uint var10 = s_67;
+        var10 = s_67;
         if (1U == s_70)
         {
             var10 = var10;
@@ -388,6 +396,9 @@ public class Program
 
     static int M3(ushort arg0, ref ulong arg1, short arg2, long arg3)
     {
+        uint var0 = default(uint);
+        short var1 = default(short);
+        int var2 = default(int);
         arg1 = 11318137128244086683UL;
         if (M4(ref s_98))
         {
@@ -399,7 +410,7 @@ public class Program
                 }
                 finally
                 {
-                    uint var0 = s_81--;
+                    var0 = s_81--;
                     var0 = 1U;
                     M42();
                     s_rt.Checksum("c_623", var0);
@@ -413,7 +424,7 @@ public class Program
         s_114 = 0;
         if (M38(-10, arg0))
         {
-            short var1 = s_19--;
+            var1 = s_19--;
             s_115 = new short[]{-2, -3486, 663, 0, 2, -2, 31317, -10};
             s_rt.Checksum("c_624", var1);
         }
@@ -421,7 +432,7 @@ public class Program
         {
             M83();
             arg1 = arg1;
-            int var2 = s_20[0] & arg0;
+            var2 = s_20[0] & arg0;
             M69(s_26--, (int)M61(), arg1, ref s_96, s_20[0]--, M26(), arg3) = s_46;
             s_rt.Checksum("c_625", var2);
         }
@@ -437,6 +448,25 @@ public class Program
 
     static bool M4(ref ulong[, ] arg0)
     {
+        sbyte var0 = default(sbyte);
+        int[] var1 = default(int[]);
+        int var2 = default(int);
+        int var3 = default(int);
+        sbyte var4 = default(sbyte);
+        ulong var5 = default(ulong);
+        bool[] var6 = default(bool[]);
+        long var7 = default(long);
+        bool[] var8 = default(bool[]);
+        uint var10 = default(uint);
+        int[] var11 = default(int[]);
+        short var12 = default(short);
+        ushort var13 = default(ushort);
+        byte var14 = default(byte);
+        uint var15 = default(uint);
+        bool[][] var16 = default(bool[][]);
+        sbyte[] var17 = default(sbyte[]);
+        short var18 = default(short);
+        sbyte var19 = default(sbyte);
         {
             arg0[0, 0] = 132693170054025997UL;
             if (arg0[0, 0] > 0)
@@ -450,10 +480,10 @@ public class Program
             {
                 if (M6(true, s_3[0]++, (long)(1UL & (byte)(0U * (short)(M9(ref s_48) & M52(s_27++, s_50[0][0])))), ref s_50[0][0], 126, s_25++))
                 {
-                    sbyte var0 = s_26;
+                    var0 = s_26;
                     M8();
                     arg0 = new ulong[, ]{{1UL, 15797075046127076784UL, 13147378918255787610UL, 0UL, 0UL, 11316617526271234261UL}, {6873163290184261498UL, 1UL, 6712732914444017550UL, 0UL, 1UL, 1UL}, {1093755499519010400UL, 5279327011684114299UL, 0UL, 2269515745318399257UL, 1UL, 15202922821037993063UL}};
-                    int[] var1 = new int[]{-1521369650, -2147483648, -883946343, 2147483647};
+                    var1 = new int[]{-1521369650, -2147483648, -883946343, 2147483647};
                     var1[0] = (int)M51(var1[0], 0U, ref s_39, 378748732, (uint)(M53(ref s_68) / (ushort)((ushort)M17(var0, ref M82(), M93(), s_70, s_83[0, 0], var0) | 1)));
                     M67(new ushort[,, ]{{{65535, 40919, 46441, 5409, 41151, 2006, 31776}, {22792, 62930, 30741, 0, 26653, 49464, 1}, {57783, 65535, 8539, 44095, 0, 47081, 8616}, {45008, 52244, 65534, 60664, 42451, 65402, 57384}, {0, 5666, 50074, 6021, 2125, 8594, 65534}, {1, 30618, 42891, 65534, 32678, 27097, 57653}, {1, 49735, 24844, 55875, 1, 3533, 0}}, {{1, 54943, 18021, 1, 22575, 43513, 3919}, {1, 65535, 4738, 48002, 40193, 65534, 44445}, {48734, 24345, 0, 1, 56038, 26406, 57850}, {0, 10014, 0, 29335, 10, 30475, 65534}, {26600, 38606, 65212, 0, 65535, 1, 16647}, {0, 1, 65535, 10, 48527, 0, 9213}, {63506, 0, 17607, 40064, 1, 43630, 61858}}, {{2, 33713, 8032, 9610, 36283, 65535, 10}, {2324, 1, 1, 26130, 2, 46125, 12210}, {38275, 42953, 1, 16099, 38419, 8402, 0}, {0, 47189, 18135, 1, 1, 47303, 15943}, {8034, 41189, 19393, 1, 1, 13295, 0}, {1, 43989, 1410, 54861, 50309, 2, 17867}, {39557, 50584, 6577, 13110, 0, 0, 3822}}, {{41485, 34996, 10, 0, 18024, 46578, 2}, {15392, 0, 4510, 1, 56225, 4359, 53975}, {1, 14820, 9839, 0, 4607, 15971, 58523}, {1397, 65534, 24817, 35824, 19795, 65534, 1}, {0, 10, 20322, 2, 0, 0, 46024}, {3121, 14097, 0, 1, 65535, 65535, 62429}, {0, 65535, 1533, 49228, 55060, 1, 0}}, {{0, 11688, 10077, 55511, 1, 61494, 1}, {1060, 30453, 10, 10, 0, 1, 5707}, {1, 1, 1, 25733, 23806, 10443, 44440}, {9204, 36770, 65534, 32465, 10, 0, 60152}, {36128, 0, 0, 2, 29525, 62736, 47990}, {10, 10634, 20216, 65535, 30885, 27695, 0}, {28967, 63754, 1, 7060, 65534, 0, 0}}});
                     var1[0]--;
@@ -465,22 +495,22 @@ public class Program
                     finally
                     {
                         arg0 = arg0;
-                        int var2 = var1[0];
+                        var2 = var1[0];
                         s_108 += s_21;
-                        int var3 = var1[0];
+                        var3 = var1[0];
                         M20();
                         s_rt.Checksum("c_602", var2);
                         s_rt.Checksum("c_603", var3);
                     }
 
-                    sbyte var4 = var0;
-                    ulong var5 = s_10[0];
-                    bool[] var6 = new bool[]{true, false, false, false, true, false};
+                    var4 = var0;
+                    var5 = s_10[0];
+                    var6 = new bool[]{true, false, false, false, true, false};
                     if (M62())
                     {
-                        long var7 = (long)M89((int)M10(ref arg0[0, 0], ref s_89));
+                        var7 = (long)M89((int)M10(ref arg0[0, 0], ref s_89));
                         var1 = new int[]{1};
-                        bool[] var8 = s_23;
+                        var8 = s_23;
                         {
                             var6[0] = M62();
                         }
@@ -501,8 +531,8 @@ public class Program
                 }
                 else
                 {
-                    uint var10 = s_33++;
-                    int[] var11 = new int[]{945691856, 0, 1094709766, -535670382, -1432605493, 1363072048};
+                    var10 = s_33++;
+                    var11 = new int[]{945691856, 0, 1094709766, -535670382, -1432605493, 1363072048};
                     s_rt.Checksum("c_612", var10);
                     s_rt.Checksum("c_613", var11[0]);
                 }
@@ -510,10 +540,10 @@ public class Program
             finally
             {
                 s_16 = new sbyte[, ]{{68}, {-39}, {10}, {127}, {-81}, {-108}, {87}};
-                short var12 = -30836;
-                ushort var13 = s_17;
+                var12 = -30836;
+                var13 = s_17;
                 M18();
-                byte var14 = (byte)(5188465721317387458UL - s_34++);
+                var14 = (byte)(5188465721317387458UL - s_34++);
                 M76(ref var13, s_9, s_94) = 2147483647;
                 s_rt.Checksum("c_614", var12);
                 s_rt.Checksum("c_615", var13);
@@ -523,7 +553,7 @@ public class Program
             if (s_104)
             {
                 arg0 = arg0;
-                uint var15 = (uint)M91();
+                var15 = (uint)M91();
                 s_19 = s_54[0]--;
                 s_109 = (byte)(arg0[0, 0] / (uint)(var15 | 1));
                 arg0[0, 0] = arg0[0, 0];
@@ -537,7 +567,7 @@ public class Program
             M73((int)M64(), -128, ref s_2[0], M41(s_42), 6804781619317926953L, (uint)(32766 - s_2[0]++)) = new ulong[]{0UL, 5735822109356904137UL, 18446744073709551614UL, 8082015322326661631UL, 0UL, 3376069854299098080UL, 8401536039270433698UL, 11478142067773248618UL};
             if (s_48)
             {
-                bool[][] var16 = new bool[][]{new bool[]{false}, new bool[]{true}, new bool[]{false}, new bool[]{true}, new bool[]{true}, new bool[]{true}};
+                var16 = new bool[][]{new bool[]{false}, new bool[]{true}, new bool[]{false}, new bool[]{true}, new bool[]{true}, new bool[]{true}};
                 M36();
                 s_rt.Checksum("c_618", var16[0][0]);
             }
@@ -570,13 +600,13 @@ public class Program
             {
                 if (M80((long)M76(ref s_85[0], new sbyte[]{-32, 108, 0, 0, 2, -128, 0}, false)))
                 {
-                    sbyte[] var17 = new sbyte[]{-128};
+                    var17 = new sbyte[]{-128};
                     s_rt.Checksum("c_619", var17[0]);
                     return true;
                 }
                 else
                 {
-                    short var18 = -10;
+                    var18 = -10;
                     --var18;
                     arg0 = arg0;
                     M54(ref s_31, ref s_73);
@@ -585,7 +615,7 @@ public class Program
             }
 
             M31();
-            sbyte var19 = s_26--;
+            var19 = s_26--;
             s_rt.Checksum("c_621", var19);
         }
 
@@ -595,10 +625,11 @@ public class Program
 
     static ref sbyte[] M5(ushort arg0, long arg1, long[] arg2)
     {
+        long var0 = default(long);
         arg0 = arg0;
         if (255 < (short)(arg0++ ^ (92 | (short)(arg1 * 69))))
         {
-            long var0 = arg2[0]++;
+            var0 = arg2[0]++;
             arg2[0] = var0;
             s_rt.Checksum("c_0", var0);
         }
@@ -614,6 +645,16 @@ public class Program
 
     static bool M6(bool arg0, ushort arg1, long arg2, ref ushort arg3, sbyte arg4, byte arg5)
     {
+        long var0 = default(long);
+        short var1 = default(short);
+        uint var3 = default(uint);
+        byte var5 = default(byte);
+        ulong var6 = default(ulong);
+        bool var7 = default(bool);
+        bool var9 = default(bool);
+        uint var10 = default(uint);
+        short var11 = default(short);
+        short[] var12 = default(short[]);
         arg0 = arg0;
         arg1 = arg1;
         arg1 = arg1;
@@ -633,9 +674,9 @@ public class Program
                 {
                     M8();
                     M8();
-                    long var0 = arg2;
+                    var0 = arg2;
                     s_2 = s_2;
-                    short var1 = (short)(arg3 & -22027);
+                    var1 = (short)(arg3 & -22027);
                     s_rt.Checksum("c_4", var0);
                     s_rt.Checksum("c_5", var1);
                 }
@@ -656,7 +697,7 @@ public class Program
                     }
                     finally
                     {
-                        uint var3 = var2++;
+                        var3 = var2++;
                         var3 = s_1[0];
                         s_rt.Checksum("c_6", var3);
                     }
@@ -668,7 +709,7 @@ public class Program
                     arg0 ^= false;
                     s_1 = new uint[]{1491416518U, 1607520489U, 392317939U, 1162369618U, 2847565021U, 1U};
                     ref byte var4 = ref arg5;
-                    byte var5 = var4;
+                    var5 = var4;
                     var5 = 255;
                     arg0 = false;
                     {
@@ -683,7 +724,7 @@ public class Program
                         {
                             var4 = var5--;
                             M8();
-                            ulong var6 = (ulong)M8();
+                            var6 = (ulong)M8();
                             s_rt.Checksum("c_8", var6);
                         }
 
@@ -707,7 +748,7 @@ public class Program
             arg3 = s_3[0]--;
             if (arg0)
             {
-                bool var7 = arg0;
+                var7 = arg0;
                 arg1 = arg3;
                 s_rt.Checksum("c_11", var7);
             }
@@ -725,16 +766,16 @@ public class Program
                 if (arg0)
                 {
                     M8();
-                    bool var9 = true;
+                    var9 = true;
                     s_rt.Checksum("c_12", var9);
                 }
                 else
                 {
-                    uint var10 = 0U;
-                    short var11 = (short)(s_4[0][0]-- / (int)(s_4[0][0]-- | 1));
+                    var10 = 0U;
+                    var11 = (short)(s_4[0][0]-- / (int)(s_4[0][0]-- | 1));
                     s_1 = new uint[]{2489492800U, 3602523092U, 2172169016U, 3648157679U, 1U, 534085079U, 1211647533U, 4158260100U, 3514073192U};
                     var8 = var8;
-                    short[] var12 = new short[]{2};
+                    var12 = new short[]{2};
                     arg3 = arg3;
                     arg5 = arg5;
                     s_rt.Checksum("c_13", var10);
@@ -776,6 +817,25 @@ public class Program
 
     static long M9(ref bool arg0)
     {
+        byte[] var0 = default(byte[]);
+        bool var1 = default(bool);
+        byte var3 = default(byte);
+        uint var4 = default(uint);
+        byte var5 = default(byte);
+        bool[, ] var6 = default(bool[, ]);
+        uint var7 = default(uint);
+        uint[] var8 = default(uint[]);
+        byte[] var9 = default(byte[]);
+        sbyte var10 = default(sbyte);
+        ulong[] var11 = default(ulong[]);
+        sbyte var12 = default(sbyte);
+        int var14 = default(int);
+        short var15 = default(short);
+        short[] var16 = default(short[]);
+        uint var17 = default(uint);
+        short var18 = default(short);
+        byte[] var19 = default(byte[]);
+        ushort var20 = default(ushort);
         if (-44 >= s_1[0])
         {
             {
@@ -785,7 +845,7 @@ public class Program
                 {
                     M16();
                     arg0 = ref arg0;
-                    byte[] var0 = new byte[]{255};
+                    var0 = new byte[]{255};
                     s_13[0, 0] = (uint)M18();
                     s_rt.Checksum("c_275", var0[0]);
                 }
@@ -805,7 +865,7 @@ public class Program
                 else
                 {
                     arg0 = M41(s_42--);
-                    bool var1 = arg0;
+                    var1 = arg0;
                     if (M26())
                     {
                         ref long var2 = ref s_11;
@@ -817,9 +877,9 @@ public class Program
             }
         }
 
-        byte var3 = 165;
-        uint var4 = s_22[0][0];
-        byte var5 = 186;
+        var3 = 165;
+        var4 = s_22[0][0];
+        var5 = 186;
         M51(s_37++, var4, ref arg0, s_37++, M42()++);
         var5 = var5;
         var4 = var4;
@@ -827,7 +887,7 @@ public class Program
         {
             try
             {
-                bool[, ] var6 = new bool[, ]{{true, true, false, false, true, false, true, false, true}, {false, false, true, false, true, false, true, true, false}, {true, true, false, false, false, false, true, false, false}};
+                var6 = new bool[, ]{{true, true, false, false, true, false, true, false, true}, {false, false, true, false, true, false, true, true, false}, {true, true, false, false, false, false, true, false, false}};
                 s_rt.Checksum("c_278", var6[0, 0]);
             }
             finally
@@ -845,17 +905,17 @@ public class Program
             }
 
             M30();
-            uint var7 = var4--;
+            var7 = var4--;
             M17((sbyte)(-2 & s_4[0][0]), ref var4, -22908, 10973034589174924987UL, (int)M29(), (sbyte)((long)M46(new ushort[]{42582, 435, 23750, 1, 60466, 1}, var7) | 9223372036854775806L));
             if (arg0 | s_36[0][0])
             {
-                uint[] var8 = new uint[]{1762967682U, 1666038855U, 1U, 2262761083U, 4109095242U, 1006329062U, 0U, 2299140818U, 667321214U, 2852557486U};
+                var8 = new uint[]{1762967682U, 1666038855U, 1U, 2262761083U, 4109095242U, 1006329062U, 0U, 2299140818U, 667321214U, 2852557486U};
                 var3 = (byte)M45(s_32[0, 0, 0]++, s_17, ref arg0, -2147483648, new short[]{-15234, -6425, 21879, 31004, 32766});
                 {
                     if (arg0)
                     {
                         var8[0] = var7;
-                        byte[] var9 = new byte[]{254, 108, 120, 32, 147, 255, 143};
+                        var9 = new byte[]{254, 108, 120, 32, 147, 255, 143};
                         s_rt.Checksum("c_279", var9[0]);
                     }
                     else
@@ -865,7 +925,7 @@ public class Program
                             var3 = 254;
                             var5 = 0;
                             M15();
-                            sbyte var10 = s_2[0]--;
+                            var10 = s_2[0]--;
                             M34(new long[][]{new long[]{-9223372036854775808L}, new long[]{8656904023889073621L}, new long[]{9223372036854775807L, -10L}, new long[]{-9223372036854775808L}}) = s_32;
                             var7 = s_1[0];
                             s_rt.Checksum("c_280", var10);
@@ -877,8 +937,8 @@ public class Program
                         M29();
                     }
 
-                    ulong[] var11 = new ulong[]{10UL, 9767901163662185374UL, 0UL, 15977936205797865757UL, 2UL};
-                    sbyte var12 = -2;
+                    var11 = new ulong[]{10UL, 9767901163662185374UL, 0UL, 15977936205797865757UL, 2UL};
+                    var12 = -2;
                     var11[0] = var11[0];
                     ref sbyte var13 = ref s_26;
                     s_48 = arg0;
@@ -897,15 +957,15 @@ public class Program
                 var4 = var4;
             }
 
-            int var14 = (int)(M30() ^ 1246872860);
+            var14 = (int)(M30() ^ 1246872860);
             var3 = 0;
-            short var15 = (short)M49(s_3, 1, (short)(2300925610046489953UL + (uint)M17(92, ref var4, 0, 826631402900473900UL, s_37, s_9[0]--)));
-            short[] var16 = new short[]{-31155, 0, 32767, -9802, -32767};
+            var15 = (short)M49(s_3, 1, (short)(2300925610046489953UL + (uint)M17(92, ref var4, 0, 826631402900473900UL, s_37, s_9[0]--)));
+            var16 = new short[]{-31155, 0, 32767, -9802, -32767};
             if (arg0)
             {
                 {
                     var16[0] = var16[0];
-                    uint var17 = (uint)M33(ref s_4);
+                    var17 = (uint)M33(ref s_4);
                     M51(var14, var17, ref s_36[0][0], s_31, s_13[0, 0]);
                     if (arg0)
                     {
@@ -917,8 +977,8 @@ public class Program
                     }
 
                     {
-                        short var18 = (short)M13(var5, ref var4, new int[]{-836798278, 1668319188, -2147483647, 763803149, 538626178, -1549306013, -2147483647, -2147483647});
-                        byte[] var19 = new byte[]{43, 254, 1};
+                        var18 = (short)M13(var5, ref var4, new int[]{-836798278, 1668319188, -2147483647, 763803149, 538626178, -1549306013, -2147483647, -2147483647});
+                        var19 = new byte[]{43, 254, 1};
                         var18 &= (short)((uint)((long)M32(s_49) / (long)((long)M46(new ushort[]{65535, 12039}, s_33) | 1)) / (ulong)(s_5 | 1));
                         var19[0] = s_20[0];
                         s_50 = new ushort[][]{new ushort[]{0, 28154}};
@@ -945,7 +1005,7 @@ public class Program
         }
         finally
         {
-            ushort var20 = s_3[0];
+            var20 = s_3[0];
             var20 = 19099;
             s_rt.Checksum("c_292", var20);
         }
@@ -960,6 +1020,11 @@ public class Program
 
     static long M10(ref ulong arg0, ref bool arg1)
     {
+        uint var0 = default(uint);
+        uint var1 = default(uint);
+        uint[][][] var3 = default(uint[][][]);
+        ushort var4 = default(ushort);
+        ushort var5 = default(ushort);
         if (arg1)
         {
             arg1 = arg1;
@@ -969,7 +1034,7 @@ public class Program
                 arg0 = 15022371188452047616UL;
                 if (arg1)
                 {
-                    uint var0 = s_1[0]--;
+                    var0 = s_1[0]--;
                     var0 = 0U;
                     arg0 = 18446744073709551615UL;
                     s_rt.Checksum("c_23", var0);
@@ -988,7 +1053,7 @@ public class Program
         {
             M29();
             s_46 = s_39;
-            uint var1 = s_13[0, 0]--;
+            var1 = s_13[0, 0]--;
             if (arg1)
             {
                 try
@@ -998,11 +1063,11 @@ public class Program
                 }
                 finally
                 {
-                    uint[][][] var3 = new uint[][][]{new uint[][]{new uint[]{3713255602U, 387794647U}, new uint[]{4294967295U}, new uint[]{0U, 2977160725U}, new uint[]{1U}, new uint[]{4294967295U, 1326424842U}, new uint[]{0U}}, new uint[][]{new uint[]{1676776290U}, new uint[]{2U, 4294967294U}, new uint[]{4294967294U}, new uint[]{0U}, new uint[]{4294967294U, 1810062630U}, new uint[]{0U, 2418284113U}, new uint[]{1U}, new uint[]{1897022280U}}, new uint[][]{new uint[]{3790895793U, 3430317561U}, new uint[]{0U, 1U}, new uint[]{3929424796U, 1U}, new uint[]{2730894256U, 2634379707U}}, new uint[][]{new uint[]{3099130890U, 1U}}, new uint[][]{new uint[]{3984281740U}, new uint[]{277306780U}, new uint[]{2502089079U}}};
+                    var3 = new uint[][][]{new uint[][]{new uint[]{3713255602U, 387794647U}, new uint[]{4294967295U}, new uint[]{0U, 2977160725U}, new uint[]{1U}, new uint[]{4294967295U, 1326424842U}, new uint[]{0U}}, new uint[][]{new uint[]{1676776290U}, new uint[]{2U, 4294967294U}, new uint[]{4294967294U}, new uint[]{0U}, new uint[]{4294967294U, 1810062630U}, new uint[]{0U, 2418284113U}, new uint[]{1U}, new uint[]{1897022280U}}, new uint[][]{new uint[]{3790895793U, 3430317561U}, new uint[]{0U, 1U}, new uint[]{3929424796U, 1U}, new uint[]{2730894256U, 2634379707U}}, new uint[][]{new uint[]{3099130890U, 1U}}, new uint[][]{new uint[]{3984281740U}, new uint[]{277306780U}, new uint[]{2502089079U}}};
                     s_rt.Checksum("c_268", var3[0][0][0]);
                 }
 
-                ushort var4 = 1457;
+                var4 = 1457;
                 s_rt.Checksum("c_269", var4);
             }
             else
@@ -1014,7 +1079,7 @@ public class Program
                 }
                 finally
                 {
-                    ushort var5 = (ushort)M36();
+                    var5 = (ushort)M36();
                     s_rt.Checksum("c_270", var5);
                 }
             }
@@ -1052,6 +1117,23 @@ public class Program
 
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
+        sbyte var0 = default(sbyte);
+        short var1 = default(short);
+        sbyte[] var2 = default(sbyte[]);
+        sbyte var3 = default(sbyte);
+        long var5 = default(long);
+        ushort var6 = default(ushort);
+        int var7 = default(int);
+        short var8 = default(short);
+        byte var9 = default(byte);
+        int var10 = default(int);
+        uint var11 = default(uint);
+        byte var12 = default(byte);
+        bool var13 = default(bool);
+        uint var14 = default(uint);
+        ulong var15 = default(ulong);
+        ulong var17 = default(ulong);
+        bool var18 = default(bool);
         {
             try
             {
@@ -1059,12 +1141,12 @@ public class Program
                 {
                     if (s_4[0][0] != 1)
                     {
-                        sbyte var0 = arg0[0, 0];
+                        var0 = arg0[0, 0];
                         arg0[0, 0] = s_2[0];
                         arg0 = arg0;
-                        short var1 = -32767;
+                        var1 = -32767;
                         arg0[0, 0] = -1;
-                        sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
+                        var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
                         s_rt.Checksum("c_24", var0);
                         s_rt.Checksum("c_25", var1);
                         s_rt.Checksum("c_26", var2[0]);
@@ -1078,7 +1160,7 @@ public class Program
                     {
                         {
                             arg1 = arg1++;
-                            sbyte var3 = arg0[0, 0];
+                            var3 = arg0[0, 0];
                             var3 = arg0[0, 0];
                             ref sbyte var4 = ref arg0[0, 0];
                             s_rt.Checksum("c_27", var3);
@@ -1110,22 +1192,22 @@ public class Program
         }
         finally
         {
-            long var5 = (long)(1 / (short)((short)M13(arg1--, ref s_1[0], new int[]{2044349693, -2147483647, 1, -2147483648, -10, 1350566660, -71041840, 0, 450850015}) | 1));
+            var5 = (long)(1 / (short)((short)M13(arg1--, ref s_1[0], new int[]{2044349693, -2147483647, 1, -2147483648, -10, 1350566660, -71041840, 0, 450850015}) | 1));
             s_rt.Checksum("c_35", var5);
         }
 
         if (s_7)
         {
-            ushort var6 = (ushort)M13(arg1, ref s_1[0], new int[]{-2147483647, -1502575172, -85402593, -2071209967, -2000332689, 767121773, 1418662593, -2147483647, -1162568171, -2147483648});
+            var6 = (ushort)M13(arg1, ref s_1[0], new int[]{-2147483647, -1502575172, -85402593, -2071209967, -2000332689, 767121773, 1418662593, -2147483647, -1162568171, -2147483648});
             s_rt.Checksum("c_36", var6);
         }
         else
         {
-            int var7 = 2147483647;
+            var7 = 2147483647;
             arg2 = (short)(51431005U | (short)M13(arg1, ref s_1[0], new int[]{751191425, 1, -2147483647, -2003659586, 0, -595842771}));
             M13(arg1, ref s_1[0], new int[]{-1111734879, 2147483646, 923341667, 82077352, 0, 2147483646});
             arg1 = 10;
-            short var8 = arg2;
+            var8 = arg2;
             arg0 = new sbyte[, ]{{0, 48, -128}, {126, -104, -4}, {-1, 10, 126}, {-95, 1, -64}, {-90, 20, 127}, {-67, 126, -62}, {65, -128, 1}, {-1, 0, 0}, {92, 31, 127}};
             if (arg0[0, 0] > var8)
             {
@@ -1141,20 +1223,20 @@ public class Program
                     arg2 = arg2;
                     s_7 = false != (true || s_7);
                     M13((byte)(-9223372036854775808L * arg1), ref s_1[0], new int[]{-533454929, 1226706085, -2058640502, 219790284});
-                    byte var9 = 154;
+                    var9 = 154;
                     var9 /= (byte)(224 | 1);
-                    int var10 = var7;
+                    var10 = var7;
                     var10 = var10;
                     s_rt.Checksum("c_37", var9);
                     s_rt.Checksum("c_38", var10);
                 }
 
-                uint var11 = s_1[0];
+                var11 = s_1[0];
                 if ((ulong)M13(arg1, ref s_1[0], new int[]{469759899}) <= var11++)
                 {
                     s_8 = var8;
                     M13(1, ref s_1[0], s_4[0]);
-                    byte var12 = 26;
+                    var12 = 26;
                     var8 = var8;
                     s_4[0][0] = 1;
                     M13(arg1, ref s_1[0], s_4[0]);
@@ -1172,21 +1254,21 @@ public class Program
 
             if (M14())
             {
-                bool var13 = s_36[0][0];
+                var13 = s_36[0][0];
                 arg2 = var8;
                 arg0[0, 0] += arg0[0, 0];
-                uint var14 = s_13[0, 0]++ + s_34++;
+                var14 = s_13[0, 0]++ + s_34++;
                 if (M26())
                 {
                     M42();
                     s_44 = 0L;
                     var8 = -2;
-                    ulong var15 = s_5;
+                    var15 = s_5;
                     arg0 = arg0;
                     ref byte[, ][][][, ] var16 = ref s_45;
                     {
-                        ulong var17 = (ulong)M27();
-                        bool var18 = var13;
+                        var17 = (ulong)M27();
+                        var18 = var13;
                         M27();
                         s_rt.Checksum("c_254", var17);
                         s_rt.Checksum("c_255", var18);
@@ -1213,6 +1295,7 @@ public class Program
 
     static int M13(byte arg0, ref uint arg1, int[] arg2)
     {
+        int var2 = default(int);
         ref long var0 = ref s_6;
         if (arg0 > -406484741)
         {
@@ -1229,7 +1312,7 @@ public class Program
                     if (s_7)
                     {
                         arg1 = arg1;
-                        int var2 = arg2[0];
+                        var2 = arg2[0];
                         s_rt.Checksum("c_30", var2);
                     }
                 }
@@ -1247,11 +1330,18 @@ public class Program
 
     static bool M14()
     {
+        uint var0 = default(uint);
+        bool var1 = default(bool);
+        bool var2 = default(bool);
+        uint var4 = default(uint);
+        bool var5 = default(bool);
+        long var6 = default(long);
+        ushort var7 = default(ushort);
         if (s_4[0][0] == s_6)
         {
             s_3 = new ushort[]{4870};
-            uint var0 = 1U;
-            bool var1 = s_8 <= 50;
+            var0 = 1U;
+            var1 = s_8 <= 50;
             s_rt.Checksum("c_41", var0);
             s_rt.Checksum("c_42", var1);
         }
@@ -1259,7 +1349,7 @@ public class Program
         s_3 = new ushort[]{41893, 23091, 1, 39520, 3931, 65535, 0, 1, 1};
         if (false || s_7)
         {
-            bool var2 = false;
+            var2 = false;
             M15();
             s_32 = M34(new long[][]{new long[]{-6975931450108514578L}, new long[]{-8055387808231810575L}, new long[]{-7401758982966498344L}, new long[]{10L}, new long[]{0L}, new long[]{9223372036854775806L}, new long[]{-2035431844826559151L}, new long[]{-6799940605471072472L}, new long[]{1L}, new long[]{9223372036854775806L}});
             {
@@ -1279,14 +1369,14 @@ public class Program
 
         if (s_36[0][0])
         {
-            uint var4 = M42()--;
+            var4 = M42()--;
             if (s_39)
             {
                 var4 = var4;
             }
 
             {
-                bool var5 = true;
+                var5 = true;
                 var4 = s_22[0][0]--;
                 M35(new ushort[][]{new ushort[]{18665, 39229}, new ushort[]{7121, 32876, 65534}}, ref s_41, ref s_29);
                 var4 = 3715985311U;
@@ -1297,9 +1387,9 @@ public class Program
         }
         else
         {
-            long var6 = s_6;
+            var6 = s_6;
             M20() = new uint[, ]{{1897112581U, 85962728U, 2556839154U, 60308014U, 1U, 3529380856U, 320732545U, 0U}, {786968350U, 1304706343U, 0U, 1526233700U, 1166370605U, 3640455025U, 4294967294U, 2095698729U}, {0U, 3211284173U, 10U, 4294967295U, 1U, 284916076U, 810721382U, 1U}, {1057285143U, 1773615746U, 1U, 2030061776U, 1U, 3036272597U, 556554537U, 4028966114U}, {2070831039U, 3005348273U, 4294967295U, 544181224U, 1U, 462205335U, 3960851339U, 4294967294U}, {318159490U, 1838087412U, 1U, 0U, 0U, 0U, 2U, 1U}, {1U, 1854446599U, 3049126165U, 4294967295U, 1800868750U, 0U, 4173649580U, 4189285782U}, {1U, 4294967294U, 3555752390U, 0U, 2624048407U, 4294967294U, 4294967295U, 0U}, {2365286597U, 4294967294U, 2364224769U, 2850958888U, 4016224566U, 4032275778U, 4294967295U, 3239668001U}, {4294967295U, 68170570U, 2237939033U, 355596096U, 0U, 0U, 3765930728U, 4294967294U}};
-            ushort var7 = s_17;
+            var7 = s_17;
             var7 = var7++;
             var6 = s_35;
             s_rt.Checksum("c_252", var6);
@@ -1314,6 +1404,10 @@ public class Program
 
     static bool[] M15()
     {
+        sbyte var0 = default(sbyte);
+        long var1 = default(long);
+        ulong var2 = default(ulong);
+        ulong var3 = default(ulong);
         s_10 = new ulong[]{18118214526235327036UL, 16648714977630228080UL};
         if (s_7)
         {
@@ -1324,12 +1418,12 @@ public class Program
             }
 
             s_9 = new sbyte[]{74, -127, -54, -57, -128, 1, 2};
-            sbyte var0 = -108;
+            var0 = -108;
             try
             {
                 if (s_7)
                 {
-                    long var1 = s_6;
+                    var1 = s_6;
                     s_rt.Checksum("c_43", var1);
                 }
             }
@@ -1342,7 +1436,7 @@ public class Program
             s_4 = new int[][]{new int[]{-2, -1380330483, 0, 0, 1105410740, -475266803, 0}, new int[]{-751555279, -912663631}, new int[]{0, -1245607988, 1713292993, 2147483646}, new int[]{324083798, -10, -2, 0, -668760947, 2147483646, 1556782561, 0}, new int[]{147348701, 234024220, -1903164296, 24845747, 2147483647}, new int[]{-2147483647}};
             var0 %= (sbyte)((sbyte)(s_1[0] / (ushort)(0 | 1)) | 1);
             M16();
-            ulong var2 = 18446744073709551615UL;
+            var2 = 18446744073709551615UL;
             if (s_39)
             {
                 try
@@ -1359,7 +1453,7 @@ public class Program
                 finally
                 {
                     M40(s_28, -1821084591);
-                    ulong var3 = var2;
+                    var3 = var2;
                     s_rt.Checksum("c_244", var3);
                 }
 
@@ -1397,7 +1491,10 @@ public class Program
 
     static ulong M16()
     {
-        short var0 = s_8;
+        short var0 = default(short);
+        long var1 = default(long);
+        uint var3 = default(uint);
+        var0 = s_8;
         var0 = var0;
         M17(-81, ref s_1[0], 32766, (ulong)M17(127, ref s_1[0], var0, 0UL, 1, -128) / (uint)(2259218901U | 1), s_4[0][0]++, (sbyte)(254 % (long)(s_6-- | 1)));
         var0 = var0;
@@ -1405,7 +1502,7 @@ public class Program
         {
             {
                 M17(s_9[0], ref s_1[0], M17((sbyte)M17((sbyte)(s_2[0]-- + 112), ref s_1[0], (short)(7155 ^ s_4[0][0]--), (ulong)M17(-76, ref s_1[0], (short)((uint)(-2147483647 & s_9[0]) * (byte)(s_6-- & M17(s_9[0]--, ref s_1[0], var0, 745614966877508870UL, s_4[0][0]++, -127))), 9352707486386095167UL, s_4[0][0]++, (sbyte)M17(9, ref s_1[0], var0, 2UL, -2, s_9[0]--)), (int)M17(s_2[0]--, ref s_1[0], M17(s_2[0]--, ref s_1[0], M17((sbyte)M17(s_2[0]--, ref s_1[0], var0, (ulong)M17(14, ref s_1[0], M17(s_2[0], ref s_1[0], -16047, (ulong)M17(7, ref s_1[0], 32766, 8457600465970406527UL, s_4[0][0], 58), 2147483647, (sbyte)M17(0, ref s_1[0], var0++, 0UL, s_4[0][0], (sbyte)M17(53, ref s_1[0], var0, s_10[0], s_4[0][0], (sbyte)(s_10[0] - s_3[0])))), s_10[0], s_4[0][0]++, (sbyte)M17((sbyte)M17(s_9[0], ref s_1[0], var0, 1UL, (int)(var0 + s_6), (sbyte)M17((sbyte)M17(s_2[0], ref s_1[0], var0, s_5, -2090690306, (sbyte)(var0 ^ 2179297289U)), ref s_1[0], 0, (ulong)M17((sbyte)M17((sbyte)M17(10, ref s_1[0], var0, 1UL, s_4[0][0]++, -119), ref s_1[0], (short)((long)((byte)M17(s_2[0], ref s_1[0], var0, 9223336888783397185UL, (int)(s_6++ | s_8--), (sbyte)((byte)M17((sbyte)M17((sbyte)(s_2[0]-- & -14877), ref s_1[0], var0, (ulong)M17(M18(), ref s_13[0, 0], var0, s_5, s_12++ | s_26++, -10), (int)M23(1, s_4[0][0], -13, ref s_16, (long)M17(-127, ref s_22[0][0], M17(M18(), ref s_1[0], (short)M29(), 9008039238329753637UL, s_12++, s_9[0]), (ulong)(M30() + M32((byte)M36())), 729916534, s_9[0]), (ushort)(1 % (int)(s_38[0][0] | 1)), s_2[0], s_13[0, 0]++, new ushort[]{0, 65534, 0, 0, 3735, 65534, 14821, 42826, 1, 1}), -84), ref s_13[0, 0], (short)M33(ref s_4), s_41, (int)M32(0), -1) + -1L)) / (ushort)((ushort)M24() | 1)) & 16599), 18446744073709551615UL, 0, M44()), ref s_13[0, 0], var0, 18446744073709551615UL, (int)(s_26-- ^ s_33++), s_16[0, 0]), 10, s_9[0]--)), ref s_1[0], var0++, 3999434680244708037UL, s_32[0, 0, 0]++, s_26++)), 1, M35(new ushort[][]{new ushort[]{1, 4767, 42357}, new ushort[]{0, 1, 21613, 1}, new ushort[]{60482, 38195, 1, 1, 1}, new ushort[]{54433}, new ushort[]{62505, 0, 34971, 34695, 45235}, new ushort[]{1, 1, 43313, 1, 56063, 62075, 20072}, new ushort[]{1}}, ref s_5, ref s_40[0][0, 0])), ref s_1[0], var0, (ulong)M32(61), -2147483648, (sbyte)M43(ref var0)), 1161032424465406515UL, s_4[0][0], -128), (ulong)M28(s_27), 2147483646, (sbyte)((ushort)M23(254, s_12--, M35(new ushort[][]{new ushort[]{11718, 0, 1}, new ushort[]{65535, 0, 52604, 1, 1, 39534}, new ushort[]{25046, 35438, 65535}, new ushort[]{1, 2, 62717, 1, 57237, 12709, 26461}, new ushort[]{65534}, new ushort[]{1, 43142, 29516, 0, 62388}, new ushort[]{65535, 0, 59907, 48100, 64044, 0, 6918}, new ushort[]{1, 61231, 42692}, new ushort[]{26961}}, ref s_5, ref M33(ref s_4)), ref s_16, s_27--, 10, 0, M29(), s_3) ^ 0)), 22), ref s_13[0, 0], 1, (ulong)M35(new ushort[][]{new ushort[]{65534, 19166}, new ushort[]{1, 1, 46993, 14376, 552, 9102}, new ushort[]{2216, 7544, 0, 1, 5527}, new ushort[]{62143, 0, 1}, new ushort[]{0, 65535, 1, 1}, new ushort[]{1, 37257, 37942, 40368, 15440, 65534, 30685}, new ushort[]{65199, 47358, 1, 65535, 1}, new ushort[]{1, 1, 0, 65534, 44804, 63322, 65534, 0}}, ref s_5, ref s_29), s_21, -68), M45(622521613, (ushort)M21(s_38[0][0]--), ref s_7, 2147483646, s_30), s_21--, 73);
-                long var1 = 10L;
+                var1 = 10L;
                 var1 = 9223372036854775806L;
                 var1 = var1;
                 if (14551 <= s_1[0])
@@ -1430,7 +1527,7 @@ public class Program
                     s_22[0] = s_1;
                 }
 
-                uint var3 = 122694802U;
+                var3 = 122694802U;
                 var1 = var1;
                 s_rt.Checksum("c_241", var1);
                 s_rt.Checksum("c_242", var3);
@@ -1455,6 +1552,27 @@ public class Program
 
     static sbyte M18()
     {
+        sbyte var1 = default(sbyte);
+        short var2 = default(short);
+        long var3 = default(long);
+        bool var5 = default(bool);
+        int var6 = default(int);
+        byte var7 = default(byte);
+        ulong var8 = default(ulong);
+        ushort[] var9 = default(ushort[]);
+        short var10 = default(short);
+        bool var11 = default(bool);
+        ushort var12 = default(ushort);
+        short var13 = default(short);
+        long[, ][] var14 = default(long[, ][]);
+        uint var15 = default(uint);
+        ushort var16 = default(ushort);
+        int var17 = default(int);
+        byte var18 = default(byte);
+        ulong var19 = default(ulong);
+        int var21 = default(int);
+        long var22 = default(long);
+        sbyte var24 = default(sbyte);
         s_2[0] = s_9[0];
         s_3[0] *= (ushort)(-21327 | s_8++);
         if (s_7)
@@ -1490,7 +1608,7 @@ public class Program
             try
             {
                 s_1[0] = s_1[0];
-                sbyte var1 = s_2[0];
+                var1 = s_2[0];
                 s_rt.Checksum("c_62", var1);
             }
             finally
@@ -1498,8 +1616,8 @@ public class Program
                 s_11 = -6982326905491414656L;
                 {
                     s_6 = s_14[0]++;
-                    short var2 = (short)((sbyte)(s_8++ + s_3[0]--) % (uint)(s_1[0]++ | 1));
-                    long var3 = -1L;
+                    var2 = (short)((sbyte)(s_8++ + s_3[0]--) % (uint)(s_1[0]++ | 1));
+                    var3 = -1L;
                     s_rt.Checksum("c_63", var2);
                     s_rt.Checksum("c_64", var3);
                 }
@@ -1508,21 +1626,21 @@ public class Program
             }
 
             ref ulong var4 = ref s_5;
-            bool var5 = true;
+            var5 = true;
             s_15 = 2;
             M20() = s_13;
             if (var5 || var5)
             {
-                int var6 = s_4[0][0]--;
-                byte var7 = M23(s_15++, (int)M21(M24()), s_9[0], ref s_16, s_6, s_3[0], 1, s_13[0, 0]++, new ushort[]{65534, 43215, 0, 65534, 23043, 0, 56905});
+                var6 = s_4[0][0]--;
+                var7 = M23(s_15++, (int)M21(M24()), s_9[0], ref s_16, s_6, s_3[0], 1, s_13[0, 0]++, new ushort[]{65534, 43215, 0, 65534, 23043, 0, 56905});
                 var5 ^= true;
                 s_rt.Checksum("c_80", var6);
                 s_rt.Checksum("c_81", var7);
             }
 
-            ulong var8 = 13220115286037351746UL / (ulong)(var4 | 1);
+            var8 = 13220115286037351746UL / (ulong)(var4 | 1);
             var5 = true;
-            ushort[] var9 = s_3;
+            var9 = s_3;
             var5 = var5;
             s_17 = s_3[0];
             s_rt.Checksum("c_82", var4);
@@ -1551,7 +1669,7 @@ public class Program
             s_21 = -1939140204;
             M28((long)M22());
             s_5 = (ulong)((uint)M24() + 2147483646) + s_5;
-            short var10 = 32766;
+            var10 = 32766;
             try
             {
                 M25();
@@ -1560,7 +1678,7 @@ public class Program
             finally
             {
                 var10 = 1;
-                bool var11 = false;
+                var11 = false;
                 try
                 {
                     var11 = var11;
@@ -1576,7 +1694,7 @@ public class Program
                     else
                     {
                         M28(-10L) = var10;
-                        ushort var12 = s_17++;
+                        var12 = s_17++;
                         s_rt.Checksum("c_116", var12);
                     }
                 }
@@ -1589,7 +1707,7 @@ public class Program
             s_rt.Checksum("c_118", var10);
         }
 
-        short var13 = s_24;
+        var13 = s_24;
         {
             M28(s_6);
             if (s_7)
@@ -1598,8 +1716,8 @@ public class Program
             }
             else
             {
-                long[, ][] var14 = new long[, ][]{{new long[]{-2501106294853838729L, 3378895331082875076L}, new long[]{0L, 3763917057734474099L, 0L, -1058740372623305087L}, new long[]{-2222883223302504405L, -3085916324620492591L}, new long[]{-6568546273535836497L, 7397389474725830540L, -9223372036854775808L, -187765277629754306L, 3993500737808176140L}, new long[]{-1962348721567372890L, -10L, 5497255172687862355L, -9055331007661614099L, 551951626699487616L, 0L}, new long[]{10L, -10L, -6942987649869402841L, 9223372036854775806L, 452210862698768735L, -3115426301167036953L}}};
-                uint var15 = s_1[0]--;
+                var14 = new long[, ][]{{new long[]{-2501106294853838729L, 3378895331082875076L}, new long[]{0L, 3763917057734474099L, 0L, -1058740372623305087L}, new long[]{-2222883223302504405L, -3085916324620492591L}, new long[]{-6568546273535836497L, 7397389474725830540L, -9223372036854775808L, -187765277629754306L, 3993500737808176140L}, new long[]{-1962348721567372890L, -10L, 5497255172687862355L, -9055331007661614099L, 551951626699487616L, 0L}, new long[]{10L, -10L, -6942987649869402841L, 9223372036854775806L, 452210862698768735L, -3115426301167036953L}}};
+                var15 = s_1[0]--;
                 s_rt.Checksum("c_119", var14[0, 0][0]);
                 s_rt.Checksum("c_120", var15);
             }
@@ -1610,11 +1728,11 @@ public class Program
                 {
                     var13 = var13;
                     s_1[0] = 4294967294U;
-                    ushort var16 = s_3[0];
+                    var16 = s_3[0];
                     s_rt.Checksum("c_121", var16);
                 }
 
-                int var17 = (int)M21(s_12++);
+                var17 = (int)M21(s_12++);
                 var17 = var17;
                 s_rt.Checksum("c_122", var17);
             }
@@ -1623,7 +1741,7 @@ public class Program
                 s_19 = (short)(s_2[0] % (sbyte)((sbyte)(28812 + s_14[0]--) | 1));
             }
 
-            byte var18 = 11;
+            var18 = 11;
             s_25 = (byte)(-9223372036854775807L ^ s_17--);
             s_26 = 0;
             {
@@ -1633,7 +1751,7 @@ public class Program
 
             try
             {
-                ulong var19 = s_10[0];
+                var19 = s_10[0];
                 s_rt.Checksum("c_123", var19);
             }
             finally
@@ -1652,10 +1770,10 @@ public class Program
                         }
 
                         M23(178, 0, s_16[0, 0]--, ref s_16, s_11++, var20, s_2[0], (uint)(var13++ | 1U), new ushort[]{57446, 34465});
-                        int var21 = s_21++;
+                        var21 = s_21++;
                         s_27 = s_6;
                         var18 = var18;
-                        long var22 = (long)M24();
+                        var22 = (long)M24();
                         var21 = -552058055;
                         M27();
                         s_rt.Checksum("c_124", var21);
@@ -1683,7 +1801,7 @@ public class Program
 
                     s_11 = s_11;
                     s_4[0][0] = M24();
-                    sbyte var24 = (sbyte)M28(s_14[0]);
+                    var24 = (sbyte)M28(s_14[0]);
                     M29();
                     s_rt.Checksum("c_128", var24);
                 }
@@ -1725,16 +1843,20 @@ public class Program
 
     static ulong[] M19(ref uint arg0, short arg1, uint[] arg2)
     {
-        long var0 = arg2[0] ^ -32665;
+        long var0 = default(long);
+        long var2 = default(long);
+        int var3 = default(int);
+        long var5 = default(long);
+        var0 = arg2[0] ^ -32665;
         ref uint var1 = ref arg2[0];
-        long var2 = var0;
+        var2 = var0;
         arg0 = 2U;
         M20();
-        int var3 = s_12++;
+        var3 = s_12++;
         s_14 = new long[]{9223372036854775806L, -3281498678345351126L, -9223372036854775808L, -3122657114242456583L, 5695272276153936953L, 2176666584825965377L, -6551355637144547308L, 2L, 1L};
         ref sbyte var4 = ref s_2[0];
         s_3 = new ushort[]{65535, 57626, 38477, 63700, 34501, 0, 65534, 1, 39454};
-        long var5 = 9173985135957611349L;
+        var5 = 9173985135957611349L;
         try
         {
             var1 = arg2[0];
@@ -1762,13 +1884,14 @@ public class Program
 
     static ref uint[, ] M20()
     {
+        bool var0 = default(bool);
         s_3 = new ushort[]{48756, 0, 1, 22371, 0, 3289, 1};
         {
             M21(s_4[0][0]++);
             s_3 = new ushort[]{26922, 3046, 38349, 25841, 28119, 0, 57341};
         }
 
-        bool var0 = false;
+        var0 = false;
         s_12 = (int)M21(1550332660);
         var0 = s_7;
         s_rt.Checksum("c_52", var0);
@@ -1805,6 +1928,12 @@ public class Program
 
     static byte M23(byte arg0, int arg1, sbyte arg2, ref sbyte[, ] arg3, long arg4, ushort arg5, sbyte arg6, uint arg7, ushort[] arg8)
     {
+        int var0 = default(int);
+        sbyte var1 = default(sbyte);
+        bool var2 = default(bool);
+        ulong[] var3 = default(ulong[]);
+        sbyte var4 = default(sbyte);
+        int var5 = default(int);
         M24();
         s_3[0] = arg8[0];
         {
@@ -1812,7 +1941,7 @@ public class Program
             M24();
             {
                 {
-                    int var0 = arg1--;
+                    var0 = arg1--;
                     arg0 = s_15;
                     s_rt.Checksum("c_65", var0);
                 }
@@ -1822,14 +1951,14 @@ public class Program
 
             {
                 M24();
-                sbyte var1 = -93;
-                bool var2 = true;
+                var1 = -93;
+                var2 = true;
                 arg8 = s_3;
                 arg3 = arg3;
-                ulong[] var3 = new ulong[]{0UL, 11769882297530445718UL, 16460209444906240365UL};
-                sbyte var4 = arg2;
+                var3 = new ulong[]{0UL, 11769882297530445718UL, 16460209444906240365UL};
+                var4 = arg2;
                 M24();
-                int var5 = (int)(1484787614U ^ (ulong)M24());
+                var5 = (int)(1484787614U ^ (ulong)M24());
                 M24();
                 if (var2)
                 {
@@ -1865,11 +1994,13 @@ public class Program
 
     static int[][] M25()
     {
+        bool var0 = default(bool);
+        uint var1 = default(uint);
         try
         {
             if (M26())
             {
-                bool var0 = true;
+                var0 = true;
                 M28(1L);
                 var0 = var0;
                 s_rt.Checksum("c_113", var0);
@@ -1893,7 +2024,7 @@ public class Program
         }
 
         {
-            uint var1 = s_22[0][0]--;
+            var1 = s_22[0][0]--;
             M26();
             s_rt.Checksum("c_114", var1);
         }
@@ -1905,18 +2036,33 @@ public class Program
 
     static bool M26()
     {
+        sbyte var0 = default(sbyte);
+        ulong var1 = default(ulong);
+        ushort[] var2 = default(ushort[]);
+        int var3 = default(int);
+        bool[, ] var4 = default(bool[, ]);
+        short var5 = default(short);
+        uint[] var6 = default(uint[]);
+        byte[] var7 = default(byte[]);
+        ushort[][] var9 = default(ushort[][]);
+        byte var10 = default(byte);
+        int var11 = default(int);
+        sbyte var12 = default(sbyte);
+        sbyte[] var13 = default(sbyte[]);
+        int var14 = default(int);
+        bool[] var16 = default(bool[]);
         if (s_7)
         {
             if (-5939421279753052427L > s_11)
             {
-                sbyte var0 = s_9[0];
+                var0 = s_9[0];
                 s_rt.Checksum("c_86", var0);
             }
 
             if (s_7)
             {
                 s_14[0] = 5620087363910517090L;
-                ulong var1 = 10037972119732552812UL;
+                var1 = 10037972119732552812UL;
                 try
                 {
                     if ((int)(4164895191U + s_3[0]--) == 2835991067U)
@@ -1926,10 +2072,10 @@ public class Program
                     }
                     else
                     {
-                        ushort[] var2 = new ushort[]{20234, 52302};
-                        int var3 = -1834367155;
-                        bool[, ] var4 = new bool[, ]{{true, false, true, false, false, false}, {true, false, true, true, true, false}, {true, false, true, false, true, true}, {false, false, false, false, true, true}, {false, true, true, false, false, true}, {false, true, true, false, true, false}, {false, false, true, true, false, true}, {true, false, true, false, false, false}};
-                        short var5 = 0;
+                        var2 = new ushort[]{20234, 52302};
+                        var3 = -1834367155;
+                        var4 = new bool[, ]{{true, false, true, false, false, false}, {true, false, true, true, true, false}, {true, false, true, false, true, true}, {false, false, false, false, true, true}, {false, true, true, false, false, true}, {false, true, true, false, true, false}, {false, false, true, true, false, true}, {true, false, true, false, false, false}};
+                        var5 = 0;
                         s_rt.Checksum("c_88", var2[0]);
                         s_rt.Checksum("c_89", var3);
                         s_rt.Checksum("c_90", var4[0, 0]);
@@ -1943,14 +2089,14 @@ public class Program
                     var1 -= 18446744073709551614UL;
                 }
 
-                uint[] var6 = new uint[]{0U, 2535587414U, 3736969003U, 1U, 1061972498U, 4294967294U};
+                var6 = new uint[]{0U, 2535587414U, 3736969003U, 1U, 1061972498U, 4294967294U};
                 {
                     var6 = s_1;
                     var6[0] = var6[0];
                     var6 = var6;
                     var6[0] = var6[0];
                     var6[0] = 1548797251U;
-                    byte[] var7 = new byte[]{0, 0, 100, 0, 1};
+                    var7 = new byte[]{0, 0, 100, 0, 1};
                     s_4[0] = new int[]{0, 2, 2147483646, 1};
                     s_rt.Checksum("c_92", var7[0]);
                 }
@@ -1973,7 +2119,7 @@ public class Program
                 if (var8)
                 {
                     var8 = var8;
-                    ushort[][] var9 = new ushort[][]{new ushort[]{6607}, new ushort[]{27393, 37656, 65534}};
+                    var9 = new ushort[][]{new ushort[]{6607}, new ushort[]{27393, 37656, 65534}};
                     s_rt.Checksum("c_104", var9[0][0]);
                 }
 
@@ -1992,7 +2138,7 @@ public class Program
                 var8 = ref s_7;
                 var8 = var8;
                 M28((long)(s_20[0]++ * 10)) = s_8++;
-                byte var10 = (byte)M29();
+                var10 = (byte)M29();
                 s_rt.Checksum("c_105", var10);
             }
 
@@ -2010,7 +2156,7 @@ public class Program
         {
             M28(s_11++);
             {
-                int var11 = 1845037249;
+                var11 = 1845037249;
                 s_rt.Checksum("c_106", var11);
             }
         }
@@ -2019,12 +2165,12 @@ public class Program
         {
             if (s_7)
             {
-                sbyte var12 = 58;
+                var12 = 58;
                 {
                     var8 = var8;
-                    sbyte[] var13 = new sbyte[]{82, -127, -85, 127, -127};
+                    var13 = new sbyte[]{82, -127, -85, 127, -127};
                     s_17 = (ushort)M29();
-                    int var14 = s_12;
+                    var14 = s_12;
                     M28(0L);
                     s_rt.Checksum("c_107", var13[0]);
                     s_rt.Checksum("c_108", var14);
@@ -2073,7 +2219,7 @@ public class Program
                 s_rt.Checksum("c_110", var15);
             }
 
-            bool[] var16 = new bool[]{false, true, true, false, true, false, true, false, true};
+            var16 = new bool[]{false, true, true, false, true, false, true, false, true};
             var8 = var8;
             s_rt.Checksum("c_111", var16[0]);
         }
@@ -2101,9 +2247,16 @@ public class Program
 
     static ref short M28(long arg0)
     {
+        ushort[] var0 = default(ushort[]);
+        int[] var1 = default(int[]);
+        byte var3 = default(byte);
+        long var4 = default(long);
+        sbyte var5 = default(sbyte);
+        byte var6 = default(byte);
+        bool var7 = default(bool);
         if (s_7)
         {
-            ushort[] var0 = new ushort[]{32768, 26897, 13695, 1, 4638, 12555, 37480, 1};
+            var0 = new ushort[]{32768, 26897, 13695, 1, 4638, 12555, 37480, 1};
             s_rt.Checksum("c_95", var0[0]);
         }
 
@@ -2118,7 +2271,7 @@ public class Program
                 arg0 = arg0;
             }
 
-            int[] var1 = new int[]{1440886930, 1662999250, -10, -2147483648, 1571726538, 1};
+            var1 = new int[]{1440886930, 1662999250, -10, -2147483648, 1571726538, 1};
             s_rt.Checksum("c_96", var1[0]);
         }
 
@@ -2139,11 +2292,11 @@ public class Program
                 ref ushort var2 = ref s_17;
                 {
                     ++var2;
-                    byte var3 = (byte)M29();
+                    var3 = (byte)M29();
                     s_20 = new byte[]{0};
                     M29();
                     M29();
-                    long var4 = arg0;
+                    var4 = arg0;
                     var4 = 7844966598244298994L;
                     s_rt.Checksum("c_97", var3);
                     s_rt.Checksum("c_98", var4);
@@ -2156,10 +2309,10 @@ public class Program
         if (s_7)
         {
             M29();
-            sbyte var5 = s_2[0]++;
+            var5 = s_2[0]++;
             arg0 = s_6;
             arg0 = arg0;
-            byte var6 = s_15--;
+            var6 = s_15--;
             s_rt.Checksum("c_100", var5);
             s_rt.Checksum("c_101", var6);
         }
@@ -2167,7 +2320,7 @@ public class Program
         arg0 = s_14[0];
         M29();
         arg0 = (long)M29();
-        bool var7 = s_7 | true;
+        var7 = s_7 | true;
         s_rt.Checksum("c_102", arg0);
         s_rt.Checksum("c_103", var7);
         return ref s_8;
@@ -2184,6 +2337,16 @@ public class Program
 
     static long M30()
     {
+        long var0 = default(long);
+        uint var1 = default(uint);
+        byte var3 = default(byte);
+        ushort var4 = default(ushort);
+        sbyte var5 = default(sbyte);
+        short var6 = default(short);
+        long var7 = default(long);
+        ushort[] var8 = default(ushort[]);
+        byte var9 = default(byte);
+        bool var10 = default(bool);
         s_23 = s_23;
         s_30 = new short[]{-1, 11945, 28500, -10, -25602, -21293, -32768, -8044};
         if (s_17-- >= s_26)
@@ -2194,9 +2357,9 @@ public class Program
             {
                 M31();
                 {
-                    long var0 = s_14[0];
+                    var0 = s_14[0];
                     M31();
-                    uint var1 = s_22[0][0]++;
+                    var1 = s_22[0][0]++;
                     var0 = s_6;
                     M31();
                     if (s_23[0])
@@ -2207,8 +2370,8 @@ public class Program
                     }
                     else
                     {
-                        byte var3 = s_18++;
-                        ushort var4 = 0;
+                        var3 = s_18++;
+                        var4 = 0;
                         s_rt.Checksum("c_133", var3);
                         s_rt.Checksum("c_134", var4);
                     }
@@ -2222,7 +2385,7 @@ public class Program
             {
                 try
                 {
-                    sbyte var5 = s_26--;
+                    var5 = s_26--;
                     s_rt.Checksum("c_137", var5);
                 }
                 finally
@@ -2233,7 +2396,7 @@ public class Program
                     s_15 = 17;
                 }
 
-                short var6 = 1;
+                var6 = 1;
                 s_rt.Checksum("c_138", var6);
             }
 
@@ -2251,7 +2414,7 @@ public class Program
                 {
                     if (s_7)
                     {
-                        long var7 = -9223372036854775808L;
+                        var7 = -9223372036854775808L;
                         M31();
                         var7 %= (long)(s_29 | 1);
                         var7 = var7--;
@@ -2276,10 +2439,10 @@ public class Program
         {
             s_4 = new int[][]{new int[]{-2147483648, -805982672, 1, 2147483647}, new int[]{1505452516, -1751433094, 1344734383}, new int[]{910077736, 10, -10, -1169840563}, new int[]{2147483647, -432552860, 576558872}, new int[]{-856700924, 0, 203554976, -2147483648}, new int[]{405073323, 0, 752602499, 1381182394}};
             s_24 = s_30[0];
-            ushort[] var8 = s_3;
+            var8 = s_3;
             M31();
             {
-                byte var9 = s_15;
+                var9 = s_15;
                 s_rt.Checksum("c_140", var9);
             }
 
@@ -2288,7 +2451,7 @@ public class Program
             }
 
             var8 = s_3;
-            bool var10 = false;
+            var10 = false;
             var8[0] = var8[0];
             s_rt.Checksum("c_141", var8[0]);
             s_rt.Checksum("c_142", var10);
@@ -2299,7 +2462,8 @@ public class Program
 
     static uint[] M31()
     {
-        ulong var0 = 4787032656520567745UL;
+        ulong var0 = default(ulong);
+        var0 = 4787032656520567745UL;
         s_rt.Checksum("c_131", var0);
         return new uint[]{3193491721U, 10421100U, 1506745144U, 3833949630U, 76394140U, 1U, 10U, 0U};
     }
@@ -2327,6 +2491,17 @@ public class Program
 
     static sbyte M35(ushort[][] arg0, ref ulong arg1, ref long arg2)
     {
+        int var2 = default(int);
+        byte[] var3 = default(byte[]);
+        byte var4 = default(byte);
+        short var5 = default(short);
+        byte var6 = default(byte);
+        sbyte var7 = default(sbyte);
+        long[] var9 = default(long[]);
+        byte var11 = default(byte);
+        uint[] var12 = default(uint[]);
+        uint var13 = default(uint);
+        byte var14 = default(byte);
         arg0[0][0] = 24332;
         if (s_23[0])
         {
@@ -2342,7 +2517,7 @@ public class Program
             ref uint var1 = ref s_13[0, 0];
             if (s_1[0] == s_11)
             {
-                int var2 = s_21;
+                var2 = s_21;
                 s_rt.Checksum("c_147", var2);
             }
             else
@@ -2375,14 +2550,14 @@ public class Program
             }
 
             {
-                byte[] var3 = s_20;
+                var3 = s_20;
                 var3[0]++;
                 s_11 |= -6123530783080863779L;
                 s_32 = new int[,, ]{{{1644192081, 0, 2147483646, -2147483648, 657337028, 514605455, -1, 0, 506873077, 0}, {-2147483647, 1, 1, 2147483647, 287161755, 244130849, 1040780113, -2147483647, 1, 0}, {2, 2147483646, -1592734895, 1238632324, 733120299, 0, 1, -317321065, -10, 397582417}, {2147483647, 0, -373877722, 0, -833131522, -1, -22270918, 1706598921, -1126223269, 824888591}, {-1457163346, 613656544, 1, 0, 1, 0, 2, -2147483648, 1773043271, -2147483647}, {-1907229447, -1, -2147483648, -2147483647, 0, 2, 2147483646, 0, -1714992345, 10}}, {{10, 0, 2, -2147483647, 1043919523, 1, 2147483646, 288116906, -2147483647, 1512137146}, {383216214, -10, 1027389398, 2147483647, 2069042961, 413463961, 0, -10, 2147483647, -1}, {-1, -2147483648, -1013100966, 432671254, -410846938, -27069980, 2147483646, -2147483648, -2124349868, -2}, {-2147483648, -1868317618, 1, -907195954, 2, 0, 1, 2147483646, 2147483647, 1}, {0, -2147483647, -2147483648, 2, -10, -2147483648, 2147483647, 1, 1811859088, 10}, {1, -1270495042, -483117253, -2147483647, -54785423, -2, 874570875, 1280239441, -2, 2147483647}}, {{-10, 2147483647, -353573941, -52395198, -1147783953, -2147483647, 2147483647, -2147483647, -10, -1030249327}, {0, -738543931, 2009708361, -670248101, -1534902548, 1, -2147483647, 0, 0, -2147483648}, {1, -1953612605, 1, -2, -1311676505, 1, 2147483647, 1601872886, -1301158021, -1873111491}, {1642379649, -2147483647, -357392149, -2147483648, 1869548439, 1074663370, 0, 2087822593, 0, 2147483647}, {2147483646, 1, -1935112914, -198228611, 10, 1, 959505873, 0, 1822856447, -2147483648}, {-322822942, 1, 2147483647, 1, -2147483648, 2147483646, -727080080, -271212402, 235796399, -1}}, {{-667583732, 1985733729, 666800800, 228229819, -2147483648, 302538751, 460210107, 126266835, 2147483647, -983012387}, {-333004521, 1370212456, 1875644305, 2147483646, -1298568806, 2147483647, -169074797, 436555372, 190246676, -2147483648}, {-2147483647, 1836959280, 2147483647, 1402669525, -2147483648, -2043042746, -309223339, 1857211121, -1659048351, 2147483646}, {-56280306, 0, 10, 2012765909, -1, 1287698566, -2, -1721539634, 0, -10}, {531002189, 324947286, 2147483646, 515082605, 1691675991, -2147483648, 561072793, -1, 0, 2147483646}, {1, 0, -1510130223, 980012344, 414583778, 2147483646, 1802740695, -1721897976, -1, 1519329138}}};
                 s_13 = new uint[, ]{{2770849606U, 3930682774U, 4291797167U, 2274102951U, 0U, 4294967295U}, {4294967294U, 4294967295U, 10U, 1626024211U, 1U, 3441123574U}, {1U, 2211367547U, 2466647209U, 1103784685U, 3807746817U, 1U}};
                 M39(11133535487298317325UL, 1U);
                 {
-                    byte var4 = 3;
+                    var4 = 3;
                     arg1 = arg1;
                     s_rt.Checksum("c_178", var4);
                 }
@@ -2411,13 +2586,13 @@ public class Program
                 s_33 = 1U;
             }
 
-            short var5 = s_24;
-            byte var6 = (byte)M36();
+            var5 = s_24;
+            var6 = (byte)M36();
             s_23 = new bool[]{false, true, true, true, true};
             s_4 = new int[][]{new int[]{-121241096}, new int[]{1485421566, 1}, new int[]{-2, 1}, new int[]{2}, new int[]{1, 0}, new int[]{1475310965}, new int[]{0}, new int[]{0}};
             {
                 arg0[0][0] = arg0[0][0];
-                sbyte var7 = 1;
+                var7 = 1;
                 M38(0, (ushort)M36());
                 ref sbyte var8 = ref var7;
                 s_rt.Checksum("c_180", var7);
@@ -2430,7 +2605,7 @@ public class Program
             s_rt.Checksum("c_184", var6);
         }
 
-        long[] var9 = M40(7022, 2147483647);
+        var9 = M40(7022, 2147483647);
         {
             s_37 ^= s_21;
             if (var9[0] <= s_33)
@@ -2461,12 +2636,12 @@ public class Program
                 if (M37(ref arg2, new short[, ][][, ]{{new short[][, ]{new short[, ]{{1}, {13569}}, new short[, ]{{1}, {-11625}, {-25092}, {10865}}, new short[, ]{{-15337}, {23870}, {32767}}, new short[, ]{{-32768}, {-32767}, {1}, {1}}, new short[, ]{{-25236}, {1}, {13930}, {22959}}}}, {new short[][, ]{new short[, ]{{22787}, {-30318}}, new short[, ]{{25470}, {32766}, {1}, {17437}}, new short[, ]{{25296}, {0}}, new short[, ]{{1}, {1}}, new short[, ]{{-19675}}, new short[, ]{{-32768}, {10}, {-6088}}, new short[, ]{{-2242}, {0}}, new short[, ]{{25673}, {-19585}, {-28978}, {-1}}, new short[, ]{{10}, {9913}}}}, {new short[][, ]{new short[, ]{{-20188}}, new short[, ]{{-18851}, {3708}, {1294}}, new short[, ]{{-17335}}, new short[, ]{{-1555}, {1}}, new short[, ]{{1}, {-1}, {5646}, {-16879}}, new short[, ]{{-16136}, {19392}, {32766}, {1}}, new short[, ]{{-32768}, {1}}, new short[, ]{{-10}, {-32768}, {-18922}}, new short[, ]{{-10}, {32767}, {-4149}, {18176}}}}, {new short[][, ]{new short[, ]{{5631}}, new short[, ]{{-32768}, {15996}, {-32767}, {24326}}, new short[, ]{{17446}, {-23871}, {10885}, {-32767}}}}, {new short[][, ]{new short[, ]{{23710}, {371}, {-5105}, {26812}}}}, {new short[][, ]{new short[, ]{{10}, {9961}, {22756}}, new short[, ]{{0}, {32767}, {1}, {-26303}}}}, {new short[][, ]{new short[, ]{{10}, {-32767}}, new short[, ]{{13398}, {31978}}, new short[, ]{{-32015}, {29049}, {3440}, {27815}}}}}, s_9[0], 1))
                 {
                     M39(arg1, 4294967295U);
-                    byte var11 = M43(ref s_8);
-                    uint[] var12 = new uint[]{4294967294U, 1U, 545153929U, 1U, 2415608057U, 1U, 1U, 1460005043U, 2276515527U};
-                    uint var13 = var12[0];
+                    var11 = M43(ref s_8);
+                    var12 = new uint[]{4294967294U, 1U, 545153929U, 1U, 2415608057U, 1U, 1U, 1460005043U, 2276515527U};
+                    var13 = var12[0];
                     try
                     {
-                        byte var14 = (byte)M36();
+                        var14 = (byte)M36();
                         s_rt.Checksum("c_203", var14);
                     }
                     finally
@@ -2505,6 +2680,24 @@ public class Program
 
     static uint M36()
     {
+        uint var0 = default(uint);
+        ulong var1 = default(ulong);
+        long var2 = default(long);
+        uint var3 = default(uint);
+        int var4 = default(int);
+        short var5 = default(short);
+        byte var6 = default(byte);
+        sbyte var8 = default(sbyte);
+        byte var10 = default(byte);
+        uint var11 = default(uint);
+        short var12 = default(short);
+        ulong var13 = default(ulong);
+        short var14 = default(short);
+        short var15 = default(short);
+        short var16 = default(short);
+        ushort var17 = default(ushort);
+        long[][] var18 = default(long[][]);
+        long var19 = default(long);
         s_20[0] = s_25--;
         if (s_32[0, 0, 0] != s_13[0, 0])
         {
@@ -2517,12 +2710,12 @@ public class Program
                 }
             }
 
-            uint var0 = 1519632089U;
+            var0 = 1519632089U;
             {
                 var0 = var0++;
                 {
                     var0 = s_1[0];
-                    ulong var1 = 1UL;
+                    var1 = 1UL;
                     var0 = var0--;
                     s_rt.Checksum("c_153", var1);
                 }
@@ -2543,11 +2736,11 @@ public class Program
                 {
                     {
                         s_34 = 0;
-                        long var2 = s_29;
+                        var2 = s_29;
                         var2 = var2;
                         {
                             var2 = 9223372036854775807L;
-                            uint var3 = 0U;
+                            var3 = 0U;
                             s_rt.Checksum("c_155", var3);
                         }
 
@@ -2557,7 +2750,7 @@ public class Program
             }
             else
             {
-                int var4 = s_4[0][0];
+                var4 = s_4[0][0];
                 if (s_23[0])
                 {
                     s_2[0] = 0;
@@ -2587,8 +2780,8 @@ public class Program
 
         if (M38(s_2[0]++, s_3[0]--))
         {
-            short var5 = 1;
-            byte var6 = 203;
+            var5 = 1;
+            var6 = 203;
             var5 = var5++;
             ref sbyte[] var7 = ref s_9;
             s_rt.Checksum("c_160", var5);
@@ -2598,7 +2791,7 @@ public class Program
 
         try
         {
-            sbyte var8 = s_26;
+            var8 = s_26;
             if (M38(10, 0))
             {
                 var8 = 0;
@@ -2621,9 +2814,9 @@ public class Program
                 }
                 else
                 {
-                    byte var10 = s_18;
-                    uint var11 = 4294967295U;
-                    short var12 = (short)(65534 | s_30[0]++);
+                    var10 = s_18;
+                    var11 = 4294967295U;
+                    var12 = (short)(65534 | s_30[0]++);
                     var11 = var11;
                     s_rt.Checksum("c_164", var10);
                     s_rt.Checksum("c_165", var11);
@@ -2636,14 +2829,14 @@ public class Program
                     var8 = s_9[0];
                     if (s_7)
                     {
-                        ulong var13 = (ulong)(s_3[0] | s_3[0]) - 237;
-                        short var14 = 16326;
-                        short var15 = var14;
+                        var13 = (ulong)(s_3[0] | s_3[0]) - 237;
+                        var14 = 16326;
+                        var15 = var14;
                         var8 >>= (int)((uint)(var13 % (ushort)(s_3[0]++ | 1)) ^ (long)(50 / (int)(s_31 | 1)));
                         if (M37(ref s_27, new short[, ][][, ]{{new short[][, ]{new short[, ]{{11406}, {-3322}, {-2}, {0}, {32766}}}, new short[][, ]{new short[, ]{{1316}, {8068}, {-26304}, {-1174}, {-32767}}}, new short[][, ]{new short[, ]{{-18773}, {32766}, {-24313}, {-2}}}, new short[][, ]{new short[, ]{{-26522}, {1}, {15204}, {-7773}, {883}}}, new short[][, ]{new short[, ]{{-32768}, {1}, {2}, {14867}}}, new short[][, ]{new short[, ]{{0}, {1}}}}, {new short[][, ]{new short[, ]{{20328}, {1}, {-22295}, {-32767}, {10723}}}, new short[][, ]{new short[, ]{{-16722}, {-596}, {4364}, {13770}}}, new short[][, ]{new short[, ]{{-19475}}}, new short[][, ]{new short[, ]{{-32768}}}, new short[][, ]{new short[, ]{{-8708}, {18268}, {-32768}, {16943}, {-16419}}}, new short[][, ]{new short[, ]{{1}}}}, {new short[][, ]{new short[, ]{{0}, {-25631}, {239}, {1}}}, new short[][, ]{new short[, ]{{-10}, {-22412}, {1}, {10}}}, new short[][, ]{new short[, ]{{-26381}, {9287}, {10284}, {-32767}}}, new short[][, ]{new short[, ]{{1}}}, new short[][, ]{new short[, ]{{1}, {-10}}}, new short[][, ]{new short[, ]{{32766}, {-14349}, {0}, {11600}, {22692}}}}, {new short[][, ]{new short[, ]{{32766}, {-24988}}}, new short[][, ]{new short[, ]{{14866}, {0}, {32766}}}, new short[][, ]{new short[, ]{{-15544}}}, new short[][, ]{new short[, ]{{-32767}, {-9844}, {3079}, {32766}}}, new short[][, ]{new short[, ]{{-1}}}, new short[][, ]{new short[, ]{{17152}, {-11670}}}}, {new short[][, ]{new short[, ]{{0}, {16405}}}, new short[][, ]{new short[, ]{{22419}, {-5136}}}, new short[][, ]{new short[, ]{{20391}, {-4468}, {1}, {14888}}}, new short[][, ]{new short[, ]{{-32768}, {10}, {32767}, {-1}}}, new short[][, ]{new short[, ]{{19843}}}, new short[][, ]{new short[, ]{{-2863}, {-7829}, {1}, {32766}}}}, {new short[][, ]{new short[, ]{{0}, {10}, {-17229}}}, new short[][, ]{new short[, ]{{-11086}, {-32767}, {11151}, {32767}}}, new short[][, ]{new short[, ]{{21326}, {1}}}, new short[][, ]{new short[, ]{{10}, {-30241}, {32766}, {-32767}}}, new short[][, ]{new short[, ]{{1}, {5524}, {-8936}}}, new short[][, ]{new short[, ]{{6966}, {32766}, {10228}, {-9931}, {-29835}}}}, {new short[][, ]{new short[, ]{{-32767}, {13449}, {10}}}, new short[][, ]{new short[, ]{{-18223}}}, new short[][, ]{new short[, ]{{3810}, {0}, {0}, {-21208}}}, new short[][, ]{new short[, ]{{32366}, {32766}}}, new short[][, ]{new short[, ]{{-83}}}, new short[][, ]{new short[, ]{{0}, {0}}}}, {new short[][, ]{new short[, ]{{-32767}, {0}, {1}, {2844}}}, new short[][, ]{new short[, ]{{1}, {-10548}}}, new short[][, ]{new short[, ]{{-19689}, {1}, {32766}, {2498}, {13332}}}, new short[][, ]{new short[, ]{{10}, {32767}, {14363}}}, new short[][, ]{new short[, ]{{22077}, {32766}, {19678}, {-16461}, {32766}}}, new short[][, ]{new short[, ]{{1567}, {2}, {-6086}, {-32767}}}}}, 69, s_9[0]))
                         {
                             M38(var8, (ushort)(var15-- | 1));
-                            short var16 = var15;
+                            var16 = var15;
                             s_rt.Checksum("c_167", var16);
                         }
 
@@ -2658,11 +2851,11 @@ public class Program
                         var8 = var8;
                     }
 
-                    ushort var17 = s_17--;
+                    var17 = s_17--;
                     s_rt.Checksum("c_171", var17);
                 }
 
-                long[][] var18 = new long[][]{new long[]{-2075051747109869103L, 1866653020324556934L, 9223372036854775806L}, new long[]{2602493167615209883L, -9223372036854775807L}, new long[]{8280216372257752328L, 9099323642435393727L}, new long[]{0L, 1L}, new long[]{-4457441377854146932L, -9200479096141202908L}, new long[]{9223372036854775807L, 1L, 7304268054001546693L, -7649732128353390153L, 1700285919550920256L, 0L, -2420285902968231015L, 5357664131843792267L}};
+                var18 = new long[][]{new long[]{-2075051747109869103L, 1866653020324556934L, 9223372036854775806L}, new long[]{2602493167615209883L, -9223372036854775807L}, new long[]{8280216372257752328L, 9099323642435393727L}, new long[]{0L, 1L}, new long[]{-4457441377854146932L, -9200479096141202908L}, new long[]{9223372036854775807L, 1L, 7304268054001546693L, -7649732128353390153L, 1700285919550920256L, 0L, -2420285902968231015L, 5357664131843792267L}};
                 s_rt.Checksum("c_172", var18[0][0]);
             }
 
@@ -2673,7 +2866,7 @@ public class Program
             s_1 = M39(1UL, 1U);
         }
 
-        long var19 = 7772384902374106328L;
+        var19 = 7772384902374106328L;
         var19 = var19;
         s_rt.Checksum("c_177", var19);
         return 4294967294U;
@@ -2681,6 +2874,7 @@ public class Program
 
     static bool M37(ref long arg0, short[, ][][, ] arg1, sbyte arg2, sbyte arg3)
     {
+        bool var0 = default(bool);
         arg0 = arg0;
         arg2 = 14;
         if (s_23[0])
@@ -2690,7 +2884,7 @@ public class Program
         }
         else
         {
-            bool var0 = false && (arg2 != arg1[0, 0][0][0, 0]);
+            var0 = false && (arg2 != arg1[0, 0][0][0, 0]);
             arg2 = arg3;
             s_rt.Checksum("c_148", var0);
         }
@@ -2714,9 +2908,10 @@ public class Program
 
     static uint[] M39(ulong arg0, uint arg1)
     {
+        int var0 = default(int);
         if (s_3[0] < -1)
         {
-            int var0 = -1433555422;
+            var0 = -1433555422;
             s_rt.Checksum("c_174", var0);
         }
 
@@ -2751,6 +2946,11 @@ public class Program
 
     static long[] M40(short arg0, int arg1)
     {
+        long var1 = default(long);
+        sbyte var2 = default(sbyte);
+        ushort var4 = default(ushort);
+        ulong var6 = default(ulong);
+        short var8 = default(short);
         {
             if (M41(-10))
             {
@@ -2771,7 +2971,7 @@ public class Program
                     {
                         ref int var0 = ref arg1;
                         M41(8366);
-                        long var1 = 6061911560257761272L;
+                        var1 = 6061911560257761272L;
                         M42();
                         arg1 = s_21;
                         ++var0;
@@ -2797,7 +2997,7 @@ public class Program
             }
 
             s_30 = new short[]{2, -1966, 1, 27266, 18123, -5788, 1, 13284, 0, 18921};
-            sbyte var2 = (sbyte)M42();
+            var2 = (sbyte)M42();
             s_rt.Checksum("c_191", var2);
         }
 
@@ -2818,13 +3018,13 @@ public class Program
         }
         else
         {
-            ushort var4 = 3020;
+            var4 = 3020;
             M42();
             ref short var5 = ref arg0;
-            ulong var6 = (ulong)(s_24 | M42());
+            var6 = (ulong)(s_24 | M42());
             {
                 ref sbyte var7 = ref s_9[0];
-                short var8 = 15856;
+                var8 = 15856;
                 s_rt.Checksum("c_193", var7);
                 s_rt.Checksum("c_194", var8);
             }
@@ -2843,6 +3043,8 @@ public class Program
 
     static bool M41(short arg0)
     {
+        bool var0 = default(bool);
+        ushort var1 = default(ushort);
         if (((byte)(arg0++ | -127) | (sbyte)(s_16[0, 0]-- * 722096999U)) == s_13[0, 0]--)
         {
             arg0 = (short)(-69 & s_17);
@@ -2864,9 +3066,9 @@ public class Program
         }
         else
         {
-            bool var0 = false || (arg0 > (uint)(arg0 + 2967628336U));
+            var0 = false || (arg0 > (uint)(arg0 + 2967628336U));
             {
-                ushort var1 = s_3[0];
+                var1 = s_3[0];
                 s_rt.Checksum("c_186", var1);
             }
 
@@ -2884,7 +3086,8 @@ public class Program
 
     static ref uint M42()
     {
-        int var0 = s_12;
+        int var0 = default(int);
+        var0 = s_12;
         var0 <<= 1965711740;
         var0 = var0++;
         s_rt.Checksum("c_185", var0);
@@ -2893,7 +3096,8 @@ public class Program
 
     static byte M43(ref short arg0)
     {
-        int[][] var0 = new int[][]{new int[]{1921100264}, new int[]{0}, new int[]{1730370135}, new int[]{22642782}, new int[]{-793182294}, new int[]{-1}, new int[]{1}, new int[]{-2105634838}, new int[]{1302024080}};
+        int[][] var0 = default(int[][]);
+        var0 = new int[][]{new int[]{1921100264}, new int[]{0}, new int[]{1730370135}, new int[]{22642782}, new int[]{-793182294}, new int[]{-1}, new int[]{1}, new int[]{-2105634838}, new int[]{1302024080}};
         var0 = var0;
         s_rt.Checksum("c_201", arg0);
         s_rt.Checksum("c_202", var0[0][0]);
@@ -2908,6 +3112,9 @@ public class Program
 
     static ulong M45(int arg0, ushort arg1, ref bool arg2, int arg3, short[] arg4)
     {
+        byte var1 = default(byte);
+        sbyte var2 = default(sbyte);
+        uint[][] var3 = default(uint[][]);
         {
             arg4[0] = -32768;
             arg1 = 17577;
@@ -2921,9 +3128,9 @@ public class Program
             if (s_36[0][0])
             {
                 arg0 |= s_37;
-                byte var1 = 219;
-                sbyte var2 = M49(s_3, arg3, 32766);
-                uint[][] var3 = s_22;
+                var1 = 219;
+                var2 = M49(s_3, arg3, 32766);
+                var3 = s_22;
                 s_rt.Checksum("c_226", var1);
                 s_rt.Checksum("c_227", var2);
                 s_rt.Checksum("c_228", var3[0][0]);
@@ -2987,7 +3194,10 @@ public class Program
 
     static ref long M47(long arg0)
     {
-        long var0 = -9223372036854775807L;
+        long var0 = default(long);
+        byte var1 = default(byte);
+        ushort var2 = default(ushort);
+        var0 = -9223372036854775807L;
         if (s_39)
         {
             arg0 = arg0;
@@ -3016,14 +3226,14 @@ public class Program
             {
                 {
                     M48(1);
-                    byte var1 = s_34--;
+                    var1 = s_34--;
                     s_3 = new ushort[]{0};
                     s_rt.Checksum("c_212", var1);
                 }
 
                 if (s_39)
                 {
-                    ushort var2 = 38146;
+                    var2 = 38146;
                     s_rt.Checksum("c_213", var2);
                 }
 
@@ -3094,6 +3304,8 @@ public class Program
 
     static ushort[, ] M50(ref int arg0)
     {
+        uint var1 = default(uint);
+        sbyte var2 = default(sbyte);
         try
         {
             ref byte var0 = ref s_25;
@@ -3101,7 +3313,7 @@ public class Program
         }
         finally
         {
-            uint var1 = 1U;
+            var1 = 1U;
             s_rt.Checksum("c_220", var1);
         }
 
@@ -3111,7 +3323,7 @@ public class Program
         }
         finally
         {
-            sbyte var2 = 17;
+            var2 = 17;
             s_rt.Checksum("c_221", var2);
         }
 
@@ -3123,7 +3335,8 @@ public class Program
 
     static short M51(int arg0, uint arg1, ref bool arg2, int arg3, uint arg4)
     {
-        short var0 = 9946;
+        short var0 = default(short);
+        var0 = 9946;
         s_rt.Checksum("c_235", arg0);
         s_rt.Checksum("c_236", arg1);
         s_rt.Checksum("c_237", arg2);
@@ -3135,7 +3348,8 @@ public class Program
 
     static short M52(long arg0, ushort arg1)
     {
-        ushort[] var0 = new ushort[]{0, 65534, 65535, 11030, 0, 0, 1, 46467};
+        ushort[] var0 = default(ushort[]);
+        var0 = new ushort[]{0, 65534, 65535, 11030, 0, 0, 1, 46467};
         s_rt.Checksum("c_297", arg0);
         s_rt.Checksum("c_298", arg1);
         s_rt.Checksum("c_299", var0[0]);
@@ -3144,8 +3358,24 @@ public class Program
 
     static ulong M53(ref uint arg0)
     {
-        short var0 = s_8--;
-        bool[] var1 = new bool[]{true, false, true, true, true, true, true, false, true};
+        short var0 = default(short);
+        bool[] var1 = default(bool[]);
+        int var2 = default(int);
+        uint var3 = default(uint);
+        bool var4 = default(bool);
+        ushort var5 = default(ushort);
+        sbyte var6 = default(sbyte);
+        bool var7 = default(bool);
+        sbyte var8 = default(sbyte);
+        byte[] var9 = default(byte[]);
+        sbyte var10 = default(sbyte);
+        uint var11 = default(uint);
+        bool var12 = default(bool);
+        ulong var13 = default(ulong);
+        sbyte var14 = default(sbyte);
+        bool[] var15 = default(bool[]);
+        var0 = s_8--;
+        var1 = new bool[]{true, false, true, true, true, true, true, false, true};
         var1[0] = true;
         if (var1[0])
         {
@@ -3156,12 +3386,12 @@ public class Program
             else
             {
                 arg0 = 0U;
-                int var2 = -1354268804;
+                var2 = -1354268804;
                 s_52 = new byte[]{254, 1, 79};
                 s_rt.Checksum("c_300", var2);
             }
 
-            uint var3 = arg0;
+            var3 = arg0;
             s_rt.Checksum("c_301", var3);
         }
 
@@ -3171,21 +3401,21 @@ public class Program
             {
                 M54(ref s_37, ref s_11);
                 var1[0] = M85(ref s_10[0]);
-                bool var4 = var1[0];
+                var4 = var1[0];
                 s_42 = var0;
                 var0 = var0;
                 var0 = s_42--;
                 s_rt.Checksum("c_562", var4);
             }
 
-            ushort var5 = (ushort)M87();
+            var5 = (ushort)M87();
             s_76 = var5;
-            sbyte var6 = 75;
+            var6 = 75;
             {
                 var6 = 99;
-                bool var7 = var1[0];
-                sbyte var8 = s_56;
-                byte[] var9 = new byte[]{197, 246, 253, 249, 234, 0, 127, 141, 239, 255};
+                var7 = var1[0];
+                var8 = s_56;
+                var9 = new byte[]{197, 246, 253, 249, 234, 0, 127, 141, 239, 255};
                 s_rt.Checksum("c_563", var7);
                 s_rt.Checksum("c_564", var8);
                 s_rt.Checksum("c_565", var9[0]);
@@ -3199,7 +3429,7 @@ public class Program
 
             if (s_53[0, 0, 0])
             {
-                sbyte var10 = s_16[0, 0];
+                var10 = s_16[0, 0];
                 s_41 = (ulong)(s_97[0] | s_77);
                 s_rt.Checksum("c_566", var10);
             }
@@ -3214,10 +3444,10 @@ public class Program
 
         if (var1[0])
         {
-            uint var11 = 4007882522U;
-            bool var12 = var1[0];
-            ulong var13 = (ulong)M88();
-            sbyte var14 = (sbyte)M79(1, new sbyte[]{2, 0, 15, 127, 1, -55, -127, -52, -127, 58}, 1U);
+            var11 = 4007882522U;
+            var12 = var1[0];
+            var13 = (ulong)M88();
+            var14 = (sbyte)M79(1, new sbyte[]{2, 0, 15, 127, 1, -55, -127, -52, -127, 58}, 1U);
             s_102 = var0--;
             s_rt.Checksum("c_569", var11);
             s_rt.Checksum("c_570", var12);
@@ -3230,7 +3460,7 @@ public class Program
         }
 
         M91();
-        bool[] var15 = var1;
+        var15 = var1;
         s_rt.Checksum("c_574", arg0);
         s_rt.Checksum("c_575", var0);
         s_rt.Checksum("c_576", var1[0]);
@@ -3240,12 +3470,13 @@ public class Program
 
     static int M54(ref int arg0, ref long arg1)
     {
+        bool var0 = default(bool);
         {
             M55(s_22[0], (sbyte)M81());
             if (s_53[0, 0, 0])
             {
                 {
-                    bool var0 = s_7;
+                    var0 = s_7;
                     if (var0)
                     {
                         M89(arg0);
@@ -3272,8 +3503,20 @@ public class Program
 
     static ushort[][] M55(uint[] arg0, sbyte arg1)
     {
-        long[] var0 = s_14;
-        bool[] var1 = new bool[]{false};
+        long[] var0 = default(long[]);
+        bool[] var1 = default(bool[]);
+        uint[] var2 = default(uint[]);
+        sbyte[][] var3 = default(sbyte[][]);
+        int var4 = default(int);
+        byte var5 = default(byte);
+        ulong var6 = default(ulong);
+        long var9 = default(long);
+        long[] var10 = default(long[]);
+        uint[] var11 = default(uint[]);
+        short var12 = default(short);
+        ulong var13 = default(ulong);
+        var0 = s_14;
+        var1 = new bool[]{false};
         {
             {
                 if (var1[0])
@@ -3282,12 +3525,12 @@ public class Program
                     var0 = new long[]{-9223372036854775808L, -2L, -9223372036854775808L, -5486155620693117660L, -2L, -8045146591217874582L, 9122386105440711226L, -2L};
                 }
 
-                uint[] var2 = arg0;
+                var2 = arg0;
                 {
-                    sbyte[][] var3 = new sbyte[][]{new sbyte[]{-78, 0, -60, -127}, new sbyte[]{0}, new sbyte[]{-127, 0, 1, 127}, new sbyte[]{0}, new sbyte[]{124, -116, 1, -118}};
+                    var3 = new sbyte[][]{new sbyte[]{-78, 0, -60, -127}, new sbyte[]{0}, new sbyte[]{-127, 0, 1, 127}, new sbyte[]{0}, new sbyte[]{124, -116, 1, -118}};
                     var2[0] ^= (uint)M56();
-                    int var4 = (int)M56();
-                    byte var5 = (byte)(s_20[0]-- & s_17++);
+                    var4 = (int)M56();
+                    var5 = (byte)(s_20[0]-- & s_17++);
                     ++arg0[0];
                     s_rt.Checksum("c_325", var3[0][0]);
                     s_rt.Checksum("c_326", var4);
@@ -3301,7 +3544,7 @@ public class Program
 
             try
             {
-                ulong var6 = 18084654172577678392UL;
+                var6 = 18084654172577678392UL;
                 var0 = var0;
                 ref byte[] var7 = ref s_20;
                 s_rt.Checksum("c_329", var6);
@@ -3322,9 +3565,9 @@ public class Program
                     ref byte var8 = ref s_58;
                     {
                         M86(575490270, 58596, s_98[0, 0], var0[0], ref var0[0], M68(arg1), arg0[0]);
-                        long var9 = s_84[0];
-                        long[] var10 = new long[]{-9223372036854775808L, -9223372036854775807L, -9223372036854775807L, 4201685713794396246L, -7101189006756891202L, 2884501921213726578L};
-                        uint[] var11 = arg0;
+                        var9 = s_84[0];
+                        var10 = new long[]{-9223372036854775808L, -9223372036854775807L, -9223372036854775807L, 4201685713794396246L, -7101189006756891202L, 2884501921213726578L};
+                        var11 = arg0;
                         arg0[0] = M88();
                         s_rt.Checksum("c_549", var9);
                         s_rt.Checksum("c_550", var10[0]);
@@ -3338,13 +3581,13 @@ public class Program
                     s_99 = arg1++;
                     s_20 = s_64;
                     var0 = var0;
-                    short var12 = 1;
+                    var12 = 1;
                     s_rt.Checksum("c_553", var12);
                 }
 
                 {
                     arg0 = arg0;
-                    ulong var13 = (ulong)M70();
+                    var13 = (ulong)M70();
                     s_100 = new ulong[]{2830587306523321224UL};
                     s_rt.Checksum("c_554", var13);
                 }
@@ -3363,6 +3606,13 @@ public class Program
 
     static ref ulong M56()
     {
+        byte var1 = default(byte);
+        short var2 = default(short);
+        long[, ] var3 = default(long[, ]);
+        uint var4 = default(uint);
+        ushort var5 = default(ushort);
+        bool var6 = default(bool);
+        short[][][] var7 = default(short[][][]);
         ref short var0 = ref s_30[0];
         if (s_4[0][0]-- < var0--)
         {
@@ -3370,9 +3620,9 @@ public class Program
             s_53 = new bool[,, ]{{{false, false, false, false, false, false, true, true, true, true}, {true, false, true, true, true, true, true, false, true, true}, {false, true, false, false, false, false, true, true, true, true}, {false, true, true, true, false, true, true, false, true, true}, {false, true, false, true, false, true, true, true, true, false}}, {{false, false, false, false, true, true, true, true, false, true}, {true, true, false, false, false, false, true, false, true, false}, {false, true, true, false, false, true, false, false, true, false}, {true, true, false, true, true, true, true, false, true, true}, {false, false, true, true, false, false, false, false, false, false}}, {{true, false, false, false, false, false, false, false, true, true}, {true, true, false, true, true, false, true, true, false, false}, {true, true, false, true, true, false, false, true, false, false}, {false, true, true, false, true, false, false, false, false, false}, {true, false, true, true, false, true, true, true, false, false}}, {{true, false, false, false, false, false, true, false, false, true}, {true, false, false, false, false, false, true, false, true, true}, {true, false, false, true, false, true, true, false, false, true}, {true, true, false, true, true, true, true, true, true, false}, {true, false, false, true, false, false, false, false, false, false}}};
             M57(5474859200122226104L);
             M58(new sbyte[]{-96, 86, 0});
-            byte var1 = 216;
+            var1 = 216;
             {
-                short var2 = (short)(2247 ^ s_11++);
+                var2 = (short)(2247 ^ s_11++);
                 s_rt.Checksum("c_317", var2);
             }
 
@@ -3382,7 +3632,7 @@ public class Program
                 {
                     var1 = var1;
                     M57(-9223372036854775807L);
-                    long[, ] var3 = s_40[0];
+                    var3 = s_40[0];
                     s_rt.Checksum("c_318", var3[0, 0]);
                 }
                 else
@@ -3390,13 +3640,13 @@ public class Program
                     var1 = 172;
                 }
 
-                uint var4 = s_13[0, 0]--;
+                var4 = s_13[0, 0]--;
                 var1 = var1--;
                 s_rt.Checksum("c_319", var4);
             }
 
             M58(new sbyte[]{-111, -1, 1, -86, -2, 1, 0, -127, 0, 0});
-            ushort var5 = s_17;
+            var5 = s_17;
             s_rt.Checksum("c_320", var1);
             s_rt.Checksum("c_321", var5);
         }
@@ -3405,7 +3655,7 @@ public class Program
         s_56 = s_2[0]--;
         M57(0L);
         var0 = var0;
-        bool var6 = true;
+        var6 = true;
         if (var6)
         {
             var6 = var6;
@@ -3418,7 +3668,7 @@ public class Program
         if (var6)
         {
             {
-                short[][][] var7 = new short[][][]{new short[][]{new short[]{16766}, new short[]{32766}, new short[]{1, 32767}}, new short[][]{new short[]{5590}, new short[]{1}}};
+                var7 = new short[][][]{new short[][]{new short[]{16766}, new short[]{32766}, new short[]{1, 32767}}, new short[][]{new short[]{5590}, new short[]{1}}};
                 var6 = var6;
                 M57(s_11--);
                 s_rt.Checksum("c_322", var7[0][0][0]);
@@ -3434,15 +3684,22 @@ public class Program
 
     static long[] M57(long arg0)
     {
+        ushort[] var0 = default(ushort[]);
+        int[] var1 = default(int[]);
+        uint var2 = default(uint);
+        int[][, ] var3 = default(int[][, ]);
+        short[] var4 = default(short[]);
+        long var5 = default(long);
+        int var7 = default(int);
         arg0 = arg0;
-        ushort[] var0 = M58(new sbyte[]{-10, 19, 127, -85, 117, 126, -85, -1, 72});
+        var0 = M58(new sbyte[]{-10, 19, 127, -85, 117, 126, -85, -1, 72});
         if (s_46)
         {
             var0 = M58(new sbyte[]{126, 1, 103, 0, -128, -128, 10, 100, 50});
             {
                 {
                     var0 = new ushort[]{1, 50458, 0, 9043, 55998};
-                    int[] var1 = s_4[0];
+                    var1 = s_4[0];
                     s_rt.Checksum("c_307", var1[0]);
                 }
 
@@ -3458,7 +3715,7 @@ public class Program
                     var0[0] = var0[0]--;
                 }
 
-                uint var2 = 1786118333U;
+                var2 = 1786118333U;
                 s_rt.Checksum("c_308", var2);
             }
 
@@ -3472,18 +3729,18 @@ public class Program
                 else
                 {
                     s_54 = s_54;
-                    int[][, ] var3 = new int[][, ]{new int[, ]{{1210005803, -979467337, -196401287, 2147483646, 1277335719, -2147483648, -1430519326, 1, -627794847, 10}}, new int[, ]{{-462292643, 1596573795, 2139135581, -1165167437, 2041124143, 2147483647, 10, 0, 1, -1}, {-431637094, -1870506385, 0, 2028813830, 1, 1, 10, -1121149880, 526645718, 1}}, new int[, ]{{1642320878, -2, -2147483647, 257220512, -75954405, 2147483647, 427020908, -2127116693, 33505052, 2147483646}}, new int[, ]{{-2, -1527236517, 0, 2147483646, 2118033718, 1838639951, 467608430, 2119977552, 2, -1376577310}, {590723180, -1383302549, 1, 2147483646, -10, -1741342557, -10, -2147483647, 2147483646, 2147483646}}, new int[, ]{{884182795, 2147483646, 2147483646, 1726416410, -2147483648, 1, 2147483646, -1, 1, 0}}, new int[, ]{{-1923276546, -1810198339, -2147483648, -2147483648, -364482896, -1541379186, 1, 0, -486076789, -10}}, new int[, ]{{1282779971, 2147483646, -2147483647, 1121443138, -321012102, -2, 1756661142, 294631931, 618748152, -1277761588}}, new int[, ]{{0, -594633161, 2, -165494717, -1961473745, 1, -556766813, 2147483646, 390029229, 42568581}, {-2147483647, -1713059501, 2, 1226582350, 0, 1721284439, 793178494, 0, 1, -706651028}}, new int[, ]{{-2147483648, 10, -2147483647, -718228108, -2147483648, 1, 2147483646, -490578447, -1419425687, -1091571911}, {-2064398844, 2147483647, 0, -585757078, -1, 1117198429, 90032537, 1148461169, -1898857928, -1388139665}}, new int[, ]{{1746211997, -31998301, 1561515100, -2099526638, 1020712595, 1, -774459709, -1402255054, -861108161, -1497142237}, {-577670460, -790916555, 1898289617, 138754087, 1805557773, 2147483646, 2147483646, 1437978201, 511736959, 1}}};
+                    var3 = new int[][, ]{new int[, ]{{1210005803, -979467337, -196401287, 2147483646, 1277335719, -2147483648, -1430519326, 1, -627794847, 10}}, new int[, ]{{-462292643, 1596573795, 2139135581, -1165167437, 2041124143, 2147483647, 10, 0, 1, -1}, {-431637094, -1870506385, 0, 2028813830, 1, 1, 10, -1121149880, 526645718, 1}}, new int[, ]{{1642320878, -2, -2147483647, 257220512, -75954405, 2147483647, 427020908, -2127116693, 33505052, 2147483646}}, new int[, ]{{-2, -1527236517, 0, 2147483646, 2118033718, 1838639951, 467608430, 2119977552, 2, -1376577310}, {590723180, -1383302549, 1, 2147483646, -10, -1741342557, -10, -2147483647, 2147483646, 2147483646}}, new int[, ]{{884182795, 2147483646, 2147483646, 1726416410, -2147483648, 1, 2147483646, -1, 1, 0}}, new int[, ]{{-1923276546, -1810198339, -2147483648, -2147483648, -364482896, -1541379186, 1, 0, -486076789, -10}}, new int[, ]{{1282779971, 2147483646, -2147483647, 1121443138, -321012102, -2, 1756661142, 294631931, 618748152, -1277761588}}, new int[, ]{{0, -594633161, 2, -165494717, -1961473745, 1, -556766813, 2147483646, 390029229, 42568581}, {-2147483647, -1713059501, 2, 1226582350, 0, 1721284439, 793178494, 0, 1, -706651028}}, new int[, ]{{-2147483648, 10, -2147483647, -718228108, -2147483648, 1, 2147483646, -490578447, -1419425687, -1091571911}, {-2064398844, 2147483647, 0, -585757078, -1, 1117198429, 90032537, 1148461169, -1898857928, -1388139665}}, new int[, ]{{1746211997, -31998301, 1561515100, -2099526638, 1020712595, 1, -774459709, -1402255054, -861108161, -1497142237}, {-577670460, -790916555, 1898289617, 138754087, 1805557773, 2147483646, 2147483646, 1437978201, 511736959, 1}}};
                     M58(new sbyte[]{-128, -128, 126, -2, -10, 127});
                     arg0 |= arg0;
                     s_rt.Checksum("c_309", var3[0][0, 0]);
                 }
 
-                short[] var4 = s_54;
+                var4 = s_54;
                 s_rt.Checksum("c_310", var4[0]);
             }
 
             arg0 = -1480322594707605622L;
-            long var5 = arg0;
+            var5 = arg0;
             s_rt.Checksum("c_311", var5);
         }
         else
@@ -3500,7 +3757,7 @@ public class Program
                 else
                 {
                     var0 = new ushort[]{65535, 0, 11778};
-                    int var7 = -1;
+                    var7 = -1;
                     s_rt.Checksum("c_313", var7);
                 }
 
@@ -3521,10 +3778,13 @@ public class Program
 
     static ushort[] M58(sbyte[] arg0)
     {
+        uint var0 = default(uint);
+        bool var1 = default(bool);
+        uint var3 = default(uint);
         {
             s_50 = new ushort[][]{new ushort[]{2497, 2, 12819, 39581}, new ushort[]{32380, 65535, 20199, 42307}, new ushort[]{29221, 1, 0, 0, 65535}, new ushort[]{51803, 1, 57618, 9955, 65535, 0, 9512, 61182, 62401}, new ushort[]{16481}, new ushort[]{65036, 65534, 380, 65535, 0, 47248, 0, 1, 11153, 13216}};
             s_11++;
-            uint var0 = 3760342882U;
+            var0 = 3760342882U;
             s_rt.Checksum("c_302", var0);
         }
 
@@ -3532,7 +3792,7 @@ public class Program
         {
             arg0 = arg0;
             arg0[0] = arg0[0];
-            bool var1 = (0L ^ s_15) != -30976;
+            var1 = (0L ^ s_15) != -30976;
             s_rt.Checksum("c_303", var1);
         }
         else
@@ -3546,7 +3806,7 @@ public class Program
             }
             else
             {
-                uint var3 = s_22[0][0]--;
+                var3 = s_22[0][0]--;
                 s_rt.Checksum("c_305", var3);
             }
         }
@@ -3558,6 +3818,14 @@ public class Program
 
     static byte M59(ushort[][] arg0, ref ulong[, ] arg1, ref ulong arg2)
     {
+        bool var0 = default(bool);
+        byte[][] var1 = default(byte[][]);
+        short var3 = default(short);
+        short var4 = default(short);
+        uint var5 = default(uint);
+        int[, ][, ] var6 = default(int[, ][, ]);
+        sbyte[] var7 = default(sbyte[]);
+        byte var8 = default(byte);
         if (s_46)
         {
             arg0[0][0] = 1;
@@ -3570,7 +3838,7 @@ public class Program
                     if (s_55[0])
                     {
                         arg0 = arg0;
-                        bool var0 = true;
+                        var0 = true;
                         var0 = var0;
                         s_rt.Checksum("c_331", var0);
                     }
@@ -3584,10 +3852,10 @@ public class Program
                     s_9[0] = 0;
                     {
                         arg2 = M61();
-                        byte[][] var1 = new byte[][]{new byte[]{176, 0, 0, 1, 68}, new byte[]{100, 154, 254, 118, 131}, new byte[]{1, 86, 255, 78}};
+                        var1 = new byte[][]{new byte[]{176, 0, 0, 1, 68}, new byte[]{100, 154, 254, 118, 131}, new byte[]{1, 86, 255, 78}};
                         ref long var2 = ref s_79;
                         M69((sbyte)(62505 & M64()), 0, 0UL, ref s_16[0, 0], 0, M69((sbyte)M64(), s_32[0, 0, 0]--, s_47, ref s_96, 187, true, s_84[0]), var2);
-                        short var3 = 32767;
+                        var3 = 32767;
                         arg2 = arg2;
                         var1 = new byte[][]{new byte[]{0, 38, 0}, new byte[]{10, 119, 173, 155, 1}, new byte[]{1, 1, 1, 184, 94, 0, 1}, new byte[]{83, 116, 81, 44, 0, 35, 37}, new byte[]{0, 0, 254, 1, 1, 0, 69, 1}, new byte[]{124, 200, 0, 255, 70}, new byte[]{243, 1, 244, 255}, new byte[]{0, 78, 1}};
                         s_rt.Checksum("c_538", var1[0][0]);
@@ -3598,11 +3866,11 @@ public class Program
                 else
                 {
                     M63() = 1397312935360913561L;
-                    short var4 = s_74++;
+                    var4 = s_74++;
                     s_rt.Checksum("c_541", var4);
                 }
 
-                uint var5 = M82()++;
+                var5 = M82()++;
                 M70();
                 s_8 = (short)(s_2[0] + M88());
                 s_rt.Checksum("c_542", var5);
@@ -3610,8 +3878,8 @@ public class Program
 
             if (s_53[0, 0, 0])
             {
-                int[, ][, ] var6 = new int[, ][, ]{{new int[, ]{{-911545550, -2062699416, -2147483648}}, new int[, ]{{1621064863, 2147483646, 2147483646}}, new int[, ]{{0, -2, -11239586}}, new int[, ]{{744739174, 0, -1006879957}}, new int[, ]{{-154827167, -2147483648, 0}}, new int[, ]{{2, -1875412878, 1466710263}}, new int[, ]{{0, 0, 2147483646}}, new int[, ]{{975804503, -1, -2101242133}}}, {new int[, ]{{0, 0, 2147483646}}, new int[, ]{{2147483647, 1, -1418745480}}, new int[, ]{{2147483647, -368540800, 1781573291}}, new int[, ]{{0, 1, 0}}, new int[, ]{{-2147483647, -2, 0}}, new int[, ]{{794232565, 2147483647, 290134421}}, new int[, ]{{-2147483648, -592917221, 2147483647}}, new int[, ]{{1, -508055177, 1}}}, {new int[, ]{{0, 895846758, 1777602265}}, new int[, ]{{-664723385, 1295638634, -1328478730}}, new int[, ]{{0, 968430458, -2}}, new int[, ]{{2147483646, 0, -556331827}}, new int[, ]{{2147483647, -976177852, 670418052}}, new int[, ]{{22124928, 2070286974, 1}}, new int[, ]{{163264353, 2147483647, 1}}, new int[, ]{{1, -2147483648, -2147483648}}}, {new int[, ]{{-266719208, 0, 886617352}}, new int[, ]{{-130678212, -708471612, -300004426}}, new int[, ]{{0, -1189080495, -1817714714}}, new int[, ]{{1, -1182583745, 1480794908}}, new int[, ]{{-2147483647, -953108423, -2091203271}}, new int[, ]{{-1547639314, -1, 0}}, new int[, ]{{2, 2147483647, -936148474}}, new int[, ]{{54882183, -345785874, -379531041}}}, {new int[, ]{{2147483646, -2, 667723412}}, new int[, ]{{-2147483648, -351928877, -1806077057}}, new int[, ]{{-312921630, 1, 0}}, new int[, ]{{0, 0, 0}}, new int[, ]{{-165526099, 2116658193, -1}}, new int[, ]{{134652117, 604232017, 2062627900}}, new int[, ]{{1, 996715089, 940743483}}, new int[, ]{{842847654, 282527936, -2147483647}}}, {new int[, ]{{2147483646, -1440551262, 0}}, new int[, ]{{-2147483648, -1391084770, -232324808}}, new int[, ]{{2147483646, 1234247068, -11394290}}, new int[, ]{{-509228083, 1146969321, -510819060}}, new int[, ]{{0, 2147483646, 1300875500}}, new int[, ]{{-2147483648, -619290175, 0}}, new int[, ]{{0, -2, 1986176330}}, new int[, ]{{1406420173, -10, 1317124443}}}, {new int[, ]{{1872942192, 10, 2112078135}}, new int[, ]{{953335507, 0, 1497656776}}, new int[, ]{{0, -2147483648, 0}}, new int[, ]{{1721420997, 2147483646, -881100874}}, new int[, ]{{-1162008718, 549424322, -898314578}}, new int[, ]{{-10, 1, 1858106636}}, new int[, ]{{1566402004, 2147483647, -2147483648}}, new int[, ]{{1, -1358429780, -2114366539}}}, {new int[, ]{{1, 627321481, -1}}, new int[, ]{{1, 2147483646, 1}}, new int[, ]{{-617060826, 803537532, 25632790}}, new int[, ]{{-2029058891, -633307404, -10}}, new int[, ]{{-587904625, -2147483647, 1}}, new int[, ]{{2147483646, 476705423, 2147483647}}, new int[, ]{{-1373780173, -1699219928, 2147483646}}, new int[, ]{{-2147483648, 1359835128, 1964582294}}}, {new int[, ]{{-1917121400, -639908425, 2147483646}}, new int[, ]{{1, 2147483647, 1421037320}}, new int[, ]{{10, 1738866790, 664401336}}, new int[, ]{{1950814983, 2147483647, 1737078626}}, new int[, ]{{0, 10, 0}}, new int[, ]{{-919823257, -1089713367, 2147483646}}, new int[, ]{{1948470670, 400140658, 0}}, new int[, ]{{-2147483648, -2147483648, 2147483647}}}};
-                sbyte[] var7 = new sbyte[]{-104, -82, 82, 2};
+                var6 = new int[, ][, ]{{new int[, ]{{-911545550, -2062699416, -2147483648}}, new int[, ]{{1621064863, 2147483646, 2147483646}}, new int[, ]{{0, -2, -11239586}}, new int[, ]{{744739174, 0, -1006879957}}, new int[, ]{{-154827167, -2147483648, 0}}, new int[, ]{{2, -1875412878, 1466710263}}, new int[, ]{{0, 0, 2147483646}}, new int[, ]{{975804503, -1, -2101242133}}}, {new int[, ]{{0, 0, 2147483646}}, new int[, ]{{2147483647, 1, -1418745480}}, new int[, ]{{2147483647, -368540800, 1781573291}}, new int[, ]{{0, 1, 0}}, new int[, ]{{-2147483647, -2, 0}}, new int[, ]{{794232565, 2147483647, 290134421}}, new int[, ]{{-2147483648, -592917221, 2147483647}}, new int[, ]{{1, -508055177, 1}}}, {new int[, ]{{0, 895846758, 1777602265}}, new int[, ]{{-664723385, 1295638634, -1328478730}}, new int[, ]{{0, 968430458, -2}}, new int[, ]{{2147483646, 0, -556331827}}, new int[, ]{{2147483647, -976177852, 670418052}}, new int[, ]{{22124928, 2070286974, 1}}, new int[, ]{{163264353, 2147483647, 1}}, new int[, ]{{1, -2147483648, -2147483648}}}, {new int[, ]{{-266719208, 0, 886617352}}, new int[, ]{{-130678212, -708471612, -300004426}}, new int[, ]{{0, -1189080495, -1817714714}}, new int[, ]{{1, -1182583745, 1480794908}}, new int[, ]{{-2147483647, -953108423, -2091203271}}, new int[, ]{{-1547639314, -1, 0}}, new int[, ]{{2, 2147483647, -936148474}}, new int[, ]{{54882183, -345785874, -379531041}}}, {new int[, ]{{2147483646, -2, 667723412}}, new int[, ]{{-2147483648, -351928877, -1806077057}}, new int[, ]{{-312921630, 1, 0}}, new int[, ]{{0, 0, 0}}, new int[, ]{{-165526099, 2116658193, -1}}, new int[, ]{{134652117, 604232017, 2062627900}}, new int[, ]{{1, 996715089, 940743483}}, new int[, ]{{842847654, 282527936, -2147483647}}}, {new int[, ]{{2147483646, -1440551262, 0}}, new int[, ]{{-2147483648, -1391084770, -232324808}}, new int[, ]{{2147483646, 1234247068, -11394290}}, new int[, ]{{-509228083, 1146969321, -510819060}}, new int[, ]{{0, 2147483646, 1300875500}}, new int[, ]{{-2147483648, -619290175, 0}}, new int[, ]{{0, -2, 1986176330}}, new int[, ]{{1406420173, -10, 1317124443}}}, {new int[, ]{{1872942192, 10, 2112078135}}, new int[, ]{{953335507, 0, 1497656776}}, new int[, ]{{0, -2147483648, 0}}, new int[, ]{{1721420997, 2147483646, -881100874}}, new int[, ]{{-1162008718, 549424322, -898314578}}, new int[, ]{{-10, 1, 1858106636}}, new int[, ]{{1566402004, 2147483647, -2147483648}}, new int[, ]{{1, -1358429780, -2114366539}}}, {new int[, ]{{1, 627321481, -1}}, new int[, ]{{1, 2147483646, 1}}, new int[, ]{{-617060826, 803537532, 25632790}}, new int[, ]{{-2029058891, -633307404, -10}}, new int[, ]{{-587904625, -2147483647, 1}}, new int[, ]{{2147483646, 476705423, 2147483647}}, new int[, ]{{-1373780173, -1699219928, 2147483646}}, new int[, ]{{-2147483648, 1359835128, 1964582294}}}, {new int[, ]{{-1917121400, -639908425, 2147483646}}, new int[, ]{{1, 2147483647, 1421037320}}, new int[, ]{{10, 1738866790, 664401336}}, new int[, ]{{1950814983, 2147483647, 1737078626}}, new int[, ]{{0, 10, 0}}, new int[, ]{{-919823257, -1089713367, 2147483646}}, new int[, ]{{1948470670, 400140658, 0}}, new int[, ]{{-2147483648, -2147483648, 2147483647}}}};
+                var7 = new sbyte[]{-104, -82, 82, 2};
                 s_rt.Checksum("c_543", var6[0, 0][0, 0]);
                 s_rt.Checksum("c_544", var7[0]);
             }
@@ -3626,7 +3894,7 @@ public class Program
             M82();
         }
 
-        byte var8 = 255;
+        var8 = 255;
         s_rt.Checksum("c_545", arg0[0][0]);
         s_rt.Checksum("c_546", arg1[0, 0]);
         s_rt.Checksum("c_547", arg2);
@@ -3645,12 +3913,29 @@ public class Program
 
     static ulong M61()
     {
+        uint var0 = default(uint);
+        ushort var2 = default(ushort);
+        ulong[] var3 = default(ulong[]);
+        uint var5 = default(uint);
+        bool var6 = default(bool);
+        byte[] var7 = default(byte[]);
+        long var8 = default(long);
+        ulong var9 = default(ulong);
+        short var10 = default(short);
+        long var11 = default(long);
+        ushort var12 = default(ushort);
+        long var13 = default(long);
+        int var14 = default(int);
+        ulong var15 = default(ulong);
+        short var17 = default(short);
+        ushort var18 = default(ushort);
+        ulong[, ] var19 = default(ulong[, ]);
         s_27 = (long)(s_50[0][0]-- ^ s_56);
         try
         {
             if (M62())
             {
-                uint var0 = 4116611811U;
+                var0 = 4116611811U;
                 if (s_36[0][0])
                 {
                     var0 = var0;
@@ -3659,10 +3944,10 @@ public class Program
                 }
                 else
                 {
-                    ushort var2 = s_17--;
+                    var2 = s_17--;
                     --var2;
                     var0 = s_13[0, 0];
-                    ulong[] var3 = new ulong[]{14642226659287603301UL, 5406846881773099441UL, 8580664257784071388UL};
+                    var3 = new ulong[]{14642226659287603301UL, 5406846881773099441UL, 8580664257784071388UL};
                     var3 = var3;
                     var2 = var2--;
                     var0 = var0;
@@ -3679,32 +3964,32 @@ public class Program
             {
                 if (M62())
                 {
-                    uint var5 = 0U;
+                    var5 = 0U;
                     s_rt.Checksum("c_339", var5);
                 }
 
                 M63();
                 s_93 = s_38[0][0];
-                bool var6 = true;
+                var6 = true;
                 if (s_61)
                 {
-                    byte[] var7 = new byte[]{1, 243};
+                    var7 = new byte[]{1, 243};
                     s_rt.Checksum("c_524", var7[0]);
                 }
                 else
                 {
-                    long var8 = -8420470293647435217L;
+                    var8 = -8420470293647435217L;
                     s_rt.Checksum("c_525", var8);
                 }
 
                 if (s_53[0, 0, 0])
                 {
                     {
-                        ulong var9 = (ulong)M87();
+                        var9 = (ulong)M87();
                         var6 = s_61;
-                        short var10 = 1;
+                        var10 = 1;
                         {
-                            long var11 = -2L;
+                            var11 = -2L;
                             M77(new ulong[][]{new ulong[]{4229908695040581407UL}, new ulong[]{0UL, 1UL}, new ulong[]{1UL}, new ulong[]{0UL, 3297220204646447542UL, 2UL}, new ulong[]{7587145483848833474UL, 0UL, 0UL, 0UL}, new ulong[]{1UL, 8641322995759975201UL, 2370098521720853033UL, 9317462873615097735UL}, new ulong[]{1UL, 3525024811971989854UL, 1UL, 1UL}, new ulong[]{7848032457987699662UL, 3680610322926918202UL}, new ulong[]{0UL, 7408890873873950684UL, 6300142016980172176UL, 1UL}}, (sbyte)(var9 + 64243), new ushort[]{1, 21699, 4994, 49256, 35936, 11444});
                             s_rt.Checksum("c_526", var11);
                         }
@@ -3730,22 +4015,22 @@ public class Program
             {
                 if (s_94)
                 {
-                    ushort var12 = 25669;
-                    long var13 = -2L;
+                    var12 = 25669;
+                    var13 = -2L;
                     s_rt.Checksum("c_530", var12);
                     s_rt.Checksum("c_531", var13);
                 }
             }
             else
             {
-                int var14 = 10;
+                var14 = 10;
                 var14 = 2;
                 {
                     var14 = var14++;
                 }
 
                 var14 = var14;
-                ulong var15 = 629639324415425653UL;
+                var15 = 629639324415425653UL;
                 ref int var16 = ref var14;
                 {
                     M82() = 900212934U;
@@ -3753,7 +4038,7 @@ public class Program
                     var14 = var14;
                 }
 
-                short var17 = s_74++;
+                var17 = s_74++;
                 var15++;
                 s_rt.Checksum("c_532", var14);
                 s_rt.Checksum("c_533", var15);
@@ -3764,13 +4049,13 @@ public class Program
 
         M69(s_9[0]--, (int)(-18746 % (long)(s_77 | 1)), (ulong)M88(), ref s_78[0], s_60, false, -9223372036854775808L);
         s_30 = s_30;
-        ushort var18 = s_88[0];
+        var18 = s_88[0];
         s_96 = (sbyte)M88();
         {
             M81();
             var18 = 38241;
             M79(127, new sbyte[]{-113, 126, 1, 1, -107, -78, -127, 81}, 1372681422U);
-            ulong[, ] var19 = new ulong[, ]{{17138809357939400113UL, 8007806920452224330UL, 10711192665565577340UL, 18446744073709551615UL, 16051193110696041865UL, 5199661719705579602UL, 1UL, 0UL, 4439515712086549174UL}, {17233879962964242763UL, 13617941636985300410UL, 14816131294305873881UL, 377840201118616238UL, 18446744073709551615UL, 0UL, 10667212963550604094UL, 8737771480993109287UL, 1UL}, {18446744073709551614UL, 0UL, 1UL, 1UL, 18446744073709551614UL, 1UL, 14395658642273602365UL, 1UL, 1UL}, {18446744073709551614UL, 18446744073709551615UL, 1UL, 9193224226850141182UL, 1UL, 15161920774694464274UL, 2690272869805294882UL, 3684273658229886295UL, 10340428790625722413UL}, {1517018729041593280UL, 0UL, 1600564101465999755UL, 5083482054603080269UL, 12360330902331005494UL, 5779267221531900807UL, 9604180890205154606UL, 1UL, 18446744073709551614UL}, {7673291058216605220UL, 12995735640557790031UL, 1UL, 4858118157513334261UL, 0UL, 1UL, 6049222921797245953UL, 1UL, 18446744073709551615UL}, {1UL, 1UL, 4057861059982169159UL, 1938699307454030231UL, 9357319411203170717UL, 8069108045831100704UL, 3557773697025153091UL, 3403220272587979334UL, 8944567368070198231UL}};
+            var19 = new ulong[, ]{{17138809357939400113UL, 8007806920452224330UL, 10711192665565577340UL, 18446744073709551615UL, 16051193110696041865UL, 5199661719705579602UL, 1UL, 0UL, 4439515712086549174UL}, {17233879962964242763UL, 13617941636985300410UL, 14816131294305873881UL, 377840201118616238UL, 18446744073709551615UL, 0UL, 10667212963550604094UL, 8737771480993109287UL, 1UL}, {18446744073709551614UL, 0UL, 1UL, 1UL, 18446744073709551614UL, 1UL, 14395658642273602365UL, 1UL, 1UL}, {18446744073709551614UL, 18446744073709551615UL, 1UL, 9193224226850141182UL, 1UL, 15161920774694464274UL, 2690272869805294882UL, 3684273658229886295UL, 10340428790625722413UL}, {1517018729041593280UL, 0UL, 1600564101465999755UL, 5083482054603080269UL, 12360330902331005494UL, 5779267221531900807UL, 9604180890205154606UL, 1UL, 18446744073709551614UL}, {7673291058216605220UL, 12995735640557790031UL, 1UL, 4858118157513334261UL, 0UL, 1UL, 6049222921797245953UL, 1UL, 18446744073709551615UL}, {1UL, 1UL, 4057861059982169159UL, 1938699307454030231UL, 9357319411203170717UL, 8069108045831100704UL, 3557773697025153091UL, 3403220272587979334UL, 8944567368070198231UL}};
             s_rt.Checksum("c_536", var19[0, 0]);
         }
 
@@ -3802,11 +4087,24 @@ public class Program
 
     static short M64()
     {
+        uint var0 = default(uint);
+        int var1 = default(int);
+        short var2 = default(short);
+        sbyte var3 = default(sbyte);
+        ulong var5 = default(ulong);
+        bool var6 = default(bool);
+        ulong var7 = default(ulong);
+        ushort var8 = default(ushort);
+        int var9 = default(int);
+        short var10 = default(short);
+        ushort var11 = default(ushort);
+        ulong var12 = default(ulong);
+        byte var13 = default(byte);
         if ((ulong)(s_19 - s_21--) < (byte)(s_25 & 0U))
         {
             {
                 s_38 = new int[][]{new int[]{1447202408, 1268200912}, new int[]{2147483647, 1, 291915581}, new int[]{-2129385114, -2133462848}, new int[]{1024231524, -1, 1}, new int[]{10}, new int[]{1, 2147483646}, new int[]{0}, new int[]{1141840825}, new int[]{1}};
-                uint var0 = 275330216U;
+                var0 = 275330216U;
                 var0 = var0++;
                 var0 = 1274440952U;
                 s_60 = s_58;
@@ -3816,14 +4114,14 @@ public class Program
                 {
                     try
                     {
-                        int var1 = -2143657894;
+                        var1 = -2143657894;
                         s_rt.Checksum("c_504", var1);
                     }
                     finally
                     {
                         try
                         {
-                            short var2 = 31288;
+                            var2 = 31288;
                             s_rt.Checksum("c_505", var2);
                         }
                         finally
@@ -3841,16 +4139,16 @@ public class Program
                 s_rt.Checksum("c_506", var0);
             }
 
-            sbyte var3 = -90;
+            var3 = -90;
             var3 = var3;
             M69((sbyte)M77(s_86[0][0], 34, new ushort[]{22797, 55688}), (int)M67(new ushort[,, ]{{{31237, 1, 2956, 62487, 1, 65534, 65534, 46379, 65534}, {0, 51829, 23442, 65535, 63931, 65535, 57683, 39939, 1}, {20095, 10242, 23030, 0, 65534, 53522, 1, 0, 65534}, {0, 1, 55326, 65534, 0, 8071, 22057, 51108, 1}, {15911, 18945, 13933, 52889, 42665, 8851, 27718, 0, 1}, {60385, 1, 35814, 46734, 42558, 65534, 0, 1, 65534}}, {{16811, 2, 53399, 65535, 39976, 65535, 65534, 44081, 1}, {24889, 58336, 58484, 1, 1, 1, 10, 0, 0}, {0, 1, 1, 65535, 65535, 21503, 65534, 24017, 18175}, {56453, 65534, 2003, 1, 19006, 44036, 8592, 1, 25812}, {1, 0, 0, 0, 24137, 5478, 0, 65535, 22183}, {0, 65534, 0, 14990, 1, 1, 65535, 1, 2507}}, {{0, 30526, 65535, 43387, 1, 65534, 4971, 10161, 24912}, {0, 65534, 0, 36595, 9574, 0, 10, 65535, 23148}, {0, 10861, 0, 7681, 54737, 65535, 40219, 21400, 40324}, {56661, 0, 14567, 31355, 1, 17105, 1, 53798, 0}, {0, 34425, 65534, 0, 49455, 65534, 0, 65535, 1583}, {1, 1, 1, 1, 0, 20728, 3200, 53760, 3362}}, {{1, 1, 39739, 0, 1, 48935, 1, 1, 1}, {60561, 23374, 0, 23506, 38372, 0, 20050, 55253, 27427}, {14040, 39560, 32114, 0, 1, 0, 36668, 11985, 1}, {21808, 65534, 0, 48420, 1, 0, 65534, 0, 0}, {1, 49839, 0, 61645, 18252, 58120, 1, 39580, 65534}, {0, 34004, 65535, 41541, 49211, 65535, 21643, 168, 0}}, {{1, 10, 1, 31091, 52541, 0, 42468, 1, 45826}, {59358, 19078, 40921, 44588, 2, 65535, 52423, 28451, 0}, {32516, 0, 0, 61980, 18732, 1, 47685, 0, 1032}, {16213, 25160, 0, 1, 0, 36994, 284, 0, 65534}, {1, 58656, 0, 10, 64164, 65535, 65534, 0, 65534}, {1, 7998, 0, 65535, 0, 20778, 0, 26810, 20863}}}), 2693201272117539916UL, ref s_72[0], 1, (ushort)((byte)M70() | s_33) <= 1, (long)((ulong)((int)M82() ^ s_74--) + s_66--)) = s_55[0];
             ref long var4 = ref s_6;
             {
                 M72();
-                ulong var5 = s_41;
-                bool var6 = true;
+                var5 = s_41;
+                var6 = true;
                 s_88 = new ushort[]{65535, 42486, 1};
-                ulong var7 = (ulong)(12572 + (sbyte)M79(1, M68(var3), 4034984066U));
+                var7 = (ulong)(12572 + (sbyte)M79(1, M68(var3), 4034984066U));
                 var5 = (ulong)M76(ref s_76, M68(var3++), false);
                 s_rt.Checksum("c_507", var5);
                 s_rt.Checksum("c_508", var6);
@@ -3869,7 +4167,7 @@ public class Program
             if (s_23[0])
             {
                 s_78 = new sbyte[]{-104};
-                ushort var8 = 0;
+                var8 = 0;
                 var8 = (ushort)M70();
                 var8 = var8;
                 s_rt.Checksum("c_512", var8);
@@ -3879,7 +4177,7 @@ public class Program
             if (M75(ref s_23, (long)M76(ref s_82, s_2, s_7) != s_26--, s_36[0][0], ref s_38[0][0], new bool[]{true, true, false, false, false, true, true, false, false}))
             {
                 s_90 = s_41;
-                int var9 = 0;
+                var9 = 0;
                 try
                 {
                     M82() = s_1[0]++;
@@ -3902,7 +4200,7 @@ public class Program
         s_68 = 1U;
         if (M66())
         {
-            short var10 = s_8++;
+            var10 = s_8++;
             s_rt.Checksum("c_516", var10);
         }
         else
@@ -3911,7 +4209,7 @@ public class Program
             if (M75(ref s_36[0], false, M80(-9177143188118630577L), ref s_83[0, 0], M90(ref s_67, ref s_26, ref s_88[0])))
             {
                 s_40 = new long[][, ]{new long[, ]{{9223372036854775806L, 9223372036854775807L, 9223372036854775807L, 6540333009579763213L, -5648924889323462471L}, {-9223372036854775808L, -2283572551390587465L, 8267943724047698753L, 0L, 10L}}, new long[, ]{{-826617725961065158L, -2163944019647441704L, 3006369208280464927L, 1L, 8785581998411564333L}, {1L, 2671475897884397707L, 2L, -6606952071667654395L, 9223372036854775807L}, {1929753141081187109L, -5452666327753375641L, 1L, 0L, -4661057276480854241L}, {0L, 0L, 0L, 3634447307359550029L, -8383849251899930981L}}, new long[, ]{{-9223372036854775807L, -2302997706760791594L, 9223372036854775806L, 8492567306069345674L, -9223372036854775807L}, {6489166924552725174L, 9223372036854775806L, -8335145657160562962L, 0L, 1L}, {5526624741372058467L, 9223372036854775807L, 0L, 6911326622167619032L, 10L}, {5714595823190409580L, -3990267431929015147L, 1L, -6133459792389407050L, 9223372036854775806L}, {8095690846884118669L, 7554165695043911162L, -9223372036854775807L, 9223372036854775806L, 0L}}, new long[, ]{{342069483927579115L, 1L, 1789301311027668059L, -9223372036854775807L, -296772116803683079L}, {-1941354832701768001L, 6786799633080120911L, -3267170789559839418L, 2L, -9223372036854775807L}, {1L, -1220320918438845147L, -1L, 1L, 4772476534963146804L}}, new long[, ]{{-2369547248677584450L, 218743770081878158L, -60652653825426046L, -2134413670629260416L, 7413287347130130375L}, {0L, 4447256556026982173L, -9223372036854775808L, -55882368209144370L, 2674011502952457070L}}, new long[, ]{{-1292207135359577903L, -8944986846396819331L, -9223372036854775808L, -1L, 0L}, {1L, -7911654831500139571L, -2543137965086175603L, -2L, 4981538088539266688L}}, new long[, ]{{-2399971923280035539L, 1058732530084939995L, -8764984250481647264L, -2819842722459957623L, -2031629483220739940L}}, new long[, ]{{0L, -5468736047265247756L, 0L, 1L, 1L}, {6551476929338288287L, 10L, 9223372036854775806L, -3379223284095912816L, -9223372036854775808L}, {0L, -1L, 3545953195234354434L, -3516076894217083679L, -10L}, {8750320819735509832L, 5106921329240477140L, -3293455685513436868L, -9223372036854775808L, -9223372036854775808L}}, new long[, ]{{-4970884638319833313L, -9223372036854775808L, 1L, -1964451144462791553L, -9223372036854775808L}, {0L, 1L, 1L, -2L, 9223372036854775807L}, {8356648769058654416L, 8545135831581848768L, -1187656345933633925L, -9223372036854775808L, -1L}}};
-                ushort var11 = 61344;
+                var11 = 61344;
                 s_rt.Checksum("c_521", var11);
             }
         }
@@ -3919,7 +4217,7 @@ public class Program
         if (M80(s_40[0][0, 0]--))
         {
             s_9 = M68((sbyte)M81());
-            ulong var12 = s_57;
+            var12 = s_57;
             s_rt.Checksum("c_522", var12);
         }
         else
@@ -3927,7 +4225,7 @@ public class Program
             return s_42;
         }
 
-        byte var13 = (byte)M72();
+        var13 = (byte)M72();
         s_92 = (ushort)((int)(1UL / (uint)(s_22[0][0] | 1)) - s_68--);
         s_rt.Checksum("c_523", var13);
         return s_54[0];
@@ -3943,9 +4241,10 @@ public class Program
 
     static bool M66()
     {
+        sbyte[] var0 = default(sbyte[]);
         {
             M67(new ushort[,, ]{{{12336, 52858, 0, 2562, 65535, 2, 7336, 6210}, {13345, 1, 0, 30690, 1, 10, 1, 14545}}, {{51287, 24005, 57663, 8195, 2, 30094, 35916, 1}, {22844, 62294, 0, 0, 59306, 1, 61721, 1}}, {{1, 0, 19284, 0, 0, 49486, 33543, 1}, {0, 1, 40692, 1, 1758, 0, 0, 65534}}, {{0, 0, 1, 10975, 28236, 51936, 0, 46311}, {47862, 47938, 0, 10, 65535, 22547, 43200, 10}}, {{1, 0, 1, 44477, 54671, 65534, 1, 65535}, {1, 0, 0, 65535, 65534, 6363, 34858, 1}}, {{65534, 10, 0, 65534, 48074, 29251, 26149, 1913}, {53056, 1, 1, 0, 2, 48755, 27226, 1}}, {{0, 22734, 27788, 64566, 0, 0, 1, 65534}, {32204, 60789, 2, 0, 0, 40961, 6630, 0}}});
-            sbyte[] var0 = M68(s_56);
+            var0 = M68(s_56);
             s_rt.Checksum("c_502", var0[0]);
         }
 
@@ -3972,8 +4271,12 @@ public class Program
 
     static sbyte[] M68(sbyte arg0)
     {
+        short var0 = default(short);
+        ulong var2 = default(ulong);
+        bool var3 = default(bool);
+        byte var4 = default(byte);
         {
-            short var0 = 18455;
+            var0 = 18455;
             s_rt.Checksum("c_341", var0);
         }
 
@@ -4017,20 +4320,20 @@ public class Program
                     M74(ref arg0);
                     arg0 /= (sbyte)(s_2[0]++ | 1);
                     M80(-2004781800317358114L);
-                    ulong var2 = 2UL;
+                    var2 = 2UL;
                     s_rt.Checksum("c_498", var2);
                 }
 
                 --arg0;
                 arg0 = (sbyte)M87();
-                bool var3 = true;
+                var3 = true;
                 M71();
                 s_rt.Checksum("c_499", var3);
             }
 
             arg0 = -113;
             s_87 = M69(arg0, 2147483647, s_5, ref arg0, (byte)(9223372036854775806L - (sbyte)(s_52[0] ^ (-562809373 % (uint)(s_81 | 1)))), true, 9223372036854775806L);
-            byte var4 = s_25;
+            var4 = s_25;
             {
                 if ((int)M72() > s_21)
                 {
@@ -4049,16 +4352,20 @@ public class Program
 
     static ref bool M69(sbyte arg0, int arg1, ulong arg2, ref sbyte arg3, byte arg4, bool arg5, long arg6)
     {
+        int var0 = default(int);
+        uint var1 = default(uint);
+        uint var2 = default(uint);
+        long var3 = default(long);
         arg0 = arg0;
         if (arg5)
         {
-            int var0 = 2147483646;
+            var0 = 2147483646;
             {
-                uint var1 = 0U;
+                var1 = 0U;
                 if (arg5)
                 {
                     arg3 = -53;
-                    uint var2 = var1;
+                    var2 = var1;
                     arg4 = arg4;
                     var0 = var0;
                     var0 = 415115690;
@@ -4073,7 +4380,7 @@ public class Program
         }
 
         M73(arg1, -127, ref arg3, arg5, -2029156729063870913L, M82()--) = M73(arg1, arg3, ref arg3, arg5, arg6, 4279521233U);
-        long var3 = arg6;
+        var3 = arg6;
         M73(arg4 % (ushort)((ushort)M82() | 1), arg3, ref s_26, M80(s_35), (long)M76(ref s_17, new sbyte[]{-120}, M75(ref s_55, arg5, s_46, ref arg1, new bool[]{false, false, false, false, true, false, true})), M87()) = new ulong[]{1UL, 6094349442551970475UL, 12014132020281218584UL, 8298889677554800209UL};
         s_rt.Checksum("c_489", arg0);
         s_rt.Checksum("c_490", arg1);
@@ -4088,8 +4395,32 @@ public class Program
 
     static long M70()
     {
+        ushort var0 = default(ushort);
+        ushort var1 = default(ushort);
+        int var2 = default(int);
+        bool var3 = default(bool);
+        long var4 = default(long);
+        uint[][] var5 = default(uint[][]);
+        ushort var6 = default(ushort);
+        int var7 = default(int);
+        int var8 = default(int);
+        ulong[] var10 = default(ulong[]);
+        bool var11 = default(bool);
+        int var12 = default(int);
+        long[] var13 = default(long[]);
+        uint[] var14 = default(uint[]);
+        ulong var16 = default(ulong);
+        int var17 = default(int);
+        long var18 = default(long);
+        ulong var19 = default(ulong);
+        ulong var21 = default(ulong);
+        uint var22 = default(uint);
+        long[][] var23 = default(long[][]);
+        ulong var24 = default(ulong);
+        ulong[, ] var25 = default(ulong[, ]);
+        long var26 = default(long);
         {
-            ushort var0 = 10;
+            var0 = 10;
             var0 /= (ushort)(s_50[0][0] | 1);
             if (s_36[0][0])
             {
@@ -4111,10 +4442,10 @@ public class Program
 
             if (s_53[0, 0, 0])
             {
-                ushort var1 = s_50[0][0];
+                var1 = s_50[0][0];
                 {
-                    int var2 = -97577244;
-                    bool var3 = true;
+                    var2 = -97577244;
+                    var3 = true;
                     s_rt.Checksum("c_344", var2);
                     s_rt.Checksum("c_345", var3);
                 }
@@ -4132,7 +4463,7 @@ public class Program
                 {
                     {
                         M81();
-                        long var4 = (long)M84();
+                        var4 = (long)M84();
                         if ((short)M84() < s_80--)
                         {
                             var1 /= (ushort)(var0 | 1);
@@ -4162,9 +4493,9 @@ public class Program
                     s_32 = s_32;
                     var0 = s_50[0][0];
                     var0 = var0;
-                    uint[][] var5 = new uint[][]{new uint[]{107984523U, 4294967294U, 1U, 3799507504U, 4294967295U, 0U, 2130398231U, 2823990187U, 0U}};
-                    ushort var6 = var0;
-                    int var7 = (int)(var5[0][0] ^ var6--);
+                    var5 = new uint[][]{new uint[]{107984523U, 4294967294U, 1U, 3799507504U, 4294967295U, 0U, 2130398231U, 2823990187U, 0U}};
+                    var6 = var0;
+                    var7 = (int)(var5[0][0] ^ var6--);
                     s_rt.Checksum("c_465", var5[0][0]);
                     s_rt.Checksum("c_466", var6);
                     s_rt.Checksum("c_467", var7);
@@ -4172,12 +4503,12 @@ public class Program
 
                 if (M75(ref s_55, (short)M87() > s_65, false, ref s_12, new bool[]{false, true, true, false, true, false, true, false, true, true}))
                 {
-                    int var8 = s_32[0, 0, 0];
+                    var8 = s_32[0, 0, 0];
                     ref sbyte var9 = ref s_56;
                     M83();
                     var9 = var9;
                     M73(var8, var9++, ref var9, true, (long)M83(), M88()) = s_10;
-                    ulong[] var10 = new ulong[]{15778092188839117741UL, 10331334473614392193UL, 18446744073709551614UL, 14973649830102340673UL, 1UL, 18446744073709551614UL, 818578968558133657UL, 0UL, 1UL, 15306980762617023873UL};
+                    var10 = new ulong[]{15778092188839117741UL, 10331334473614392193UL, 18446744073709551614UL, 14973649830102340673UL, 1UL, 18446744073709551614UL, 818578968558133657UL, 0UL, 1UL, 15306980762617023873UL};
                     var0 = var0;
                     if (s_61)
                     {
@@ -4185,14 +4516,14 @@ public class Program
                     }
                     else
                     {
-                        bool var11 = false;
-                        int var12 = var8;
+                        var11 = false;
+                        var12 = var8;
                         s_rt.Checksum("c_468", var11);
                         s_rt.Checksum("c_469", var12);
                     }
 
-                    long[] var13 = new long[]{9223372036854775807L, -2L, 1L, 1L, 0L};
-                    uint[] var14 = new uint[]{10U, 3790920293U, 1458709766U, 0U, 0U, 1984161592U, 1671185116U, 1U};
+                    var13 = new long[]{9223372036854775807L, -2L, 1L, 1L, 0L};
+                    var14 = new uint[]{10U, 3790920293U, 1458709766U, 0U, 0U, 1984161592U, 1671185116U, 1U};
                     try
                     {
                         M78();
@@ -4217,8 +4548,8 @@ public class Program
                 }
                 else
                 {
-                    ulong var16 = (ulong)(s_30[0]-- ^ (sbyte)M72());
-                    int var17 = s_21--;
+                    var16 = (ulong)(s_30[0]-- ^ (sbyte)M72());
+                    var17 = s_21--;
                     s_rt.Checksum("c_476", var16);
                     s_rt.Checksum("c_477", var17);
                 }
@@ -4235,20 +4566,20 @@ public class Program
                 {
                     if (s_61)
                     {
-                        long var18 = s_29;
+                        var18 = s_29;
                         s_rt.Checksum("c_478", var18);
                     }
 
-                    ulong var19 = 16819530361715984951UL;
+                    var19 = 16819530361715984951UL;
                     ref int[, ] var20 = ref s_83;
-                    ulong var21 = var19;
+                    var21 = var19;
                     M85(ref s_51);
                     s_37 = (int)M72();
-                    uint var22 = 1U;
-                    long[][] var23 = new long[][]{new long[]{-2178892822121763534L, -6262903406858793872L, 0L, -9223372036854775807L}, new long[]{4791957849126527895L, 4398656973800038686L, 9223372036854775806L, -9223372036854775808L}, new long[]{0L, 1L, 1L, -10L}, new long[]{-9223372036854775808L, 1L}, new long[]{9223372036854775807L, 0L, 9223372036854775807L}};
+                    var22 = 1U;
+                    var23 = new long[][]{new long[]{-2178892822121763534L, -6262903406858793872L, 0L, -9223372036854775807L}, new long[]{4791957849126527895L, 4398656973800038686L, 9223372036854775806L, -9223372036854775808L}, new long[]{0L, 1L, 1L, -10L}, new long[]{-9223372036854775808L, 1L}, new long[]{9223372036854775807L, 0L, 9223372036854775807L}};
                     s_78 = new sbyte[]{126, 1, -10};
                     s_84 = new long[]{-1L, -1129832372959387863L, 9223372036854775807L, -9223372036854775808L, 0L, -9223372036854775807L, 9223372036854775807L};
-                    ulong var24 = var21;
+                    var24 = var21;
                     s_rt.Checksum("c_479", var19);
                     s_rt.Checksum("c_480", var20[0, 0]);
                     s_rt.Checksum("c_481", var21);
@@ -4257,8 +4588,8 @@ public class Program
                     s_rt.Checksum("c_484", var24);
                 }
 
-                ulong[, ] var25 = new ulong[, ]{{1UL, 13019011886429721869UL, 7869956977206718133UL, 0UL, 18446744073709551615UL}, {0UL, 13406935657102287499UL, 18446744073709551615UL, 1124215741290740454UL, 4011577670390259948UL}, {17439553961487815336UL, 1UL, 4505865698866580321UL, 18446744073709551615UL, 16748919887243609476UL}, {0UL, 2UL, 12216558064142025236UL, 1UL, 421361296817289393UL}, {5689348271114896545UL, 12950402514180946680UL, 16367028517161626054UL, 5777093652747729344UL, 18446744073709551615UL}, {0UL, 18446744073709551615UL, 18446744073709551614UL, 8137911578315431162UL, 5311820081023965949UL}, {165754765391069859UL, 18446744073709551614UL, 10UL, 13244648845152057030UL, 18446744073709551615UL}};
-                long var26 = s_59[0]++;
+                var25 = new ulong[, ]{{1UL, 13019011886429721869UL, 7869956977206718133UL, 0UL, 18446744073709551615UL}, {0UL, 13406935657102287499UL, 18446744073709551615UL, 1124215741290740454UL, 4011577670390259948UL}, {17439553961487815336UL, 1UL, 4505865698866580321UL, 18446744073709551615UL, 16748919887243609476UL}, {0UL, 2UL, 12216558064142025236UL, 1UL, 421361296817289393UL}, {5689348271114896545UL, 12950402514180946680UL, 16367028517161626054UL, 5777093652747729344UL, 18446744073709551615UL}, {0UL, 18446744073709551615UL, 18446744073709551614UL, 8137911578315431162UL, 5311820081023965949UL}, {165754765391069859UL, 18446744073709551614UL, 10UL, 13244648845152057030UL, 18446744073709551615UL}};
+                var26 = s_59[0]++;
                 s_rt.Checksum("c_485", var25[0, 0]);
                 s_rt.Checksum("c_486", var26);
             }
@@ -4279,10 +4610,12 @@ public class Program
 
     static ushort M72()
     {
-        short[][][] var0 = new short[][][]{new short[][]{new short[]{-22525, -1, -4500}, new short[]{-8875, 3076, -15672}, new short[]{0, 32766, -8804, -8767, 13444, -15540}}, new short[][]{new short[]{18963}, new short[]{3723, 2, 12941, 19788, 0, 11055}}};
+        short[][][] var0 = default(short[][][]);
+        int var1 = default(int);
+        var0 = new short[][][]{new short[][]{new short[]{-22525, -1, -4500}, new short[]{-8875, 3076, -15672}, new short[]{0, 32766, -8804, -8767, 13444, -15540}}, new short[][]{new short[]{18963}, new short[]{3723, 2, 12941, 19788, 0, 11055}}};
         if (s_48)
         {
-            int var1 = s_21++;
+            var1 = s_21++;
             var1 = var1;
             var1 = -10;
             if (s_7)
@@ -4327,17 +4660,26 @@ public class Program
 
     static ref ulong[] M73(int arg0, sbyte arg1, ref sbyte arg2, bool arg3, long arg4, uint arg5)
     {
+        short var0 = default(short);
+        bool var1 = default(bool);
+        ulong var2 = default(ulong);
+        int var3 = default(int);
+        ushort var4 = default(ushort);
+        ulong var5 = default(ulong);
+        sbyte[] var6 = default(sbyte[]);
+        uint[] var8 = default(uint[]);
+        bool var9 = default(bool);
         {
             if (arg3)
             {
                 if (arg3)
                 {
-                    short var0 = s_54[0]--;
+                    var0 = s_54[0]--;
                     s_rt.Checksum("c_346", var0);
                 }
 
-                bool var1 = arg3;
-                ulong var2 = 7731816568299975045UL;
+                var1 = arg3;
+                var2 = 7731816568299975045UL;
                 M74(ref s_9[0]);
                 if (arg3)
                 {
@@ -4348,12 +4690,12 @@ public class Program
                 {
                     M80(arg4++);
                     var2 = (ulong)((long)(9674 % (ushort)((ushort)(s_57 - (byte)M81()) | 1)) ^ s_50[0][0]);
-                    int var3 = arg0;
+                    var3 = arg0;
                     var1 = false;
                     M78();
-                    ushort var4 = 10677;
+                    var4 = 10677;
                     M76(ref var4, new sbyte[]{1, 37, 1, -128, 1}, M85(ref s_57)) = -1958897922;
-                    ulong var5 = s_41;
+                    var5 = s_41;
                     s_rt.Checksum("c_418", var3);
                     s_rt.Checksum("c_419", var4);
                     s_rt.Checksum("c_420", var5);
@@ -4370,7 +4712,7 @@ public class Program
             }
         }
 
-        sbyte[] var6 = new sbyte[]{83, 2, 1, 0, -127, 0, 118, -53, -40, 127};
+        var6 = new sbyte[]{83, 2, 1, 0, -127, 0, 118, -53, -40, 127};
         ref short var7 = ref s_54[0];
         var6 = new sbyte[]{68, -62, 47, 112};
         M86(arg0, 0, s_10[0], arg4, ref arg4, new sbyte[]{0, 1, -82}, arg5);
@@ -4382,12 +4724,12 @@ public class Program
             if (M80(7573968938990664773L))
             {
                 arg0 = arg0;
-                uint[] var8 = s_1;
+                var8 = s_1;
                 s_rt.Checksum("c_450", var8[0]);
             }
         }
 
-        bool var9 = M80(-9147339872171356967L);
+        var9 = M80(-9147339872171356967L);
         s_81 -= (uint)M74(ref arg1);
         M79((sbyte)(arg5 & arg0), new sbyte[]{52, 127, 84, -33, 47}, 4294967295U);
         s_rt.Checksum("c_451", arg0);
@@ -4413,6 +4755,17 @@ public class Program
 
     static bool M75(ref bool[] arg0, bool arg1, bool arg2, ref int arg3, bool[] arg4)
     {
+        byte var0 = default(byte);
+        ushort var1 = default(ushort);
+        byte var2 = default(byte);
+        ulong var3 = default(ulong);
+        ushort var4 = default(ushort);
+        short var5 = default(short);
+        long var6 = default(long);
+        ushort var8 = default(ushort);
+        byte var9 = default(byte);
+        int var10 = default(int);
+        uint[] var11 = default(uint[]);
         if (arg0[0])
         {
             arg0 = arg0;
@@ -4423,7 +4776,7 @@ public class Program
                 if (s_5 >= s_52[0]++)
                 {
                     arg1 = arg2;
-                    byte var0 = 1;
+                    var0 = 1;
                     arg4[0] = true;
                     {
                         {
@@ -4434,7 +4787,7 @@ public class Program
 
                         arg0[0] = false;
                         M77(new ulong[][]{new ulong[]{5621085677742063254UL}, new ulong[]{0UL, 1171278029292956117UL, 15207803337064566735UL}, new ulong[]{1753262037771134695UL, 1UL, 1UL}, new ulong[]{1UL}, new ulong[]{10992174190707407308UL, 0UL}}, 126, new ushort[]{1090, 14663, 51604, 64691, 0});
-                        ushort var1 = 34230;
+                        var1 = 34230;
                         M78();
                         M78();
                         s_rt.Checksum("c_358", var1);
@@ -4442,19 +4795,19 @@ public class Program
 
                     try
                     {
-                        byte var2 = var0;
+                        var2 = var0;
                         s_rt.Checksum("c_359", var2);
                     }
                     finally
                     {
-                        ulong var3 = (ulong)M77(M78(), s_9[0], new ushort[]{1, 3062, 0, 35788, 23509, 48126, 44004, 8814, 1});
+                        var3 = (ulong)M77(M78(), s_9[0], new ushort[]{1, 3062, 0, 35788, 23509, 48126, 44004, 8814, 1});
                         M77(new ulong[][]{new ulong[]{5879737676674622625UL, 1UL, 495273149181401503UL, 1UL, 18446744073709551614UL}, new ulong[]{0UL, 2UL}, new ulong[]{13793582676239250899UL, 18446744073709551614UL, 0UL, 0UL}, new ulong[]{5056721534509808488UL, 18446744073709551614UL, 1UL, 93041159801607704UL}, new ulong[]{1UL, 0UL, 0UL}, new ulong[]{0UL, 2700663513666935798UL, 15746709632658835052UL, 1UL}, new ulong[]{2795064980979881614UL, 1UL, 14723055999302161303UL, 1UL}, new ulong[]{0UL, 0UL}}, 0, s_3);
                         s_65 = 0;
-                        ushort var4 = s_63;
+                        var4 = s_63;
                         {
                             s_66 = s_50[0][0];
                             var3 = s_51;
-                            short var5 = s_28;
+                            var5 = s_28;
                             s_rt.Checksum("c_360", var5);
                         }
 
@@ -4462,7 +4815,7 @@ public class Program
                         if (arg0[0])
                         {
                             M76(ref var4, new sbyte[]{71, 62, 75, 1, -120, 0, -2, -51}, false) = M79((sbyte)(s_30[0]-- | arg3), new sbyte[]{0, 1, 35, 1, -124, 2, -53, -127, -1}, s_33++);
-                            long var6 = (long)(s_50[0][0]++ % (ulong)(var3 | 1));
+                            var6 = (long)(s_50[0][0]++ % (ulong)(var3 | 1));
                             s_rt.Checksum("c_402", var6);
                         }
                         else
@@ -4496,12 +4849,12 @@ public class Program
 
             if (s_7)
             {
-                ushort var8 = (ushort)M76(ref s_66, new sbyte[]{1, -2, 125, 127, 50, 127}, arg2);
+                var8 = (ushort)M76(ref s_66, new sbyte[]{1, -2, 125, 127, 50, 127}, arg2);
                 arg2 = arg4[0];
                 if (arg2)
                 {
                     {
-                        byte var9 = 1;
+                        var9 = 1;
                         s_rt.Checksum("c_408", var9);
                     }
                 }
@@ -4512,7 +4865,7 @@ public class Program
                     s_55[0] = arg4[0];
                 }
 
-                int var10 = arg3++;
+                var10 = arg3++;
                 s_rt.Checksum("c_409", var8);
                 s_rt.Checksum("c_410", var10);
             }
@@ -4531,7 +4884,7 @@ public class Program
         M80((long)M83());
         s_73 = s_59[0];
         arg1 = arg2;
-        uint[] var11 = s_1;
+        var11 = s_1;
         arg3 = (int)((byte)M82() & (uint)(6866055105043680031L * s_44--));
         s_rt.Checksum("c_411", arg0[0]);
         s_rt.Checksum("c_412", arg1);
@@ -4544,13 +4897,16 @@ public class Program
 
     static ref int M76(ref ushort arg0, sbyte[] arg1, bool arg2)
     {
+        uint var0 = default(uint);
+        short var1 = default(short);
+        int var2 = default(int);
         M77(new ulong[][]{new ulong[]{18446744073709551614UL, 1UL}, new ulong[]{15690541342769143181UL, 17398716044925779772UL, 18446744073709551614UL}, new ulong[]{1UL, 1UL}, new ulong[]{12234101859255155577UL, 7146523035169648723UL}}, -127, new ushort[]{32558, 1, 50193, 1, 2, 49502, 3585, 1, 0, 45353});
         if (arg2)
         {
             {
                 M77(M78(), s_26, new ushort[]{53413, 41112, 0, 0, 1, 65534, 29114, 0});
-                uint var0 = (uint)((sbyte)M77(new ulong[][]{new ulong[]{1UL, 1UL, 10693355332976915320UL, 17412061499159957493UL, 0UL, 11348041743089135588UL, 18446744073709551614UL}, new ulong[]{13387153710988798828UL, 1UL, 3538027604935874308UL, 1UL}}, (sbyte)((ulong)(24 * (uint)M77(new ulong[][]{new ulong[]{4782453672055088607UL}, new ulong[]{8278111705394285194UL}}, arg1[0], new ushort[]{34915, 60307})) & 0UL), new ushort[]{0, 1, 1, 1, 1, 13670, 35393, 14785}) ^ (long)(s_5 * s_20[0]));
-                short var1 = s_30[0];
+                var0 = (uint)((sbyte)M77(new ulong[][]{new ulong[]{1UL, 1UL, 10693355332976915320UL, 17412061499159957493UL, 0UL, 11348041743089135588UL, 18446744073709551614UL}, new ulong[]{13387153710988798828UL, 1UL, 3538027604935874308UL, 1UL}}, (sbyte)((ulong)(24 * (uint)M77(new ulong[][]{new ulong[]{4782453672055088607UL}, new ulong[]{8278111705394285194UL}}, arg1[0], new ushort[]{34915, 60307})) & 0UL), new ushort[]{0, 1, 1, 1, 1, 13670, 35393, 14785}) ^ (long)(s_5 * s_20[0]));
+                var1 = s_30[0];
                 s_rt.Checksum("c_352", var0);
                 s_rt.Checksum("c_353", var1);
             }
@@ -4572,7 +4928,7 @@ public class Program
             {
                 if (s_48)
                 {
-                    int var2 = s_37--;
+                    var2 = s_37--;
                     s_rt.Checksum("c_354", var2);
                 }
                 else
@@ -4595,6 +4951,7 @@ public class Program
 
     static long M77(ulong[][] arg0, sbyte arg1, ushort[] arg2)
     {
+        bool var0 = default(bool);
         if ((sbyte)(s_19-- % (long)(s_59[0]-- | 1)) == arg2[0])
         {
             arg0[0] = new ulong[]{1UL, 429455367443649211UL, 18446744073709551614UL, 2UL};
@@ -4604,7 +4961,7 @@ public class Program
             {
                 try
                 {
-                    bool var0 = false;
+                    var0 = false;
                     s_rt.Checksum("c_347", var0);
                 }
                 finally
@@ -4622,23 +4979,26 @@ public class Program
 
     static ulong[][] M78()
     {
-        uint var0 = 0U;
+        uint var0 = default(uint);
+        var0 = 0U;
         s_rt.Checksum("c_351", var0);
         return new ulong[][]{new ulong[]{14512988967422436812UL, 11722771867974734503UL, 18446744073709551615UL, 12976961772911120469UL}, new ulong[]{1UL, 2503323721261690782UL, 1UL, 13142816938197938376UL, 18446744073709551614UL, 18446744073709551615UL}, new ulong[]{9389184152153229465UL, 1UL, 18446744073709551614UL}, new ulong[]{16760042309932406064UL, 0UL, 1UL}, new ulong[]{1UL, 1UL, 0UL, 1342838692465107UL, 1928393630231800427UL}, new ulong[]{11529851535409344551UL, 17612538283661160513UL, 0UL, 18446744073709551615UL, 1UL, 18446744073709551614UL, 3089073821720654974UL}, new ulong[]{1UL, 18446744073709551615UL, 16380860044031446442UL, 0UL, 116036276351870827UL, 11627908559790285408UL, 1UL}};
     }
 
     static int M79(sbyte arg0, sbyte[] arg1, uint arg2)
     {
+        bool var0 = default(bool);
+        long[] var1 = default(long[]);
         if (true & ((byte)(s_3[0]++ | arg2) != 65534))
         {
             arg2 = arg2++;
         }
 
-        bool var0 = M80(-9223372036854775807L);
+        var0 = M80(-9223372036854775807L);
         arg1 = arg1;
         if (s_55[0])
         {
-            long[] var1 = new long[]{1L, 748189618062369328L, 1L, -9223372036854775808L};
+            var1 = new long[]{1L, 748189618062369328L, 1L, -9223372036854775808L};
             s_rt.Checksum("c_397", var1[0]);
         }
 
@@ -4651,17 +5011,28 @@ public class Program
 
     static bool M80(long arg0)
     {
-        uint var0 = 4294967295U;
-        ulong[][][] var1 = new ulong[][][]{new ulong[][]{new ulong[]{10635741721305595627UL, 1UL, 1UL, 7723546937833852134UL}}, new ulong[][]{new ulong[]{0UL, 18446744073709551615UL, 2097255010348731977UL, 17196064712237990722UL, 18446744073709551614UL, 5543780225214284799UL, 8015725465774018329UL}, new ulong[]{4250408319873309239UL, 18446744073709551615UL, 14682203718542178504UL, 18446744073709551614UL}}, new ulong[][]{new ulong[]{2592471316962209237UL, 1UL, 18446744073709551615UL}}, new ulong[][]{new ulong[]{0UL, 489285985875127993UL, 4163653733987278078UL, 11835252408794549963UL, 17945111968195278341UL, 16270670976471125534UL, 0UL, 0UL}}};
+        uint var0 = default(uint);
+        ulong[][][] var1 = default(ulong[][][]);
+        ulong var3 = default(ulong);
+        long var4 = default(long);
+        ulong[] var5 = default(ulong[]);
+        byte var6 = default(byte);
+        sbyte var7 = default(sbyte);
+        bool var8 = default(bool);
+        ulong var9 = default(ulong);
+        ulong var10 = default(ulong);
+        long var11 = default(long);
+        var0 = 4294967295U;
+        var1 = new ulong[][][]{new ulong[][]{new ulong[]{10635741721305595627UL, 1UL, 1UL, 7723546937833852134UL}}, new ulong[][]{new ulong[]{0UL, 18446744073709551615UL, 2097255010348731977UL, 17196064712237990722UL, 18446744073709551614UL, 5543780225214284799UL, 8015725465774018329UL}, new ulong[]{4250408319873309239UL, 18446744073709551615UL, 14682203718542178504UL, 18446744073709551614UL}}, new ulong[][]{new ulong[]{2592471316962209237UL, 1UL, 18446744073709551615UL}}, new ulong[][]{new ulong[]{0UL, 489285985875127993UL, 4163653733987278078UL, 11835252408794549963UL, 17945111968195278341UL, 16270670976471125534UL, 0UL, 0UL}}};
         var1[0] = var1[0];
         if (s_61)
         {
             ref long var2 = ref arg0;
-            ulong var3 = var1[0][0][0];
-            long var4 = var0 + var2;
-            ulong[] var5 = var1[0][0];
-            byte var6 = 237;
-            sbyte var7 = s_9[0];
+            var3 = var1[0][0][0];
+            var4 = var0 + var2;
+            var5 = var1[0][0];
+            var6 = 237;
+            var7 = s_9[0];
             s_rt.Checksum("c_361", var2);
             s_rt.Checksum("c_362", var3);
             s_rt.Checksum("c_363", var4);
@@ -4676,11 +5047,11 @@ public class Program
             M83();
             {
                 var1[0] = var1[0];
-                bool var8 = false;
-                ulong var9 = 1UL;
+                var8 = false;
+                var9 = 1UL;
                 if (var8)
                 {
-                    ulong var10 = (ulong)((int)(-556769901 ^ s_6) % (long)(arg0 | 1));
+                    var10 = (ulong)((int)(-556769901 ^ s_6) % (long)(arg0 | 1));
                     s_rt.Checksum("c_390", var10);
                 }
 
@@ -4690,7 +5061,7 @@ public class Program
 
             if (s_23[0])
             {
-                long var11 = arg0;
+                var11 = arg0;
                 if (s_36[0][0])
                 {
                     arg0 = arg0;
@@ -4728,6 +5099,25 @@ public class Program
 
     static long M81()
     {
+        ulong var0 = default(ulong);
+        long var1 = default(long);
+        short var3 = default(short);
+        int var4 = default(int);
+        long var5 = default(long);
+        uint[, ] var7 = default(uint[, ]);
+        bool var8 = default(bool);
+        uint[] var9 = default(uint[]);
+        ushort var10 = default(ushort);
+        byte[][] var11 = default(byte[][]);
+        long var12 = default(long);
+        ulong var13 = default(ulong);
+        int var14 = default(int);
+        short var15 = default(short);
+        short var16 = default(short);
+        bool var17 = default(bool);
+        byte[] var18 = default(byte[]);
+        ushort var19 = default(ushort);
+        byte var20 = default(byte);
         try
         {
             s_8 += (short)((short)(s_62 * (short)((ushort)(0 - s_14[0]--) * s_50[0][0]--)) & 1);
@@ -4736,13 +5126,13 @@ public class Program
         {
             {
                 s_30 = s_30;
-                ulong var0 = (ulong)(-73 / (sbyte)(s_16[0, 0]++ | 1));
+                var0 = (ulong)(-73 / (sbyte)(s_16[0, 0]++ | 1));
                 M82();
                 s_rt.Checksum("c_369", var0);
             }
         }
 
-        long var1 = 3088148697491962091L;
+        var1 = 3088148697491962091L;
         if (s_46)
         {
             if (s_7)
@@ -4763,12 +5153,12 @@ public class Program
                 }
                 else
                 {
-                    short var3 = s_24;
+                    var3 = s_24;
                     var1 = (long)(s_33 + s_43);
-                    int var4 = s_37;
+                    var4 = s_37;
                     var3 = var3;
                     s_3[0] = 0;
-                    long var5 = (long)M84();
+                    var5 = (long)M84();
                     s_43 = M82();
                     s_rt.Checksum("c_371", var3);
                     s_rt.Checksum("c_372", var4);
@@ -4793,8 +5183,8 @@ public class Program
                 {
                     if (s_36[0][0])
                     {
-                        uint[, ] var7 = new uint[, ]{{1U, 4256839128U, 3476032174U}};
-                        bool var8 = s_7;
+                        var7 = new uint[, ]{{1U, 4256839128U, 3476032174U}};
+                        var8 = s_7;
                         s_rt.Checksum("c_375", var7[0, 0]);
                         s_rt.Checksum("c_376", var8);
                     }
@@ -4803,14 +5193,14 @@ public class Program
                 }
                 else
                 {
-                    uint[] var9 = new uint[]{4195846735U, 2263869289U, 3640318133U, 4294967294U, 1U, 0U, 1190475448U, 4294967294U};
+                    var9 = new uint[]{4195846735U, 2263869289U, 3640318133U, 4294967294U, 1U, 0U, 1190475448U, 4294967294U};
                     M83();
                     var9[0]++;
                     s_rt.Checksum("c_377", var9[0]);
                 }
             }
 
-            ushort var10 = (ushort)M84();
+            var10 = (ushort)M84();
             s_rt.Checksum("c_378", var10);
         }
         else
@@ -4818,13 +5208,13 @@ public class Program
             try
             {
                 {
-                    byte[][] var11 = new byte[][]{new byte[]{254}, new byte[]{219}};
+                    var11 = new byte[][]{new byte[]{254}, new byte[]{219}};
                     s_rt.Checksum("c_379", var11[0][0]);
                 }
             }
             finally
             {
-                long var12 = var1++;
+                var12 = var1++;
                 try
                 {
                     var1 = (long)M82();
@@ -4846,21 +5236,21 @@ public class Program
                     s_39 = s_39;
                     var1 = 7991231942559546856L;
                     ++s_69;
-                    ulong var13 = (ulong)(s_1[0] / (ushort)(s_17-- | 1));
-                    int var14 = 2;
-                    short var15 = (short)M84();
+                    var13 = (ulong)(s_1[0] / (ushort)(s_17-- | 1));
+                    var14 = 2;
+                    var15 = (short)M84();
                     s_rt.Checksum("c_381", var13);
                     s_rt.Checksum("c_382", var14);
                     s_rt.Checksum("c_383", var15);
                 }
                 else
                 {
-                    short var16 = -18079;
+                    var16 = -18079;
                     if (true && s_48)
                     {
                         var1 = var1;
-                        bool var17 = true;
-                        byte[] var18 = new byte[]{2};
+                        var17 = true;
+                        var18 = new byte[]{2};
                         var16 = var16;
                         s_rt.Checksum("c_384", var17);
                         s_rt.Checksum("c_385", var18[0]);
@@ -4878,8 +5268,8 @@ public class Program
         }
 
         var1 = s_29;
-        ushort var19 = (ushort)((byte)(var1 & s_27) | 2132440270U);
-        byte var20 = 18;
+        var19 = (ushort)((byte)(var1 & s_27) | 2132440270U);
+        var20 = 18;
         s_rt.Checksum("c_387", var1);
         s_rt.Checksum("c_388", var19);
         s_rt.Checksum("c_389", var20);
@@ -4888,6 +5278,7 @@ public class Program
 
     static ref uint M82()
     {
+        uint var0 = default(uint);
         M83();
         s_18 *= (byte)M84();
         s_64[0] = 100;
@@ -4895,7 +5286,7 @@ public class Program
             s_62 = (byte)M84();
         }
 
-        uint var0 = s_67--;
+        var0 = s_67--;
         var0 = var0--;
         var0 = var0;
         s_rt.Checksum("c_368", var0);
@@ -4904,10 +5295,11 @@ public class Program
 
     static uint M83()
     {
+        uint var0 = default(uint);
         if (s_46)
         {
             M84();
-            uint var0 = 228150594U;
+            var0 = 228150594U;
             var0 = var0;
             s_6 = 9223372036854775806L;
             var0 *= var0--;
@@ -4944,6 +5336,24 @@ public class Program
 
     static short[][] M86(int arg0, ushort arg1, ulong arg2, long arg3, ref long arg4, sbyte[] arg5, uint arg6)
     {
+        ushort var0 = default(ushort);
+        ulong var1 = default(ulong);
+        ushort[][][] var2 = default(ushort[][][]);
+        ushort var3 = default(ushort);
+        ulong var4 = default(ulong);
+        int[, ] var5 = default(int[, ]);
+        ushort var6 = default(ushort);
+        sbyte var7 = default(sbyte);
+        sbyte var8 = default(sbyte);
+        ulong var9 = default(ulong);
+        short var10 = default(short);
+        ushort var11 = default(ushort);
+        sbyte[] var12 = default(sbyte[]);
+        sbyte[] var13 = default(sbyte[]);
+        bool var14 = default(bool);
+        long var15 = default(long);
+        uint var16 = default(uint);
+        sbyte var18 = default(sbyte);
         {
             M87();
         }
@@ -4953,9 +5363,9 @@ public class Program
             arg3 = arg0 - s_29++;
             if (s_39)
             {
-                ushort var0 = arg1;
+                var0 = arg1;
                 {
-                    ulong var1 = arg2;
+                    var1 = arg2;
                     s_rt.Checksum("c_423", var1);
                 }
 
@@ -4971,7 +5381,7 @@ public class Program
             {
                 arg3 = arg3--;
                 arg5 = arg5;
-                ushort[][][] var2 = new ushort[][][]{new ushort[][]{new ushort[]{0, 1, 0, 3054, 25348}}};
+                var2 = new ushort[][][]{new ushort[][]{new ushort[]{0, 1, 0, 3054, 25348}}};
                 arg0 = -10;
                 s_rt.Checksum("c_425", var2[0][0][0]);
             }
@@ -4981,7 +5391,7 @@ public class Program
                 {
                     arg5[0] += (sbyte)M87();
                     s_46 = s_46;
-                    ushort var3 = s_3[0];
+                    var3 = s_3[0];
                     s_rt.Checksum("c_426", var3);
                 }
                 finally
@@ -4994,7 +5404,7 @@ public class Program
                         if (s_48)
                         {
                             arg1 = s_17;
-                            ulong var4 = arg2;
+                            var4 = arg2;
                             s_rt.Checksum("c_427", var4);
                         }
                     }
@@ -5028,7 +5438,7 @@ public class Program
                 if (s_55[0])
                 {
                     arg2 = s_47;
-                    int[, ] var5 = new int[, ]{{-1, 0, 1, 1, 10, 0, 1535855136}, {-1865455824, 0, 1, 1, -2147483648, -2147483647, 1}};
+                    var5 = new int[, ]{{-1, 0, 1, 1, 10, 0, 1535855136}, {-1865455824, 0, 1, 1, -2147483648, -2147483647, 1}};
                     s_rt.Checksum("c_428", var5[0, 0]);
                 }
             }
@@ -5054,7 +5464,7 @@ public class Program
                 {
                     try
                     {
-                        ushort var6 = arg1++;
+                        var6 = arg1++;
                         s_rt.Checksum("c_429", var6);
                     }
                     finally
@@ -5065,7 +5475,7 @@ public class Program
 
                 if (s_36[0][0])
                 {
-                    sbyte var7 = arg5[0]++;
+                    var7 = arg5[0]++;
                     s_rt.Checksum("c_430", var7);
                 }
 
@@ -5073,7 +5483,7 @@ public class Program
                 {
                     if (s_39)
                     {
-                        sbyte var8 = arg5[0];
+                        var8 = arg5[0];
                         s_50[0] = new ushort[]{65535, 65534, 40471, 50213, 2651, 47708};
                         s_rt.Checksum("c_431", var8);
                         return new short[][]{new short[]{-32444, -20301, 3302, 0, -32767}, new short[]{9804, 0}};
@@ -5081,7 +5491,7 @@ public class Program
                     else
                     {
                         M87();
-                        ulong var9 = arg2;
+                        var9 = arg2;
                         if (385443134877993331L < arg1)
                         {
                             s_45[0, 0][0] = new byte[][, ]{new byte[, ]{{117, 126, 110, 131, 1, 86, 132, 178, 254, 254}}, new byte[, ]{{1, 95, 99, 121, 149, 1, 158, 0, 213, 239}}, new byte[, ]{{115, 36, 151, 137, 223, 1, 0, 190, 149, 70}}, new byte[, ]{{226, 1, 2, 0, 1, 1, 82, 8, 160, 35}}, new byte[, ]{{92, 195, 1, 254, 7, 253, 255, 254, 2, 2}, {1, 21, 0, 109, 1, 254, 1, 62, 0, 0}}, new byte[, ]{{1, 0, 223, 191, 26, 0, 1, 48, 137, 1}, {1, 51, 255, 73, 144, 1, 139, 253, 28, 0}}, new byte[, ]{{62, 98, 255, 255, 254, 0, 229, 159, 114, 1}}, new byte[, ]{{220, 255, 193, 1, 254, 1, 10, 1, 1, 1}}, new byte[, ]{{254, 131, 1, 115, 1, 254, 1, 254, 10, 1}}, new byte[, ]{{91, 1, 219, 254, 145, 112, 1, 5, 0, 123}}};
@@ -5091,7 +5501,7 @@ public class Program
                             arg3 = s_44;
                             if (s_39)
                             {
-                                short var10 = (short)M87();
+                                var10 = (short)M87();
                                 arg6 = arg6;
                                 s_rt.Checksum("c_432", var10);
                             }
@@ -5109,15 +5519,15 @@ public class Program
 
                                 arg5 = s_72;
                                 s_47 += 2546063643722984211UL;
-                                ushort var11 = s_17;
-                                sbyte[] var12 = arg5;
-                                sbyte[] var13 = arg5;
+                                var11 = s_17;
+                                var12 = arg5;
+                                var13 = arg5;
                                 s_rt.Checksum("c_433", var11);
                                 s_rt.Checksum("c_434", var12[0]);
                                 s_rt.Checksum("c_435", var13[0]);
                             }
 
-                            bool var14 = s_61;
+                            var14 = s_61;
                             M87();
                             s_78 = arg5;
                             s_rt.Checksum("c_436", var14);
@@ -5127,7 +5537,7 @@ public class Program
                         s_rt.Checksum("c_437", var9);
                     }
 
-                    long var15 = arg4;
+                    var15 = arg4;
                     arg5[0] = -8;
                     s_rt.Checksum("c_438", var15);
                 }
@@ -5156,7 +5566,7 @@ public class Program
             finally
             {
                 arg6 = (uint)(arg3++ - 59);
-                uint var16 = M87();
+                var16 = M87();
                 s_rt.Checksum("c_439", var16);
             }
 
@@ -5166,7 +5576,7 @@ public class Program
             if (s_53[0, 0, 0])
             {
                 ref ulong[] var17 = ref s_10;
-                sbyte var18 = (sbyte)(-96 & arg6);
+                var18 = (sbyte)(-96 & arg6);
                 ref short var19 = ref s_54[0];
                 M87();
                 s_80 = 1;
@@ -5197,14 +5607,16 @@ public class Program
 
     static uint M88()
     {
-        sbyte var0 = s_16[0, 0]++;
+        sbyte var0 = default(sbyte);
+        var0 = s_16[0, 0]++;
         s_rt.Checksum("c_460", var0);
         return 0U;
     }
 
     static ulong M89(int arg0)
     {
-        bool var0 = false;
+        bool var0 = default(bool);
+        var0 = false;
         s_rt.Checksum("c_513", arg0);
         s_rt.Checksum("c_514", var0);
         return s_57;
@@ -5212,7 +5624,8 @@ public class Program
 
     static bool[] M90(ref uint arg0, ref sbyte arg1, ref ushort arg2)
     {
-        long var0 = s_77--;
+        long var0 = default(long);
+        var0 = s_77--;
         s_rt.Checksum("c_517", arg0);
         s_rt.Checksum("c_518", arg1);
         s_rt.Checksum("c_519", arg2);
@@ -5235,6 +5648,17 @@ public class Program
 
     static short M93()
     {
+        ulong var0 = default(ulong);
+        ulong var3 = default(ulong);
+        short var6 = default(short);
+        short var7 = default(short);
+        int[] var8 = default(int[]);
+        short var9 = default(short);
+        long[][] var10 = default(long[][]);
+        ulong[] var11 = default(ulong[]);
+        short var12 = default(short);
+        ushort var13 = default(ushort);
+        sbyte var14 = default(sbyte);
         s_42 = s_54[0];
         s_72 = s_2;
         {
@@ -5247,12 +5671,12 @@ public class Program
             if (s_36[0][0])
             {
                 s_84[0] = -5083683065808085193L;
-                ulong var0 = (ulong)(s_105++ / (uint)((uint)(s_30[0] - (byte)M95()) | 1));
+                var0 = (ulong)(s_105++ / (uint)((uint)(s_30[0] - (byte)M95()) | 1));
                 ref short[] var1 = ref s_75;
                 var0 = s_70;
                 ref ulong var2 = ref var0;
                 s_43 = (uint)M95();
-                ulong var3 = var2;
+                var3 = var2;
                 M95();
                 ref short var4 = ref var1[0];
                 s_rt.Checksum("c_587", var0);
@@ -5265,13 +5689,13 @@ public class Program
             {
                 M94();
                 ref long var5 = ref s_77;
-                short var6 = 0;
-                short var7 = var6;
+                var6 = 0;
+                var7 = var6;
                 var5 = (long)M94();
                 var7 = (short)M94();
                 var6 = var6;
                 var6 |= (short)(0 ^ s_32[0, 0, 0]++);
-                int[] var8 = new int[]{-599439334, 0, 8885877, -10};
+                var8 = new int[]{-599439334, 0, 8885877, -10};
                 s_rt.Checksum("c_592", var5);
                 s_rt.Checksum("c_593", var6);
                 s_rt.Checksum("c_594", var7);
@@ -5318,7 +5742,7 @@ public class Program
         }
         else
         {
-            short var9 = -11751;
+            var9 = -11751;
             if (s_61)
             {
                 var9 = var9;
@@ -5327,13 +5751,13 @@ public class Program
             s_rt.Checksum("c_596", var9);
         }
 
-        long[][] var10 = new long[][]{new long[]{-1804320204239990116L, -4264586771466435926L, 2L, -7702201302103527220L}, new long[]{4781452352609459574L, 9223372036854775806L, 389754763352629804L, 1568203199872872652L, -1L}, new long[]{-3066690003156906801L}, new long[]{-5609213770648575758L, 1L, 7908913239385814582L, -2429844479631565224L, -927861393819127281L}, new long[]{-6070551445227531191L, 3029677483310564480L, -9223372036854775808L}, new long[]{-4894443611945476743L, -6975860629182862530L, 9223372036854775807L, 1508581265852148942L, -1L}, new long[]{6356501024021376889L}, new long[]{-1L, -9223372036854775808L, -2801762192325122101L}, new long[]{9223372036854775806L, -2823443675423125832L, -1523596525408431918L, -346849017519105219L, 1L}};
-        ulong[] var11 = new ulong[]{0UL, 7129407728525251333UL, 14591426676812996608UL, 0UL, 10UL, 13273875952317092802UL, 0UL, 902729150452946996UL, 1UL};
+        var10 = new long[][]{new long[]{-1804320204239990116L, -4264586771466435926L, 2L, -7702201302103527220L}, new long[]{4781452352609459574L, 9223372036854775806L, 389754763352629804L, 1568203199872872652L, -1L}, new long[]{-3066690003156906801L}, new long[]{-5609213770648575758L, 1L, 7908913239385814582L, -2429844479631565224L, -927861393819127281L}, new long[]{-6070551445227531191L, 3029677483310564480L, -9223372036854775808L}, new long[]{-4894443611945476743L, -6975860629182862530L, 9223372036854775807L, 1508581265852148942L, -1L}, new long[]{6356501024021376889L}, new long[]{-1L, -9223372036854775808L, -2801762192325122101L}, new long[]{9223372036854775806L, -2823443675423125832L, -1523596525408431918L, -346849017519105219L, 1L}};
+        var11 = new ulong[]{0UL, 7129407728525251333UL, 14591426676812996608UL, 0UL, 10UL, 13273875952317092802UL, 0UL, 902729150452946996UL, 1UL};
         if (s_48)
         {
             if (0 != var10[0][0]--)
             {
-                short var12 = 30830;
+                var12 = 30830;
                 s_rt.Checksum("c_597", var12);
             }
             else
@@ -5341,7 +5765,7 @@ public class Program
                 {
                     var11[0] = var11[0];
                     M95();
-                    ushort var13 = 63907;
+                    var13 = 63907;
                     s_rt.Checksum("c_598", var13);
                 }
 
@@ -5353,7 +5777,7 @@ public class Program
             var10 = var10;
             var11 = s_10;
             {
-                sbyte var14 = (sbyte)((uint)((sbyte)M94() + s_92) ^ -1189791304);
+                var14 = (sbyte)((uint)((sbyte)M94() + s_92) ^ -1189791304);
                 s_rt.Checksum("c_599", var14);
             }
 
@@ -5367,6 +5791,12 @@ public class Program
 
     static byte M94()
     {
+        sbyte var0 = default(sbyte);
+        short[] var1 = default(short[]);
+        int var2 = default(int);
+        int var3 = default(int);
+        ulong var4 = default(ulong);
+        ulong var6 = default(ulong);
         s_45[0, 0][0][0] = new byte[, ]{{209, 255, 204, 234}, {255, 0, 234, 97}, {1, 0, 245, 254}, {4, 0, 254, 255}, {254, 57, 203, 71}, {204, 0, 0, 217}, {0, 0, 2, 46}, {10, 0, 254, 123}, {108, 240, 39, 0}};
         ++s_64[0];
         s_18 -= 1;
@@ -5379,8 +5809,8 @@ public class Program
                 {
                     s_59[0] = s_59[0];
                     s_103 = s_15;
-                    sbyte var0 = 0;
-                    short[] var1 = new short[]{10, -21449, 1, 0, 27036, 2, 1};
+                    var0 = 0;
+                    var1 = new short[]{10, -21449, 1, 0, 27036, 2, 1};
                     s_rt.Checksum("c_579", var0);
                     s_rt.Checksum("c_580", var1[0]);
                 }
@@ -5389,18 +5819,18 @@ public class Program
                 if (s_46)
                 {
                     M95();
-                    int var2 = s_32[0, 0, 0];
+                    var2 = s_32[0, 0, 0];
                     var2 = var2++;
                     M95();
                     if (141 == (sbyte)M95())
                     {
-                        int var3 = -285794022;
+                        var3 = -285794022;
                         s_rt.Checksum("c_581", var3);
                     }
                     else
                     {
                         var2 = (byte)M95() | s_82;
-                        ulong var4 = 1UL;
+                        var4 = 1UL;
                         s_rt.Checksum("c_582", var4);
                     }
 
@@ -5426,7 +5856,7 @@ public class Program
             s_56 = s_2[0];
             if (s_96++ == M95())
             {
-                ulong var6 = (ulong)(s_84[0]++ % (int)(s_38[0][0] | 1));
+                var6 = (ulong)(s_84[0]++ % (int)(s_38[0][0] | 1));
                 s_rt.Checksum("c_585", var6);
             }
 
@@ -5442,20 +5872,22 @@ public class Program
 
     static long M95()
     {
+        int var0 = default(int);
         if (s_61)
         {
             s_72 = s_72;
             s_11 = s_44;
         }
 
-        int var0 = s_12;
+        var0 = s_12;
         s_rt.Checksum("c_578", var0);
         return s_14[0]++;
     }
 
     static int M96(short arg0)
     {
-        ulong[] var0 = new ulong[]{0UL};
+        ulong[] var0 = default(ulong[]);
+        var0 = new ulong[]{0UL};
         {
             M97();
         }
@@ -5467,6 +5899,14 @@ public class Program
 
     static int M97()
     {
+        uint var0 = default(uint);
+        ulong[] var1 = default(ulong[]);
+        ushort var2 = default(ushort);
+        ushort var3 = default(ushort);
+        bool var4 = default(bool);
+        byte var5 = default(byte);
+        bool var6 = default(bool);
+        short var7 = default(short);
         if (s_53[0, 0, 0])
         {
             s_10 = s_86[0][0][0];
@@ -5478,9 +5918,9 @@ public class Program
             {
                 {
                     s_110 = 197;
-                    uint var0 = s_68--;
-                    ulong[] var1 = M98();
-                    ushort var2 = 65535;
+                    var0 = s_68--;
+                    var1 = M98();
+                    var2 = 65535;
                     var1 = new ulong[]{1945646037070402773UL, 2274636528124739144UL, 1UL, 8382604678762103937UL, 0UL, 3307613365432727840UL, 6118034745535210860UL, 18446744073709551615UL, 0UL, 0UL};
                     s_30[0] = 5600;
                     s_rt.Checksum("c_666", var0);
@@ -5488,7 +5928,7 @@ public class Program
                     s_rt.Checksum("c_668", var2);
                 }
 
-                ushort var3 = 1;
+                var3 = 1;
                 s_rt.Checksum("c_669", var3);
             }
 
@@ -5500,15 +5940,15 @@ public class Program
 
         {
             {
-                bool var4 = true;
+                var4 = true;
                 if (var4)
                 {
-                    byte var5 = (byte)M99(-4387900683214534935L);
+                    var5 = (byte)M99(-4387900683214534935L);
                     s_rt.Checksum("c_670", var5);
                 }
                 else
                 {
-                    bool var6 = var4;
+                    var6 = var4;
                     s_rt.Checksum("c_671", var6);
                 }
 
@@ -5522,7 +5962,7 @@ public class Program
             }
             finally
             {
-                short var7 = s_30[0];
+                var7 = s_30[0];
                 s_rt.Checksum("c_673", var7);
             }
         }
@@ -5537,11 +5977,12 @@ public class Program
 
     static ulong[] M98()
     {
+        ulong var0 = default(ulong);
         M99(s_95--);
         s_87 = true;
         try
         {
-            ulong var0 = s_90;
+            var0 = s_90;
             s_rt.Checksum("c_664", var0);
         }
         finally
@@ -5582,6 +6023,16 @@ public class Program
 
     static long M99(long arg0)
     {
+        long[, ] var0 = default(long[, ]);
+        short var3 = default(short);
+        ushort var4 = default(ushort);
+        int var5 = default(int);
+        sbyte[] var6 = default(sbyte[]);
+        short var7 = default(short);
+        long[] var8 = default(long[]);
+        long var9 = default(long);
+        bool var10 = default(bool);
+        uint[] var11 = default(uint[]);
         if (s_36[0][0])
         {
             s_117 = new sbyte[][]{new sbyte[]{1, 0, 1, -1}, new sbyte[]{1, 0, 77, -98}, new sbyte[]{-56, -7}, new sbyte[]{-128, 0, 29}};
@@ -5594,7 +6045,7 @@ public class Program
                 else
                 {
                     {
-                        long[, ] var0 = new long[, ]{{9157029538085328477L, 9223372036854775806L, 8429812067056106736L, -854370081890891623L}};
+                        var0 = new long[, ]{{9157029538085328477L, 9223372036854775806L, 8429812067056106736L, -854370081890891623L}};
                         s_rt.Checksum("c_649", var0[0, 0]);
                     }
                 }
@@ -5604,8 +6055,8 @@ public class Program
                     M100();
                     ref long var2 = ref s_11;
                     var1[0][0] = var1[0][0];
-                    short var3 = s_28;
-                    ushort var4 = (ushort)((ulong)M100() | s_63);
+                    var3 = s_28;
+                    var4 = (ushort)((ulong)M100() | s_63);
                     s_106[0][0] = -2147483648;
                     s_50[0] = s_3;
                     s_70 = (ulong)M100();
@@ -5615,7 +6066,7 @@ public class Program
                     s_rt.Checksum("c_654", var4);
                 }
 
-                int var5 = (int)M100();
+                var5 = (int)M100();
                 M100();
                 M100();
                 {
@@ -5624,7 +6075,7 @@ public class Program
                     arg0 = 0L;
                 }
 
-                sbyte[] var6 = new sbyte[]{0, -6, 0, 10, 31, -47, 0, -128, 127, 126};
+                var6 = new sbyte[]{0, -6, 0, 10, 31, -47, 0, -128, 127, 126};
                 s_rt.Checksum("c_655", var5);
                 s_rt.Checksum("c_656", var6[0]);
             }
@@ -5634,15 +6085,15 @@ public class Program
                 {
                     if (s_22[0][0] <= 126)
                     {
-                        short var7 = s_113;
+                        var7 = s_113;
                         arg0 = arg0;
                         s_rt.Checksum("c_657", var7);
                     }
                 }
                 finally
                 {
-                    long[] var8 = new long[]{1L, 0L, 1244037781667181146L, 1L};
-                    long var9 = arg0;
+                    var8 = new long[]{1L, 0L, 1244037781667181146L, 1L};
+                    var9 = arg0;
                     s_rt.Checksum("c_658", var8[0]);
                     s_rt.Checksum("c_659", var9);
                 }
@@ -5656,7 +6107,7 @@ public class Program
                     M100();
                     arg0 = arg0;
                     arg0 = 6400336122145366696L;
-                    bool var10 = s_89;
+                    var10 = s_89;
                     var10 = s_61;
                     s_122 = var10;
                     var10 = var10;
@@ -5672,7 +6123,7 @@ public class Program
                     }
                     else
                     {
-                        uint[] var11 = s_1;
+                        var11 = s_1;
                         s_rt.Checksum("c_661", var11[0]);
                     }
                 }
@@ -5695,7 +6146,8 @@ public class Program
 
     static short M100()
     {
-        sbyte[] var0 = s_78;
+        sbyte[] var0 = default(sbyte[]);
+        var0 = s_78;
         s_rt.Checksum("c_650", var0[0]);
         return 32766;
     }
