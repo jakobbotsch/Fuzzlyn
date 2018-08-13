@@ -228,10 +228,6 @@ public class Program
 
                 s_rt.Checksum("c_40", var11);
             }
-            else
-            {
-                var7 = 1181877853;
-            }
 
             s_rt.Checksum("c_260", var7);
             s_rt.Checksum("c_261", var8);
