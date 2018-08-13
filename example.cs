@@ -238,11 +238,6 @@ public class Program
         return default(byte);
     }
 
-    static int[] M60(ushort arg0)
-    {
-        return default(int[]);
-    }
-
     static bool M62()
     {
         return default(bool);
