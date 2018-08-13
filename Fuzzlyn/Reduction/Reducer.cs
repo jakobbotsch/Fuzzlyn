@@ -603,7 +603,7 @@ namespace Fuzzlyn.Reduction
                 {
                     LocalDeclarationStatementSyntax argLocal;
                     string argLocalName;
-                    if (arg.RefKindKeyword != null)
+                    if (!arg.RefKindKeyword.IsKind(SyntaxKind.None))
                         (argLocal, argLocalName) = MakeLocalDecl(RefExpression(arg.Expression), RefType(param.Type));
                     else
                         (argLocal, argLocalName) = MakeLocalDecl(arg.Expression, param.Type);
