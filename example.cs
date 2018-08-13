@@ -113,7 +113,7 @@ public class Program
     static byte s_110 = 0;
     static ulong s_111 = 0;
     static short s_112 = 0;
-    static short s_113 = 1;
+    static short s_113 = 0;
     static byte s_114 = 236;
     static short[] s_115 = new short[]{-32768};
     static long s_116 = 0;
