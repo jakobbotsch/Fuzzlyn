@@ -108,11 +108,6 @@ public class Program
         return ref s_2;
     }
 
-    static int M7()
-    {
-        return default(int);
-    }
-
     static uint M8()
     {
         return default(uint);
