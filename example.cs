@@ -28,7 +28,6 @@ public class Program
     static byte s_25 = 1;
     static sbyte s_26 = 0;
     static long s_27 = 0;
-    static short s_28 = 0;
     static long s_29 = 0;
     static short[] s_30 = new short[]{0};
     static int s_31 = 0;
