@@ -133,7 +133,6 @@ public class Program
 
     static void M0()
     {
-        ushort[, ] var2 = default(ushort[, ]);
         ushort[] var5 = default(ushort[]);
         short var7 = default(short);
         uint var8 = default(uint);
