@@ -47,7 +47,6 @@ public class Program
     static ushort s_82 = 0;
     static long[] s_84 = new long[]{0};
     static bool s_89 = true;
-    static ulong s_90 = 0;
     static long s_91 = 0;
     static int s_93 = 0;
     static bool s_94 = false;
