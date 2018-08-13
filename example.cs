@@ -121,11 +121,6 @@ public class Program
         return ref s_8;
     }
 
-    static long M30()
-    {
-        return default(long);
-    }
-
     static sbyte M32(byte arg0)
     {
         return default(sbyte);
