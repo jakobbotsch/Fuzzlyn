@@ -174,11 +174,6 @@ public class Program
         return default(byte);
     }
 
-    static int M24()
-    {
-        return default(int);
-    }
-
     static int[][] M25()
     {
         return default(int[][]);
