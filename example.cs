@@ -333,11 +333,6 @@ public class Program
         return default(ushort[, ]);
     }
 
-    static short M51(int arg0, uint arg1, ref bool arg2, int arg3, uint arg4)
-    {
-        return default(short);
-    }
-
     static short M52(long arg0, ushort arg1)
     {
         return default(short);
