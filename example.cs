@@ -28,7 +28,7 @@ public class Program
     static byte s_25 = 1;
     static sbyte s_26 = 0;
     static long s_27 = 0;
-    static short s_28 = -24188;
+    static short s_28 = 0;
     static long s_29 = 9223372036854775807L;
     static short[] s_30 = new short[]{32767, -21208, 9259, -16568, 1};
     static int s_31 = 10;
