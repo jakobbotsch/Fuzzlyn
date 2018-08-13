@@ -446,11 +446,6 @@ public class Program
         return default(ushort);
     }
 
-    static bool M75(ref bool[] arg0, bool arg1, bool arg2, ref int arg3, bool[] arg4)
-    {
-        return default(bool);
-    }
-
     static ref int M76(ref ushort arg0, sbyte[] arg1, bool arg2)
     {
         return ref s_4[0][0];
