@@ -886,16 +886,7 @@ public class Program
 
     static long M95()
     {
-        int var0 = default(int);
-        if (s_61)
-        {
-            s_72 = s_72;
-            s_11 = s_44;
-        }
-
-        var0 = s_12;
-        s_rt.Checksum("c_578", var0);
-        return s_14[0]++;
+        return default(long);
     }
 
     static int M96(short arg0)
