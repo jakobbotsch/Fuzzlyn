@@ -197,7 +197,6 @@ public class Program
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
         sbyte var0 = default(sbyte);
-        short var1;
         sbyte[] var2;
         sbyte var3 = default(sbyte);
         long var5 = default(long);
@@ -218,7 +217,7 @@ public class Program
             {
                 arg0[0, 0] = s_2[0];
                 arg0 = arg0;
-                var1 = -32767;
+                short var1 = -32767;
                 arg0[0, 0] = -1;
                 var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
                 s_rt.Checksum("c_24", var0);
