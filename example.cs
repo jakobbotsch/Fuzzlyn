@@ -146,7 +146,7 @@ public class Program
 
     static uint M1(byte arg0, uint arg1, byte arg2, long arg3, ref sbyte[][] arg4, ref sbyte arg5, ref sbyte arg6, sbyte arg7, ref byte arg8, ulong arg9, ref sbyte[] arg10, byte arg11, long arg12)
     {
-        arg9 = M2(ref s_22);
+        M2(ref s_22);
         return 185228006U;
     }
 
