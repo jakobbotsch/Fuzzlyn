@@ -123,7 +123,10 @@ public class Program
             ref int[] vr59 = ref vr53;
             int vr60 = vr59[0];
             var vr54 = s_4[0];
-            s_1[0] = (uint)M13(ref s_1[0], vr54);
+            ref uint vr61 = ref s_1[0];
+            ref int[] vr62 = ref vr54;
+            int vr63 = vr62[0];
+            s_1[0] = (uint)vr63;
         }
 
         if (!s_7)
