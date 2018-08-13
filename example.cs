@@ -44,7 +44,6 @@ public class Program
     static uint s_68 = 0;
     static sbyte s_69 = 0;
     static ulong s_70 = 0;
-    static ushort s_71 = 0;
     static long s_73 = 0;
     static short[] s_75 = new short[]{0};
     static ushort s_76 = 0;
