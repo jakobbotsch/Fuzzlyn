@@ -208,11 +208,6 @@ public class Program
         return default(bool);
     }
 
-    static int M27()
-    {
-        return default(int);
-    }
-
     static ref short M28(long arg0)
     {
         return ref s_8;
