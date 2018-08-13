@@ -830,10 +830,7 @@ public class Program
 
     static uint M88()
     {
-        sbyte var0 = default(sbyte);
-        var0 = s_16[0, 0]++;
-        s_rt.Checksum("c_460", var0);
-        return 0U;
+        return default(uint);
     }
 
     static ulong M89(int arg0)
