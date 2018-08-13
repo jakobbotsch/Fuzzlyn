@@ -30,7 +30,9 @@ public class Program
             sbyte vr12 = vr7[0, 0];
             s_rt.Checksum("c_28", vr12);
             var vr13 = new int[]{450864205};
-            M13(ref s_1[0], vr13);
+            ref uint vr18 = ref s_1[0];
+            ref int[] vr19 = ref vr13;
+            int vr20 = vr19[0];
             var vr14 = s_4[0];
             s_1[0] = (uint)M13(ref s_1[0], vr14);
         }
