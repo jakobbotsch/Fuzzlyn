@@ -307,11 +307,6 @@ public class Program
         return ref s_4[0][0];
     }
 
-    static ulong[][] M78()
-    {
-        return default(ulong[][]);
-    }
-
     static int M79(sbyte arg0, sbyte[] arg1, uint arg2)
     {
         return default(int);
