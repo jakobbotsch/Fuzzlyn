@@ -678,12 +678,7 @@ public class Program
 
     static byte M43(ref short arg0)
     {
-        int[][] var0 = default(int[][]);
-        var0 = new int[][]{new int[]{1921100264}, new int[]{0}, new int[]{1730370135}, new int[]{22642782}, new int[]{-793182294}, new int[]{-1}, new int[]{1}, new int[]{-2105634838}, new int[]{1302024080}};
-        var0 = var0;
-        s_rt.Checksum("c_201", arg0);
-        s_rt.Checksum("c_202", var0[0][0]);
-        return s_34;
+        return default(byte);
     }
 
     static sbyte M44()
