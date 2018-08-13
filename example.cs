@@ -162,11 +162,6 @@ public class Program
         return ref s_33;
     }
 
-    static sbyte M44()
-    {
-        return default(sbyte);
-    }
-
     static short M46(ushort[] arg0, uint arg1)
     {
         return default(short);
