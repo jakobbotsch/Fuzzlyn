@@ -357,11 +357,6 @@ public class Program
         return default(int[]);
     }
 
-    static ulong M61()
-    {
-        return default(ulong);
-    }
-
     static bool M62()
     {
         return default(bool);
