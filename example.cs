@@ -73,7 +73,7 @@ public class Program
     static ulong s_70 = 9931359137184661811UL;
     static ushort s_71 = 47833;
     static sbyte[] s_72 = new sbyte[]{0};
-    static long s_73 = 4433513382959200365L;
+    static long s_73 = 0;
     static short s_74 = 32766;
     static short[] s_75 = new short[]{0, -16223, 12414, 1, -23240, -22783, 29677, 2};
     static ushort s_76 = 21018;
