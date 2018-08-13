@@ -96,7 +96,7 @@ public class Program
         return ref s_29;
     }
 
-    static ushort[][] M55(sbyte arg1)
+    static ushort[][] M55()
     {
         return default(ushort[][]);
     }
