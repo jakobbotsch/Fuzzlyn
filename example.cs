@@ -296,11 +296,6 @@ public class Program
         return ref s_4[0][0];
     }
 
-    static int M79(sbyte arg0, sbyte[] arg1, uint arg2)
-    {
-        return default(int);
-    }
-
     static bool M80(long arg0)
     {
         return default(bool);
