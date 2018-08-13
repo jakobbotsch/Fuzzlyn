@@ -8,7 +8,6 @@ public class Program
     static short s_19;
     static byte s_25 = 1;
     static long s_29;
-    static ulong s_47;
     static byte s_60;
     static sbyte[] s_78;
     static long[] s_84 = new long[]{0};
