@@ -96,11 +96,6 @@ public class Program
         return arg2[0];
     }
 
-    static int[][] M25()
-    {
-        return default(int[][]);
-    }
-
     static ref short M28(long arg0)
     {
         return ref s_8;
