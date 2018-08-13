@@ -533,8 +533,6 @@ public class Program
 
     static ref long M33(ref int[][] arg0)
     {
-        M34(new long[][]{new long[]{-1L}, new long[]{8191470258571274071L}, new long[]{-6191645651997984133L}, new long[]{8370325159813168593L}});
-        s_rt.Checksum("c_144", arg0[0][0]);
         return ref s_6;
     }
 
