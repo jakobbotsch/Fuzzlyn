@@ -78,9 +78,4 @@ public class Program
     {
         return arg2[0];
     }
-
-    static ulong M67()
-    {
-        return default(ulong);
-    }
 }
