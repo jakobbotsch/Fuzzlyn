@@ -175,7 +175,10 @@ public class Program
         if (!s_7)
         {
             var vr75 = new int[]{0};
-            vr69 = (short)(51431005U | M13(ref s_1[0], vr75));
+            ref uint vr84 = ref s_1[0];
+            ref int[] vr85 = ref vr75;
+            int vr86 = vr85[0];
+            vr69 = (short)(51431005U | vr86);
             short vr76 = vr69;
             if (vr67[0, 0] > vr76)
             {
