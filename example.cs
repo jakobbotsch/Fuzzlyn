@@ -609,17 +609,7 @@ public class Program
 
     static short[] M48(byte arg0)
     {
-        {
-            arg0 = 0;
-        }
-
-        if (s_36[0][0])
-        {
-            s_11 = 7622133557170225341L;
-        }
-
-        s_rt.Checksum("c_211", arg0);
-        return new short[]{-32767, 24875, 32767, 14425, 0, -32768, 32766, 32766};
+        return default(short[]);
     }
 
     static sbyte M49(ushort[] arg0, int arg1, short arg2)
