@@ -220,8 +220,6 @@ public class Program
                 uint var11 = s_1[0];
                 s_rt.Checksum("c_40", var11);
             }
-
-            s_rt.Checksum("c_261", var8);
         }
 
         s_rt.Checksum("c_262", arg0[0, 0]);
