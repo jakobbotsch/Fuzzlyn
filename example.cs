@@ -220,11 +220,6 @@ public class Program
         return ref s_29;
     }
 
-    static ushort[, ] M50(ref int arg0)
-    {
-        return default(ushort[, ]);
-    }
-
     static short M52(long arg0, ushort arg1)
     {
         return default(short);
