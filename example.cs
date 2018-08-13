@@ -10,7 +10,6 @@ public class Program
     {
         s_rt = rt;
         M12(s_16, s_19);
-        byte vr4 = (byte)0;
     }
 
     static void M12(sbyte[, ] arg0, short arg2)
