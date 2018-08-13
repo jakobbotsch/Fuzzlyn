@@ -512,11 +512,6 @@ public class Program
         return default(ushort);
     }
 
-    static sbyte M74(ref sbyte arg0)
-    {
-        return default(sbyte);
-    }
-
     static bool M75(ref bool[] arg0, bool arg1, bool arg2, ref int arg3, bool[] arg4)
     {
         return default(bool);
