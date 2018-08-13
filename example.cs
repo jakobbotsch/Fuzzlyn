@@ -16,7 +16,6 @@ public class Program
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19 = 0;
     static byte[] s_20 = new byte[]{0};
-    static int s_21 = 0;
     static uint[][] s_22 = new uint[][]{new uint[]{0}};
     static byte s_25 = 1;
     static sbyte s_26;
