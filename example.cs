@@ -178,11 +178,6 @@ public class Program
         return ref s_10[0];
     }
 
-    static bool M62()
-    {
-        return default(bool);
-    }
-
     static ref long M63()
     {
         return ref s_35;
