@@ -369,11 +369,6 @@ public class Program
         return default(int);
     }
 
-    static bool M85(ref ulong arg0)
-    {
-        return default(bool);
-    }
-
     static uint M87()
     {
         return default(uint);
