@@ -94,11 +94,6 @@ public class Program
         return arg2[0];
     }
 
-    static ref short M28(long arg0)
-    {
-        return ref s_8;
-    }
-
     static sbyte M32(byte arg0)
     {
         return default(sbyte);
