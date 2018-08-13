@@ -46,7 +46,8 @@ public class Program
             sbyte var3 = arg0[0, 0];
             sbyte var4 = arg0[0, 0];
             s_rt.Checksum("c_28", var4);
-            M13(ref s_1[0], new int[]{450864205});
+            var vr2 = new int[]{450864205};
+            M13(ref s_1[0], vr2);
             s_1[0] = (uint)M13(ref s_1[0], s_4[0]);
             s_1[0] = 0;
         }
