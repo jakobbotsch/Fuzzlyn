@@ -546,7 +546,6 @@ public class Program
 
     static ref long M47(long arg0)
     {
-        long var0 = default(long);
         byte var1 = default(byte);
         ushort var2 = default(ushort);
         return ref s_29;
