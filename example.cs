@@ -62,7 +62,7 @@ public class Program
     static long[] s_59 = new long[]{0};
     static byte s_60 = 0;
     static bool s_61 = true;
-    static byte s_62 = 221;
+    static byte s_62 = 0;
     static ushort s_63 = 0;
     static byte[] s_64 = new byte[]{0};
     static byte s_65 = 115;
