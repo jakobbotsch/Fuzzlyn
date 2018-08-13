@@ -564,10 +564,6 @@ public class Program
     static ref uint M42()
     {
         int var0 = default(int);
-        var0 = s_12;
-        var0 <<= 1965711740;
-        var0 = var0++;
-        s_rt.Checksum("c_185", var0);
         return ref s_33;
     }
 
