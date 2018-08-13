@@ -6,7 +6,7 @@ public class Program
     static int[][] s_4 = new int[][]{new int[]{0}};
     static long s_6;
     static bool s_7 = true;
-    static short s_8 = 0;
+    static short s_8;
     static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10;
     static long[] s_14 = new long[]{0};
