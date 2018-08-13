@@ -208,7 +208,6 @@ public class Program
 
     static long M11(uint[] arg0)
     {
-        arg0 = new uint[]{1497508146U, 1U, 866623142U, 1969664608U, 3022816759U, 4060504330U, 1535333176U, 0U};
         try
         {
             M12(s_16, s_25--, s_19);
@@ -216,11 +215,8 @@ public class Program
         finally
         {
             ref short var0 = ref s_30[0];
-            s_rt.Checksum("c_265", var0);
         }
 
-        arg0[0] = arg0[0];
-        s_rt.Checksum("c_266", arg0[0]);
         return M47((long)(arg0[0] / (ulong)(0UL | 1)));
     }
 
