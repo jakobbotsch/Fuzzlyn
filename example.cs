@@ -286,9 +286,4 @@ public class Program
     {
         return default(uint);
     }
-
-    static ref uint M102()
-    {
-        return ref s_1[0];
-    }
 }
