@@ -10,12 +10,12 @@ public class Program
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
     {
         s_rt = rt;
-        M12(s_16, s_25, s_19);
+        M12(s_16, s_19);
         uint vr5 = 0;
         byte vr4 = (byte)vr5;
     }
 
-    static void M12(sbyte[, ] arg0, byte arg1, short arg2)
+    static void M12(sbyte[, ] arg0, short arg2)
     {
         try
         {
