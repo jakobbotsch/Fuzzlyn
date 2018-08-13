@@ -22,7 +22,7 @@ public class Program
     static ulong[] s_100 = new ulong[]{0};
     static short s_113;
     static short[] s_115 = new short[]{0};
-    static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{0}};
+    static sbyte[][] s_117;
     static byte s_123 = 0;
     static uint s_124 = 0;
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
