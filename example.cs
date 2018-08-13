@@ -191,7 +191,7 @@ public class Program
     static long M11(uint[] arg0)
     {
         M12(s_16, s_25, s_19);
-        return M47((long)(arg0[0] / (ulong)(0UL | 1)));
+        return M47((long)(arg0[0]));
     }
 
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
