@@ -242,11 +242,6 @@ public class Program
         return default(ulong);
     }
 
-    static long M95()
-    {
-        return default(long);
-    }
-
     static int M96(short arg0)
     {
         return default(int);
