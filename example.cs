@@ -117,7 +117,7 @@ public class Program
     static byte s_114 = 0;
     static short[] s_115 = new short[]{0};
     static long s_116 = 0;
-    static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{-127}};
+    static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{0}};
     static bool s_118 = true;
     static short s_119 = 0;
     static byte[][] s_120 = new byte[][]{new byte[]{0}};
