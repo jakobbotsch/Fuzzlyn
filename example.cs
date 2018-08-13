@@ -170,11 +170,6 @@ public class Program
         return default(long);
     }
 
-    static uint[] M31()
-    {
-        return default(uint[]);
-    }
-
     static sbyte M32(byte arg0)
     {
         return default(sbyte);
