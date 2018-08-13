@@ -308,7 +308,6 @@ public class Program
                     s_8 = var8;
                     M13(1, ref s_1[0], s_4[0]);
                     var12 = 26;
-                    var8 = var8;
                     s_4[0][0] = 1;
                     M13(arg1, ref s_1[0], s_4[0]);
                     arg2 = 14599;
