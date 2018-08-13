@@ -144,9 +144,4 @@ public class Program
     {
         return default(long);
     }
-
-    static ulong M89(int arg0)
-    {
-        return default(ulong);
-    }
 }
