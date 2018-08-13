@@ -205,11 +205,6 @@ public class Program
         return default(bool);
     }
 
-    static bool[] M15()
-    {
-        return default(bool[]);
-    }
-
     static ulong M16()
     {
         return default(ulong);
