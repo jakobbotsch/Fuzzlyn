@@ -17,7 +17,7 @@ public class Program
 
     static void M0()
     {
-        M2();
+        M11();
         uint vr6 = 0;
         byte var0 = (byte)vr6;
     }
