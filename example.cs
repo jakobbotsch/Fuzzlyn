@@ -1319,51 +1319,7 @@ public class Program
 
     static ulong M16()
     {
-        short var0 = default(short);
-        long var1 = default(long);
-        uint var3 = default(uint);
-        var0 = s_8;
-        var0 = var0;
-        M17(-81, ref s_1[0], 32766, (ulong)M17(127, ref s_1[0], var0, 0UL, 1, -128) / (uint)(2259218901U | 1), s_4[0][0]++, (sbyte)(254 % (long)(s_6-- | 1)));
-        var0 = var0;
-        if (s_7)
-        {
-            {
-                M17(s_9[0], ref s_1[0], M17((sbyte)M17((sbyte)(s_2[0]-- + 112), ref s_1[0], (short)(7155 ^ s_4[0][0]--), (ulong)M17(-76, ref s_1[0], (short)((uint)(-2147483647 & s_9[0]) * (byte)(s_6-- & M17(s_9[0]--, ref s_1[0], var0, 745614966877508870UL, s_4[0][0]++, -127))), 9352707486386095167UL, s_4[0][0]++, (sbyte)M17(9, ref s_1[0], var0, 2UL, -2, s_9[0]--)), (int)M17(s_2[0]--, ref s_1[0], M17(s_2[0]--, ref s_1[0], M17((sbyte)M17(s_2[0]--, ref s_1[0], var0, (ulong)M17(14, ref s_1[0], M17(s_2[0], ref s_1[0], -16047, (ulong)M17(7, ref s_1[0], 32766, 8457600465970406527UL, s_4[0][0], 58), 2147483647, (sbyte)M17(0, ref s_1[0], var0++, 0UL, s_4[0][0], (sbyte)M17(53, ref s_1[0], var0, s_10[0], s_4[0][0], (sbyte)(s_10[0] - s_3[0])))), s_10[0], s_4[0][0]++, (sbyte)M17((sbyte)M17(s_9[0], ref s_1[0], var0, 1UL, (int)(var0 + s_6), (sbyte)M17((sbyte)M17(s_2[0], ref s_1[0], var0, s_5, -2090690306, (sbyte)(var0 ^ 2179297289U)), ref s_1[0], 0, (ulong)M17((sbyte)M17((sbyte)M17(10, ref s_1[0], var0, 1UL, s_4[0][0]++, -119), ref s_1[0], (short)((long)((byte)M17(s_2[0], ref s_1[0], var0, 9223336888783397185UL, (int)(s_6++ | s_8--), (sbyte)((byte)M17((sbyte)M17((sbyte)(s_2[0]-- & -14877), ref s_1[0], var0, (ulong)M17(M18(), ref s_13[0, 0], var0, s_5, s_12++ | s_26++, -10), (int)M23(1, s_4[0][0], -13, ref s_16, (long)M17(-127, ref s_22[0][0], M17(M18(), ref s_1[0], (short)M29(), 9008039238329753637UL, s_12++, s_9[0]), (ulong)(M30() + M32((byte)M36())), 729916534, s_9[0]), (ushort)(1 % (int)(s_38[0][0] | 1)), s_2[0], s_13[0, 0]++, new ushort[]{0, 65534, 0, 0, 3735, 65534, 14821, 42826, 1, 1}), -84), ref s_13[0, 0], (short)M33(ref s_4), s_41, (int)M32(0), -1) + -1L)) / (ushort)((ushort)M24() | 1)) & 16599), 18446744073709551615UL, 0, M44()), ref s_13[0, 0], var0, 18446744073709551615UL, (int)(s_26-- ^ s_33++), s_16[0, 0]), 10, s_9[0]--)), ref s_1[0], var0++, 3999434680244708037UL, s_32[0, 0, 0]++, s_26++)), 1, M35(new ushort[][]{new ushort[]{1, 4767, 42357}, new ushort[]{0, 1, 21613, 1}, new ushort[]{60482, 38195, 1, 1, 1}, new ushort[]{54433}, new ushort[]{62505, 0, 34971, 34695, 45235}, new ushort[]{1, 1, 43313, 1, 56063, 62075, 20072}, new ushort[]{1}}, ref s_5, ref s_40[0][0, 0])), ref s_1[0], var0, (ulong)M32(61), -2147483648, (sbyte)M43(ref var0)), 1161032424465406515UL, s_4[0][0], -128), (ulong)M28(s_27), 2147483646, (sbyte)((ushort)M23(254, s_12--, M35(new ushort[][]{new ushort[]{11718, 0, 1}, new ushort[]{65535, 0, 52604, 1, 1, 39534}, new ushort[]{25046, 35438, 65535}, new ushort[]{1, 2, 62717, 1, 57237, 12709, 26461}, new ushort[]{65534}, new ushort[]{1, 43142, 29516, 0, 62388}, new ushort[]{65535, 0, 59907, 48100, 64044, 0, 6918}, new ushort[]{1, 61231, 42692}, new ushort[]{26961}}, ref s_5, ref M33(ref s_4)), ref s_16, s_27--, 10, 0, M29(), s_3) ^ 0)), 22), ref s_13[0, 0], 1, (ulong)M35(new ushort[][]{new ushort[]{65534, 19166}, new ushort[]{1, 1, 46993, 14376, 552, 9102}, new ushort[]{2216, 7544, 0, 1, 5527}, new ushort[]{62143, 0, 1}, new ushort[]{0, 65535, 1, 1}, new ushort[]{1, 37257, 37942, 40368, 15440, 65534, 30685}, new ushort[]{65199, 47358, 1, 65535, 1}, new ushort[]{1, 1, 0, 65534, 44804, 63322, 65534, 0}}, ref s_5, ref s_29), s_21, -68), M45(622521613, (ushort)M21(s_38[0][0]--), ref s_7, 2147483646, s_30), s_21--, 73);
-                var1 = 10L;
-                var1 = 9223372036854775806L;
-                var1 = var1;
-                if (14551 <= s_1[0])
-                {
-                    ref long var2 = ref s_6;
-                    var0 = (short)M30();
-                    if (s_36[0][0])
-                    {
-                        var1 = (long)M27();
-                    }
-                    else
-                    {
-                        var2 = ref var2;
-                    }
-
-                    s_rt.Checksum("c_234", var2);
-                    return (ulong)M46(s_3, 1U);
-                }
-                else
-                {
-                    var0 = M51(-2147483648, s_33--, ref s_39, (sbyte)((uint)M17(s_16[0, 0], ref s_13[0, 0], var0, 13784490384085270091UL, 131041786, s_9[0]++) / (short)(s_42++ | 1)) / (sbyte)(1 | 1), s_13[0, 0]++);
-                    s_22[0] = s_1;
-                }
-
-                var3 = 122694802U;
-                var1 = var1;
-                s_rt.Checksum("c_241", var1);
-                s_rt.Checksum("c_242", var3);
-            }
-        }
-
-        s_rt.Checksum("c_243", var0);
-        return 10UL;
+        return default(ulong);
     }
 
     static short M17(sbyte arg0, ref uint arg1, short arg2, ulong arg3, int arg4, sbyte arg5)
