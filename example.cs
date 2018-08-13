@@ -213,7 +213,6 @@ public class Program
         s_7 = -21984 >= arg1++;
         if (!s_7)
         {
-            int var7 = 2147483647;
             arg2 = (short)(51431005U | (short)M13(arg1, ref s_1[0], new int[]{751191425, 1, -2147483647, -2003659586, 0, -595842771}));
             short var8 = arg2;
             if (arg0[0, 0] > var8)
@@ -229,7 +228,7 @@ public class Program
                 s_rt.Checksum("c_40", var11);
             }
 
-            s_rt.Checksum("c_260", var7);
+            s_rt.Checksum("c_260", 2147483647);
             s_rt.Checksum("c_261", var8);
         }
 
