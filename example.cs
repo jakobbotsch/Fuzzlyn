@@ -71,7 +71,7 @@ public class Program
     static uint s_68 = 0;
     static sbyte s_69 = 0;
     static ulong s_70 = 0;
-    static ushort s_71 = 47833;
+    static ushort s_71 = 0;
     static sbyte[] s_72 = new sbyte[]{0};
     static long s_73 = 0;
     static short s_74 = 0;
