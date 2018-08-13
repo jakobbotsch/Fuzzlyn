@@ -111,9 +111,4 @@ public class Program
     {
         return default(bool);
     }
-
-    static long M81()
-    {
-        return default(long);
-    }
 }
