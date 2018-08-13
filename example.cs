@@ -38,11 +38,11 @@ public class Program
 
     static uint M1()
     {
-        M2(ref s_22);
+        M2();
         return 0;
     }
 
-    static void M2(ref uint[][] arg0)
+    static void M2()
     {
         M11();
         return;
