@@ -91,7 +91,7 @@ public class Program
     static ushort[] s_88 = new ushort[]{0};
     static bool s_89 = true;
     static ulong s_90 = 0;
-    static long s_91 = -10L;
+    static long s_91 = 0;
     static ushort s_92 = 0;
     static int s_93 = 1817748138;
     static bool s_94 = false;
