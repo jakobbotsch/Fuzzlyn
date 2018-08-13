@@ -76,7 +76,7 @@ public class Program
     static long s_73 = 0;
     static short s_74 = 0;
     static short[] s_75 = new short[]{0};
-    static ushort s_76 = 21018;
+    static ushort s_76 = 0;
     static long s_77 = -10L;
     static sbyte[] s_78 = new sbyte[]{-10, -127};
     static long s_79 = -7240599102791735317L;
