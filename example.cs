@@ -267,11 +267,6 @@ public class Program
         return default(ulong);
     }
 
-    static bool[] M90(ref uint arg0, ref sbyte arg1, ref ushort arg2)
-    {
-        return default(bool[]);
-    }
-
     static long M95()
     {
         return default(long);
