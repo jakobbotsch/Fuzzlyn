@@ -28,7 +28,6 @@ public class Program
     static ulong s_41 = 0;
     static uint s_43 = 0;
     static byte[, ][][][, ] s_45 = new byte[, ][][][, ]{{new byte[][][, ]{new byte[][, ]{new byte[, ]{{0}}}}}};
-    static bool s_46 = true;
     static ulong s_47 = 0;
     static bool s_48 = false;
     static byte s_49 = 0;
