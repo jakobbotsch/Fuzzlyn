@@ -50,7 +50,6 @@ public class Program
             M13(ref s_1[0], vr2);
             var vr3 = s_4[0];
             s_1[0] = (uint)M13(ref s_1[0], vr3);
-            s_1[0] = 0;
         }
 
         if (!s_7)
