@@ -9,7 +9,6 @@ public class Program
     static short s_8 = 0;
     static sbyte[] s_9 = new sbyte[]{0};
     static ulong[] s_10;
-    static long s_11 = 0;
     static uint[, ] s_13;
     static long[] s_14 = new long[]{0};
     static byte s_15 = 0;
