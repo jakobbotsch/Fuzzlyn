@@ -27,7 +27,6 @@ public class Program
     static void M2()
     {
         M11();
-        return;
     }
 
     static void M11()
