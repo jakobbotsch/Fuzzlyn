@@ -66,7 +66,6 @@ public class Program
         }
 
         s_rt.Checksum("c_264", arg2);
-        return;
     }
 
     static int M13(ref uint arg1, int[] arg2)
