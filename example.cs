@@ -30,7 +30,6 @@ public class Program
     static long[][, ] s_40 = new long[][, ]{new long[, ]{{0}}};
     static ulong s_41 = 0;
     static uint s_43 = 0;
-    static long s_44 = 0;
     static byte[, ][][][, ] s_45 = new byte[, ][][][, ]{{new byte[][][, ]{new byte[][, ]{new byte[, ]{{0}}}}}};
     static bool s_46 = true;
     static ulong s_47 = 0;
