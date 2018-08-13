@@ -820,13 +820,7 @@ public class Program
 
     static int M84()
     {
-        s_6 = 4960799877529508864L;
-        s_36[0][0] = s_7;
-        {
-            s_25 = s_45[0, 0][0][0][0, 0]--;
-        }
-
-        return -459766720;
+        return default(int);
     }
 
     static bool M85(ref ulong arg0)
