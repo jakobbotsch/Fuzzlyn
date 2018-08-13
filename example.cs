@@ -2,7 +2,7 @@ public class Program
 {
     static Fuzzlyn.Execution.IRuntime s_rt;
     static uint[] s_1 = new uint[]{0};
-    static sbyte[] s_2 = new sbyte[]{1};
+    static sbyte[] s_2 = new sbyte[]{0};
     static ushort[] s_3 = new ushort[]{65534, 48759, 52191, 26642, 65535, 29351};
     static int[][] s_4 = new int[][]{new int[]{0, 0, 1}, new int[]{-10}, new int[]{-2147483647}, new int[]{2018912628}, new int[]{2147483647, -1111039485}, new int[]{-108403293, -220823461}};
     static ulong s_5 = 1UL;
