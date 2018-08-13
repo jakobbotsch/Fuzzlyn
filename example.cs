@@ -665,8 +665,7 @@ public class Program
 
     static bool M62()
     {
-        s_58 = 255;
-        return s_7;
+        return default(bool);
     }
 
     static ref long M63()
