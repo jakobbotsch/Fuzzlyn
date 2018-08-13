@@ -212,7 +212,6 @@ public class Program
         }
 
         s_7 = -21984 >= arg1++;
-        arg1 = (byte)M13(arg1, ref s_1[0], s_4[0]);
         try
         {
             arg0[0, 0] = arg0[0, 0]--;
