@@ -116,7 +116,7 @@ public class Program
         return default(ushort[][]);
     }
 
-    static bool M80(long arg0)
+    static bool M80()
     {
         return default(bool);
     }
