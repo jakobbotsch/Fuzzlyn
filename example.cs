@@ -196,7 +196,6 @@ public class Program
 
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
-        sbyte var0 = default(sbyte);
         ushort var6 = default(ushort);
         try
         {
