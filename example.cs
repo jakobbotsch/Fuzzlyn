@@ -2223,78 +2223,7 @@ public class Program
         sbyte[] var6 = default(sbyte[]);
         uint[] var8 = default(uint[]);
         bool var9 = default(bool);
-        {
-            if (arg3)
-            {
-                if (arg3)
-                {
-                    var0 = s_54[0]--;
-                    s_rt.Checksum("c_346", var0);
-                }
-
-                var1 = arg3;
-                var2 = 7731816568299975045UL;
-                M74(ref s_9[0]);
-                if (arg3)
-                {
-                    arg3 = arg3;
-                    s_74 = s_54[0];
-                }
-                else
-                {
-                    M80(arg4++);
-                    var2 = (ulong)((long)(9674 % (ushort)((ushort)(s_57 - (byte)M81()) | 1)) ^ s_50[0][0]);
-                    var3 = arg0;
-                    var1 = false;
-                    M78();
-                    var4 = 10677;
-                    M76(ref var4, new sbyte[]{1, 37, 1, -128, 1}, M85(ref s_57)) = -1958897922;
-                    var5 = s_41;
-                    s_rt.Checksum("c_418", var3);
-                    s_rt.Checksum("c_419", var4);
-                    s_rt.Checksum("c_420", var5);
-                }
-
-                s_rt.Checksum("c_421", var1);
-                s_rt.Checksum("c_422", var2);
-            }
-            else
-            {
-                arg1 = (sbyte)M76(ref s_66, s_72, M76(ref s_71, s_2, s_36[0][0]) < s_19--);
-                arg5 = 3762173660U;
-                s_75 = s_30;
-            }
-        }
-
-        var6 = new sbyte[]{83, 2, 1, 0, -127, 0, 118, -53, -40, 127};
         ref short var7 = ref s_54[0];
-        var6 = new sbyte[]{68, -62, 47, 112};
-        M86(arg0, 0, s_10[0], arg4, ref arg4, new sbyte[]{0, 1, -82}, arg5);
-        M82() = (uint)M77(new ulong[][]{new ulong[]{4243510672054320913UL, 1UL, 0UL, 7470172993746202514UL, 8034701939916573486UL}, new ulong[]{15922323541900284477UL, 13579709618074211288UL, 412024011019601249UL, 1UL, 1UL}, new ulong[]{11225623764325307720UL, 0UL}, new ulong[]{0UL, 4251507856021102779UL, 0UL, 1UL, 18446744073709551614UL}, new ulong[]{18446744073709551614UL, 13295524757949047973UL, 1UL}, new ulong[]{0UL, 1UL, 17870506026229376508UL}, new ulong[]{9547919680104487218UL, 0UL, 2751600608620645290UL, 826425428225408521UL, 11987676524554470284UL}, new ulong[]{1UL, 18446744073709551615UL}, new ulong[]{112695361780868991UL}, new ulong[]{1UL, 1UL}}, arg1--, new ushort[]{49042, 65534, 65534, 1, 11624, 42180});
-        M82() = 1U;
-        if (arg3)
-        {
-            M83();
-            if (M80(7573968938990664773L))
-            {
-                arg0 = arg0;
-                var8 = s_1;
-                s_rt.Checksum("c_450", var8[0]);
-            }
-        }
-
-        var9 = M80(-9147339872171356967L);
-        s_81 -= (uint)M74(ref arg1);
-        M79((sbyte)(arg5 & arg0), new sbyte[]{52, 127, 84, -33, 47}, 4294967295U);
-        s_rt.Checksum("c_451", arg0);
-        s_rt.Checksum("c_452", arg1);
-        s_rt.Checksum("c_453", arg2);
-        s_rt.Checksum("c_454", arg3);
-        s_rt.Checksum("c_455", arg4);
-        s_rt.Checksum("c_456", arg5);
-        s_rt.Checksum("c_457", var6[0]);
-        s_rt.Checksum("c_458", var7);
-        s_rt.Checksum("c_459", var9);
         return ref s_10;
     }
 
