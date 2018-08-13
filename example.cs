@@ -505,11 +505,6 @@ public class Program
         return default(short);
     }
 
-    static byte M94()
-    {
-        return default(byte);
-    }
-
     static long M95()
     {
         return default(long);
