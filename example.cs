@@ -288,11 +288,6 @@ public class Program
         return default(sbyte);
     }
 
-    static ref long M33(ref int[][] arg0)
-    {
-        return ref s_6;
-    }
-
     static uint M36()
     {
         return default(uint);
