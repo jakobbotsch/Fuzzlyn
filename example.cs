@@ -106,7 +106,7 @@ public class Program
         return default(long[][]);
     }
 
-    static ulong M67(ushort[,, ] arg0)
+    static ulong M67()
     {
         return default(ulong);
     }
