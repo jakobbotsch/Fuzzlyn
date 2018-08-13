@@ -540,7 +540,6 @@ public class Program
 
     static ref long M47(long arg0)
     {
-        ushort var2 = default(ushort);
         return ref s_29;
     }
 
