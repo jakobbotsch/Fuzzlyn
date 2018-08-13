@@ -84,7 +84,7 @@ public class Program
     static uint s_81 = 0;
     static ushort s_82 = 0;
     static int[, ] s_83 = new int[, ]{{0}};
-    static long[] s_84 = new long[]{0L};
+    static long[] s_84 = new long[]{0};
     static ushort[] s_85 = new ushort[]{0, 33956, 5112};
     static ulong[][][][] s_86 = new ulong[][][][]{new ulong[][][]{new ulong[][]{new ulong[]{9473705828934257457UL, 11681380003416049046UL, 2UL}}}};
     static bool s_87 = true;
