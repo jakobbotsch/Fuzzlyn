@@ -10,7 +10,7 @@ public class Program
     static bool s_7 = true;
     static short s_8 = 0;
     static sbyte[] s_9 = new sbyte[]{0};
-    static ulong[] s_10 = new ulong[]{15691583844157379322UL};
+    static ulong[] s_10 = new ulong[]{0};
     static long s_11 = -9223372036854775808L;
     static int s_12 = 0;
     static uint[, ] s_13 = new uint[, ]{{2940745711U, 2U, 0U, 2806973544U, 646660452U, 1U, 224910540U}, {0, 2113080014U, 2638558188U, 4294967295U, 1U, 4000773105U, 131751513U}, {1U, 10U, 428575728U, 1U, 1714057555U, 4029293351U, 1604924186U}, {2933174561U, 81542878U, 4294967295U, 1373992250U, 4011059407U, 4294967295U, 79693535U}, {3701430385U, 3502192981U, 1U, 61638541U, 4294967294U, 1221868582U, 1U}};
