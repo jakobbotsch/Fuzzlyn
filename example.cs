@@ -119,11 +119,6 @@ public class Program
         return;
     }
 
-    static int M3(ushort arg0, ref ulong arg1, short arg2, long arg3)
-    {
-        return default(int);
-    }
-
     static ref sbyte[] M5(ushort arg0, long arg1, long[] arg2)
     {
         return ref s_2;
