@@ -560,44 +560,7 @@ public class Program
 
     static int[][] M25()
     {
-        bool var0 = default(bool);
-        uint var1 = default(uint);
-        try
-        {
-            if (M26())
-            {
-                var0 = true;
-                M28(1L);
-                var0 = var0;
-                s_rt.Checksum("c_113", var0);
-            }
-            else
-            {
-                s_9[0] = 0;
-                s_3[0] = s_3[0]++;
-                s_22 = new uint[][]{new uint[]{1U}, new uint[]{2208540405U, 1U}, new uint[]{1U}, new uint[]{61961135U, 0U, 0U}, new uint[]{4294967294U}};
-                {
-                    M27();
-                }
-            }
-
-            s_6 = (long)M27();
-        }
-        finally
-        {
-            M26();
-            s_22 = new uint[][]{new uint[]{1U, 0U}, new uint[]{1188609893U, 2U, 0U}, new uint[]{891345313U}};
-        }
-
-        {
-            var1 = s_22[0][0]--;
-            M26();
-            s_rt.Checksum("c_114", var1);
-        }
-
-        ref ushort var2 = ref s_3[0];
-        s_rt.Checksum("c_115", var2);
-        return s_4;
+        return default(int[][]);
     }
 
     static bool M26()
