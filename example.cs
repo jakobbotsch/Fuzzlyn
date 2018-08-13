@@ -185,11 +185,6 @@ public class Program
         return default(int[][]);
     }
 
-    static bool M26()
-    {
-        return default(bool);
-    }
-
     static ref short M28(long arg0)
     {
         return ref s_8;
