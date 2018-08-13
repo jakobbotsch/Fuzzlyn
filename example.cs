@@ -214,7 +214,6 @@ public class Program
         s_7 = -21984 >= arg1++;
         if (s_7)
         {
-            s_rt.Checksum("c_36", var6);
         }
         else
         {
