@@ -146,22 +146,7 @@ public class Program
 
     static uint M1(byte arg0, uint arg1, byte arg2, long arg3, ref sbyte[][] arg4, ref sbyte arg5, ref sbyte arg6, sbyte arg7, ref byte arg8, ulong arg9, ref sbyte[] arg10, byte arg11, long arg12)
     {
-        s_1 = new uint[]{4294967294U, 3086801155U, 0U, 2U};
-        arg1 = arg1;
         arg9 = M2(ref s_22);
-        s_rt.Checksum("c_631", arg0);
-        s_rt.Checksum("c_632", arg1);
-        s_rt.Checksum("c_633", arg2);
-        s_rt.Checksum("c_634", arg3);
-        s_rt.Checksum("c_635", arg4[0][0]);
-        s_rt.Checksum("c_636", arg5);
-        s_rt.Checksum("c_637", arg6);
-        s_rt.Checksum("c_638", arg7);
-        s_rt.Checksum("c_639", arg8);
-        s_rt.Checksum("c_640", arg9);
-        s_rt.Checksum("c_641", arg10[0]);
-        s_rt.Checksum("c_642", arg11);
-        s_rt.Checksum("c_643", arg12);
         return 185228006U;
     }
 
