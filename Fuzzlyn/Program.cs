@@ -137,6 +137,9 @@ namespace Fuzzlyn
                 GenerateProgramsAndOutput(options);
             else
                 GenerateProgramsAndCheck(options);
+
+            if (Debugger.IsAttached)
+                Console.ReadLine();
         }
 
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
