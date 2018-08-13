@@ -284,11 +284,6 @@ public class Program
         return ref s_29;
     }
 
-    static sbyte M49(ushort[] arg0, int arg1, short arg2)
-    {
-        return default(sbyte);
-    }
-
     static ushort[, ] M50(ref int arg0)
     {
         return default(ushort[, ]);
