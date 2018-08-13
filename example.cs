@@ -82,7 +82,7 @@ public class Program
     static long s_79 = 0;
     static byte s_80 = 0;
     static uint s_81 = 0;
-    static ushort s_82 = 65534;
+    static ushort s_82 = 0;
     static int[, ] s_83 = new int[, ]{{0}};
     static long[] s_84 = new long[]{0L};
     static ushort[] s_85 = new ushort[]{0, 33956, 5112};
