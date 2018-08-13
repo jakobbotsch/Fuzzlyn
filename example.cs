@@ -794,11 +794,7 @@ public class Program
 
     static sbyte M74(ref sbyte arg0)
     {
-        M75(ref s_23, s_46, true, ref s_21, new bool[]{false, true, false, true, true, false, true});
-        arg0 = (sbyte)(arg0 + s_52[0]++);
-        arg0 = 127;
-        s_rt.Checksum("c_417", arg0);
-        return arg0;
+        return default(sbyte);
     }
 
     static bool M75(ref bool[] arg0, bool arg1, bool arg2, ref int arg3, bool[] arg4)
