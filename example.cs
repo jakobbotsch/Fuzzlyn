@@ -10,7 +10,9 @@ public class Program
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
     {
         s_rt = rt;
-        byte vr4 = (byte)M1();
+        M2();
+        uint vr5 = 0;
+        byte vr4 = (byte)vr5;
     }
 
     static void M0()
