@@ -918,49 +918,7 @@ public class Program
 
     static ulong M45(int arg0, ushort arg1, ref bool arg2, int arg3, short[] arg4)
     {
-        byte var1 = default(byte);
-        sbyte var2 = default(sbyte);
-        uint[][] var3 = default(uint[][]);
-        {
-            arg4[0] = -32768;
-            arg1 = 17577;
-            ref short var0 = ref arg4[0];
-            M46(new ushort[]{534}, (uint)((ushort)(1 - (ushort)M46(new ushort[]{3456, 24952, 43255, 1, 61920}, s_13[0, 0])) * (int)M47(s_27--)));
-            s_rt.Checksum("c_218", var0);
-        }
-
-        try
-        {
-            if (s_36[0][0])
-            {
-                arg0 |= s_37;
-                var1 = 219;
-                var2 = M49(s_3, arg3, 32766);
-                var3 = s_22;
-                s_rt.Checksum("c_226", var1);
-                s_rt.Checksum("c_227", var2);
-                s_rt.Checksum("c_228", var3[0][0]);
-            }
-            else
-            {
-                M50(ref arg0);
-            }
-        }
-        finally
-        {
-            if (arg2)
-            {
-                arg2 = arg2;
-                arg3 = (int)M49(new ushort[]{0, 65534, 56570, 52465, 65535, 46983}, arg0--, (short)(9223372036854775806L % (ushort)(arg1++ | 1)));
-            }
-        }
-
-        s_rt.Checksum("c_229", arg0);
-        s_rt.Checksum("c_230", arg1);
-        s_rt.Checksum("c_231", arg2);
-        s_rt.Checksum("c_232", arg3);
-        s_rt.Checksum("c_233", arg4[0]);
-        return (ulong)(arg0 % (short)(arg4[0] | 1));
+        return default(ulong);
     }
 
     static short M46(ushort[] arg0, uint arg1)
