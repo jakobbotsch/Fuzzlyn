@@ -400,11 +400,6 @@ public class Program
         return default(long[]);
     }
 
-    static ushort[] M58(sbyte[] arg0)
-    {
-        return default(ushort[]);
-    }
-
     static byte M59(ushort[][] arg0, ref ulong[, ] arg1, ref ulong arg2)
     {
         return default(byte);
