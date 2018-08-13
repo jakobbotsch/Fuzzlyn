@@ -663,45 +663,7 @@ public class Program
 
     static bool M41(short arg0)
     {
-        bool var0 = default(bool);
-        ushort var1 = default(ushort);
-        if (((byte)(arg0++ | -127) | (sbyte)(s_16[0, 0]-- * 722096999U)) == s_13[0, 0]--)
-        {
-            arg0 = (short)(-69 & s_17);
-            {
-                arg0 = -1;
-                return s_7;
-            }
-
-            arg0 = -26283;
-        }
-        else
-        {
-            M42();
-        }
-
-        if (s_23[0])
-        {
-            arg0 = arg0++;
-        }
-        else
-        {
-            var0 = false || (arg0 > (uint)(arg0 + 2967628336U));
-            {
-                var1 = s_3[0];
-                s_rt.Checksum("c_186", var1);
-            }
-
-            {
-                M42();
-            }
-
-            arg0 = 1;
-            s_rt.Checksum("c_187", var0);
-        }
-
-        s_rt.Checksum("c_188", arg0);
-        return false;
+        return default(bool);
     }
 
     static ref uint M42()
