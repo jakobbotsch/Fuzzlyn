@@ -550,11 +550,6 @@ public class Program
         return default(bool);
     }
 
-    static short[][] M86(int arg0, ushort arg1, ulong arg2, long arg3, ref long arg4, sbyte[] arg5, uint arg6)
-    {
-        return default(short[][]);
-    }
-
     static uint M87()
     {
         return default(uint);
