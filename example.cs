@@ -858,33 +858,7 @@ public class Program
 
     static ushort[, ] M50(ref int arg0)
     {
-        uint var1 = default(uint);
-        sbyte var2 = default(sbyte);
-        try
-        {
-            ref byte var0 = ref s_25;
-            s_rt.Checksum("c_219", var0);
-        }
-        finally
-        {
-            var1 = 1U;
-            s_rt.Checksum("c_220", var1);
-        }
-
-        try
-        {
-            s_24 = (short)(0UL & s_18);
-        }
-        finally
-        {
-            var2 = 17;
-            s_rt.Checksum("c_221", var2);
-        }
-
-        s_22[0] = new uint[]{1099968913U, 4054913079U, 0U, 0U, 10U, 1U, 871899698U, 1U, 3439137607U, 2U};
-        arg0 = ref arg0;
-        s_rt.Checksum("c_222", arg0);
-        return new ushort[, ]{{65534, 0, 0, 57866, 65535}, {0, 60829, 6449, 18064, 1}, {0, 0, 0, 57891, 49319}, {47696, 629, 0, 40034, 47045}, {63774, 22933, 4607, 48817, 45030}, {59509, 0, 65534, 65534, 8750}, {65534, 1, 26685, 22361, 4701}, {1, 65535, 1, 0, 59933}, {1, 0, 44096, 58598, 1}, {65535, 54828, 0, 65535, 22083}};
+        return default(ushort[, ]);
     }
 
     static short M51(int arg0, uint arg1, ref bool arg2, int arg3, uint arg4)
