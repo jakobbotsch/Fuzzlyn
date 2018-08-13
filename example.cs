@@ -57,7 +57,6 @@ public class Program
     static uint s_81 = 0;
     static ushort s_82 = 0;
     static long[] s_84 = new long[]{0};
-    static ushort[] s_85 = new ushort[]{0};
     static ulong[][][][] s_86 = new ulong[][][][]{new ulong[][][]{new ulong[][]{new ulong[]{0}}}};
     static ushort[] s_88 = new ushort[]{0};
     static bool s_89 = true;
