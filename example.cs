@@ -55,7 +55,6 @@ public class Program
     static byte[] s_52 = new byte[]{0};
     static bool[,, ] s_53 = new bool[,, ]{{{false}}};
     static short[] s_54 = new short[]{0};
-    static bool[] s_55 = new bool[]{false};
     static sbyte s_56 = 0;
     static ulong s_57 = 0;
     static byte s_58 = 0;
