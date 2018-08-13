@@ -372,11 +372,6 @@ public class Program
         return ref s_33;
     }
 
-    static byte M43(ref short arg0)
-    {
-        return default(byte);
-    }
-
     static sbyte M44()
     {
         return default(sbyte);
