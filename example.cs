@@ -932,35 +932,7 @@ public class Program
 
     static int M54(ref int arg0, ref long arg1)
     {
-        bool var0 = default(bool);
-        {
-            M55(s_22[0], (sbyte)M81());
-            if (s_53[0, 0, 0])
-            {
-                {
-                    var0 = s_7;
-                    if (var0)
-                    {
-                        M89(arg0);
-                    }
-                    else
-                    {
-                        s_101 = s_101;
-                        s_39 = true;
-                        M55(new uint[]{3870818745U, 0U, 2539678334U, 1U, 3015754263U, 1U}, s_99++);
-                    }
-
-                    arg0 = 0;
-                    arg0 = -1246678707;
-                    M69(s_99, M76(ref s_71, new sbyte[]{127, -127, -77, 0, 0, 126}, 21896 < (ushort)(s_17-- ^ 1))--, (ulong)(s_42-- / (int)(0 | 1)), ref s_26, 254, var0, (long)M87()) = M69((sbyte)M61(), -2147483648, (ulong)M70(), ref s_72[0], (byte)M56(), false, arg1);
-                    s_rt.Checksum("c_559", var0);
-                }
-            }
-        }
-
-        s_rt.Checksum("c_560", arg0);
-        s_rt.Checksum("c_561", arg1);
-        return -2147483648;
+        return default(int);
     }
 
     static ushort[][] M55(uint[] arg0, sbyte arg1)
