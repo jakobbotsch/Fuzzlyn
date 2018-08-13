@@ -620,40 +620,7 @@ public class Program
 
     static uint[] M39(ulong arg0, uint arg1)
     {
-        int var0 = default(int);
-        if (s_3[0] < -1)
-        {
-            var0 = -1433555422;
-            s_rt.Checksum("c_174", var0);
-        }
-
-        s_30 = s_30;
-        if (s_23[0])
-        {
-            if (s_34 > arg1)
-            {
-                arg0 = arg0;
-            }
-        }
-
-        s_7 &= true;
-        if (s_17 == s_26++)
-        {
-            arg1 = 3921717108U;
-            arg1 = arg1;
-            try
-            {
-                arg1 = arg1--;
-            }
-            finally
-            {
-                arg1 = arg1;
-            }
-        }
-
-        s_rt.Checksum("c_175", arg0);
-        s_rt.Checksum("c_176", arg1);
-        return new uint[]{0U, 1U, 769262346U, 2799153063U, 0U, 1U, 2340544295U};
+        return default(uint[]);
     }
 
     static long[] M40(short arg0, int arg1)
