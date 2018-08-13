@@ -18,11 +18,13 @@ namespace Fuzzlyn.Reduction
     {
         private readonly Rng _rng;
         private int _varCounter;
+        private readonly bool _reduceWithChildProcesses;
 
-        public Reducer(CompilationUnitSyntax original, ulong reducerSeed)
+        public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses)
         {
             Original = original;
             _rng = Rng.FromSplitMix64Seed(reducerSeed);
+            _reduceWithChildProcesses = reduceWithChildProcesses;
         }
 
         public FuzzlynOptions Options { get; }
@@ -62,10 +64,25 @@ namespace Fuzzlyn.Reduction
                     throw new InvalidOperationException("Program has no errors");
                 }
 
+                // This variable is kind of a hack to allow the reducer to reduce programs that crash the runtime.
+                // When we see a candidate that crashes the runtime, we switch to keep such examples instead of
+                // the original bug. These bugs are usually more interesting anyway.
+                bool foundRuntimeCrash = false;
                 isInteresting = prog =>
                 {
-                    ProgramPairResults results = CompileAndRun(prog);
+                    ProgramPairResults results = CompileAndRun(prog, out bool subProcessCrash);
                     if (results == null)
+                    {
+                        if (subProcessCrash)
+                        {
+                            foundRuntimeCrash = true;
+                            return true;
+                        }
+
+                        return false;
+                    }
+
+                    if (foundRuntimeCrash)
                         return false;
 
                     // Do exceptions first because they will almost always change checksum
@@ -176,8 +193,10 @@ namespace Fuzzlyn.Reduction
             return Reduced;
         }
 
-        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog)
+        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, out bool subProcessCrash)
         {
+            subProcessCrash = false;
+
             CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
             CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
 
@@ -185,7 +204,16 @@ namespace Fuzzlyn.Reduction
                 return null;
 
             ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
-            ProgramPairResults results = ProgramExecutor.RunPair(pair);
+            ProgramPairResults results;
+            if (_reduceWithChildProcesses)
+            {
+                results = ProgramExecutor.RunSeparately(new List<ProgramPair> { pair })?.Single();
+                if (results == null)
+                    subProcessCrash = true;
+            }
+            else
+                results = ProgramExecutor.RunPair(pair);
+
             return results;
         }
 
@@ -294,7 +322,15 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            ProgramPairResults results = CompileAndRun(Reduced);
+            ProgramPairResults results = CompileAndRun(Reduced, out bool subProcessCrash);
+
+            if (results == null)
+            {
+                Debug.Assert(subProcessCrash);
+
+                yield return $"// Crashes the runtime";
+                yield break;
+            }
 
             yield return $"// Debug: {FormatResult(results.DebugResult, results.DebugFirstUnmatch)}";
             yield return $"// Release: {FormatResult(results.ReleaseResult, results.ReleaseFirstUnmatch)}";

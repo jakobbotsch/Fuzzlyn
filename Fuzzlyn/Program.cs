@@ -37,6 +37,7 @@ namespace Fuzzlyn
             bool? executePrograms = null;
             bool? enableChecksumming = null;
             bool? reduce = null;
+            bool? reduceInChildProcesses = null;
             string removeFixed = null;
             bool? stats = null;
             OptionSet optionSet = new OptionSet
@@ -54,6 +55,7 @@ namespace Fuzzlyn
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
+                { "reduce-use-child-processes", "Check reduced example candidates in child processes", v => reduceInChildProcesses = v != null },
                 { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
                 { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
                 { "help|h", v => help = v != null }
@@ -106,6 +108,8 @@ namespace Fuzzlyn
                 options.EnableChecksumming = enableChecksumming.Value;
             if (reduce.HasValue)
                 options.Reduce = reduce.Value;
+            if (reduceInChildProcesses.HasValue)
+                options.ReduceWithChildProcesses = reduceInChildProcesses.Value;
             if (stats.HasValue)
                 options.Stats = stats.Value;
 
@@ -250,7 +254,8 @@ namespace Fuzzlyn
         {
             var cg = new CodeGenerator(options);
             CompilationUnitSyntax original = cg.GenerateProgram();
-            Reducer reducer = new Reducer(original, options.Seed.Value);
+
+            Reducer reducer = new Reducer(original, options.Seed.Value, options.ReduceWithChildProcesses);
             CompilationUnitSyntax reduced = reducer.Reduce();
             Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
         }
