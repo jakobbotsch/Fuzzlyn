@@ -897,11 +897,7 @@ public class Program
 
     static uint M101()
     {
-        s_46 = true;
-        s_38[0][0] = -2147483647;
-        s_92 = s_66++;
-        M102();
-        return M102();
+        return default(uint);
     }
 
     static ref uint M102()
