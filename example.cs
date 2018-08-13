@@ -468,14 +468,7 @@ public class Program
 
     static short M17(sbyte arg0, ref uint arg1, short arg2, ulong arg3, int arg4, sbyte arg5)
     {
-        s_4 = new int[][]{new int[]{2, -105973443, 585475956}, new int[]{1657642978, -1707822875}, new int[]{1}, new int[]{-2147483648}, new int[]{-1475196895, 1828142884}, new int[]{2147483647}, new int[]{924938583}, new int[]{-1726076589, 1, 1}, new int[]{-1202747345, 268588811}, new int[]{-2, -137555522, -73775037}};
-        s_rt.Checksum("c_44", arg0);
-        s_rt.Checksum("c_45", arg1);
-        s_rt.Checksum("c_46", arg2);
-        s_rt.Checksum("c_47", arg3);
-        s_rt.Checksum("c_48", arg4);
-        s_rt.Checksum("c_49", arg5);
-        return 1;
+        return default(short);
     }
 
     static sbyte M18()
