@@ -133,7 +133,6 @@ public class Program
 
     static void M0()
     {
-        short var7 = default(short);
         uint var8 = default(uint);
         byte var9 = default(byte);
         uint var10 = default(uint);
