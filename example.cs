@@ -7,7 +7,6 @@ public class Program
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static short s_19;
     static byte s_25 = 1;
-    static sbyte[][] s_117;
     static uint s_124 = 0;
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
     {
