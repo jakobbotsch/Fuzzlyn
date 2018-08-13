@@ -55,7 +55,8 @@ public class Program
         s_7 = 0 >= arg1;
         if (!s_7)
         {
-            arg2 = (short)(51431005U | M13(ref s_1[0], new int[]{0}));
+            var vr1 = new int[]{0};
+            arg2 = (short)(51431005U | M13(ref s_1[0], vr1));
             short var8 = arg2;
             if (arg0[0, 0] > var8)
             {
