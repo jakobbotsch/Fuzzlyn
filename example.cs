@@ -192,11 +192,6 @@ public class Program
         return default(long[]);
     }
 
-    static byte M59(ushort[][] arg0, ref ulong[, ] arg1, ref ulong arg2)
-    {
-        return default(byte);
-    }
-
     static bool M62()
     {
         return default(bool);
