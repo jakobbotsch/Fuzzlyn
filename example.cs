@@ -775,7 +775,6 @@ public class Program
 
     static ref uint M82()
     {
-        uint var0 = default(uint);
         return ref s_33;
     }
 
