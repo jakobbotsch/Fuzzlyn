@@ -350,11 +350,6 @@ public class Program
         return default(long[][]);
     }
 
-    static bool M66()
-    {
-        return default(bool);
-    }
-
     static ulong M67(ushort[,, ] arg0)
     {
         return default(ulong);
