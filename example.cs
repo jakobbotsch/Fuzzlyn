@@ -83,7 +83,6 @@ public class Program
     static ulong s_111 = 0;
     static short s_112 = 0;
     static short s_113 = 0;
-    static byte s_114 = 0;
     static short[] s_115 = new short[]{0};
     static long s_116 = 0;
     static sbyte[][] s_117 = new sbyte[][]{new sbyte[]{0}};
