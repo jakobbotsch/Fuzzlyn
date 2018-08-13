@@ -100,11 +100,6 @@ public class Program
         return default(ushort[][]);
     }
 
-    static long[][] M65()
-    {
-        return default(long[][]);
-    }
-
     static ulong M67()
     {
         return default(ulong);
