@@ -162,7 +162,6 @@ public class Program
 
     static ref sbyte[] M5(ushort arg0, long arg1, long[] arg2)
     {
-        long var0 = default(long);
         return ref s_2;
     }
 
