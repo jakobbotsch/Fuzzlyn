@@ -198,7 +198,6 @@ public class Program
     {
         sbyte var0 = default(sbyte);
         ushort var6 = default(ushort);
-        bool var13 = default(bool);
         uint var14 = default(uint);
         ulong var15 = default(ulong);
         ulong var17;
