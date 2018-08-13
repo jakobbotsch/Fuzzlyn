@@ -145,7 +145,7 @@ public class Program
     static ulong M2(ref uint[][] arg0)
     {
         M11(arg0[0]);
-        return (s_109);
+        return s_109;
     }
 
     static int M3(ushort arg0, ref ulong arg1, short arg2, long arg3)
