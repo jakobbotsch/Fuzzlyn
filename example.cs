@@ -32,7 +32,7 @@ public class Program
     static long s_29 = 0;
     static short[] s_30 = new short[]{0};
     static int s_31 = 0;
-    static int[,, ] s_32 = new int[,, ]{{{1684627006, 567893548, -2097384269, 0, 0}, {10, 0, 0, 1775731947, 1179149299}, {398773950, 1, 1652481477, 0, 0}, {1, -10, -736803111, 1, -10}}};
+    static int[,, ] s_32 = new int[,, ]{{{1684627006, 567893548, -2097384269, 0, 0}}};
     static uint s_33 = 0U;
     static byte s_34 = 0;
     static long s_35 = 0;
