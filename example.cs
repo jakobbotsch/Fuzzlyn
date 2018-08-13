@@ -1296,48 +1296,7 @@ public class Program
 
     static ulong[] M98()
     {
-        ulong var0 = default(ulong);
-        M99(s_95--);
-        s_87 = true;
-        try
-        {
-            var0 = s_90;
-            s_rt.Checksum("c_664", var0);
-        }
-        finally
-        {
-            if (s_15-- < 0)
-            {
-                ref ushort var1 = ref s_71;
-                if (s_46)
-                {
-                    var1 = var1;
-                }
-
-                if ((int)M99((long)((uint)(s_1[0]-- + -10) / (uint)(s_13[0, 0] | 1))) > (byte)M99((long)(188 & s_90)))
-                {
-                    s_1[0] = (uint)M100();
-                    s_60 = s_52[0];
-                }
-                else
-                {
-                    var1 = 7267;
-                }
-
-                if (s_94)
-                {
-                    var1 = s_88[0]--;
-                }
-
-                s_rt.Checksum("c_665", var1);
-            }
-        }
-
-        s_8 = -25756;
-        s_31 = s_38[0][0];
-        M100();
-        s_123 = s_52[0]++;
-        return new ulong[]{1UL, 0UL, 10445110140036976039UL};
+        return default(ulong[]);
     }
 
     static long M99(long arg0)
