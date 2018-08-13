@@ -22,7 +22,6 @@ public class Program
     static byte[] s_20 = new byte[]{0};
     static int s_21 = 0;
     static uint[][] s_22 = new uint[][]{new uint[]{0}};
-    static bool[] s_23 = new bool[]{false};
     static short s_24 = 0;
     static byte s_25 = 1;
     static sbyte s_26;
