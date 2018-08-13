@@ -135,7 +135,6 @@ public class Program
     {
         ushort[, ] var2 = default(ushort[, ]);
         ushort[] var5 = default(ushort[]);
-        byte var6 = default(byte);
         short var7 = default(short);
         uint var8 = default(uint);
         byte var9 = default(byte);
