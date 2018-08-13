@@ -81,11 +81,6 @@ public class Program
         return arg2[0];
     }
 
-    static ref long M47()
-    {
-        return ref s_29;
-    }
-
     static ulong M67()
     {
         return default(ulong);
