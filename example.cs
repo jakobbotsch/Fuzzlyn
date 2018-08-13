@@ -36,7 +36,7 @@ public class Program
     static uint s_33 = 0U;
     static byte s_34 = 0;
     static long s_35 = -1L;
-    static bool[][] s_36 = new bool[][]{new bool[]{true}, new bool[]{false, true}, new bool[]{false}, new bool[]{false}, new bool[]{true}};
+    static bool[][] s_36 = new bool[][]{new bool[]{true}, new bool[]{false}, new bool[]{false}, new bool[]{false}, new bool[]{true}};
     static int s_37 = 2;
     static int[][] s_38 = new int[][]{new int[]{-2147483648}};
     static bool s_39 = true;
