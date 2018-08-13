@@ -198,7 +198,6 @@ public class Program
     {
         sbyte var0 = default(sbyte);
         ushort var6 = default(ushort);
-        uint var11;
         byte var12 = default(byte);
         bool var13 = default(bool);
         uint var14 = default(uint);
@@ -262,7 +261,7 @@ public class Program
             arg0 = new sbyte[, ]{{0, 48, -128}, {126, -104, -4}, {-1, 10, 126}, {-95, 1, -64}, {-90, 20, 127}, {-67, 126, -62}, {65, -128, 1}, {-1, 0, 0}, {92, 31, 127}};
             if (arg0[0, 0] > var8)
             {
-                var11 = s_1[0];
+                uint var11 = s_1[0];
                 if ((ulong)M13(arg1, ref s_1[0], new int[]{469759899}) <= var11++)
                 {
                     s_8 = var8;
