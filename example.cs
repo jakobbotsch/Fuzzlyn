@@ -187,8 +187,7 @@ public class Program
 
     static uint M8()
     {
-        ++s_1[0];
-        return s_1[0];
+        return default(uint);
     }
 
     static long M9(ref bool arg0)
