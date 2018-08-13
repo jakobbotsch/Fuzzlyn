@@ -170,11 +170,6 @@ public class Program
         return default(bool);
     }
 
-    static uint[] M39(ulong arg0, uint arg1)
-    {
-        return default(uint[]);
-    }
-
     static ref uint M42()
     {
         return ref s_33;
