@@ -245,11 +245,6 @@ public class Program
         return default(sbyte);
     }
 
-    static ulong[] M19(ref uint arg0, short arg1, uint[] arg2)
-    {
-        return default(ulong[]);
-    }
-
     static ref uint[, ] M20()
     {
         return ref s_13;
