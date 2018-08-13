@@ -88,11 +88,6 @@ public class Program
         return ref s_29;
     }
 
-    static ushort[][] M55()
-    {
-        return default(ushort[][]);
-    }
-
     static ulong M67()
     {
         return default(ulong);
