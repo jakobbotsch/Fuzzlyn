@@ -91,7 +91,7 @@ public class Program
         return arg2[0];
     }
 
-    static ref long M47(long arg0)
+    static ref long M47()
     {
         return ref s_29;
     }
