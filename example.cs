@@ -376,11 +376,6 @@ public class Program
         return default(ulong);
     }
 
-    static ref bool M69(sbyte arg0, int arg1, ulong arg2, ref sbyte arg3, byte arg4, bool arg5, long arg6)
-    {
-        return ref s_46;
-    }
-
     static ushort[][] M71()
     {
         return default(ushort[][]);
