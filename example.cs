@@ -230,7 +230,6 @@ public class Program
             finally
             {
                 arg2 = 1;
-                s_3 = s_3;
                 {
                     {
                         arg1 = arg1++;
