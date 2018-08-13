@@ -152,12 +152,10 @@ public class Program
 
     static ulong M2(ref uint[][] arg0)
     {
-        arg0 = ref arg0;
         {
             M3(0, ref s_70, s_74--, (long)(-127 | (byte)((int)M64() + M11(arg0[0]))));
         }
 
-        s_rt.Checksum("c_630", arg0[0][0]);
         return (ulong)(s_109 ^ s_69);
     }
 
