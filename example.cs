@@ -83,7 +83,7 @@ public class Program
         return M47(arg0[0]);
     }
 
-    static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
+    static void M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
         try
         {
@@ -112,7 +112,7 @@ public class Program
         }
 
         s_rt.Checksum("c_264", arg2);
-        return arg1;
+        return;
     }
 
     static int M13(byte arg0, ref uint arg1, int[] arg2)
