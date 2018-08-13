@@ -20,7 +20,7 @@ public class Program
     static ushort s_17 = 0;
     static byte s_18 = 0;
     static short s_19 = 0;
-    static byte[] s_20 = new byte[]{143, 16, 1, 172, 109};
+    static byte[] s_20 = new byte[]{143};
     static int s_21 = 2147483646;
     static uint[][] s_22 = new uint[][]{new uint[]{1U, 0U, 132292939U, 1541317924U}};
     static bool[] s_23 = new bool[]{false, false, true, true, false, false, false, false};
