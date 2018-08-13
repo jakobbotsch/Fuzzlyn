@@ -88,7 +88,10 @@ public class Program
         if (!s_7)
         {
             var vr35 = new int[]{0};
-            vr29 = (short)(51431005U | M13(ref s_1[0], vr35));
+            ref uint vr44 = ref s_1[0];
+            ref int[] vr45 = ref vr35;
+            int vr46 = vr45[0];
+            vr29 = (short)(51431005U | vr46);
             short vr36 = vr29;
             if (vr27[0, 0] > vr36)
             {
