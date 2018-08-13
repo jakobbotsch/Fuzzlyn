@@ -432,7 +432,6 @@ public class Program
         long var4 = default(long);
         sbyte var5 = default(sbyte);
         byte var6 = default(byte);
-        bool var7 = default(bool);
         return ref s_8;
     }
 
