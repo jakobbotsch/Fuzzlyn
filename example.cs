@@ -47,7 +47,7 @@ public class Program
     static long s_44 = 9223372036854775807L;
     static byte[, ][][][, ] s_45 = new byte[, ][][][, ]{{new byte[][][, ]{new byte[][, ]{new byte[, ]{{0}}}}}};
     static bool s_46 = true;
-    static ulong s_47 = 7534743659986054350UL;
+    static ulong s_47 = 0;
     static bool s_48 = false;
     static byte s_49 = 167;
     static ushort[][] s_50 = new ushort[][]{new ushort[]{1, 0, 0, 0, 6697}, new ushort[]{15151, 11331}, new ushort[]{19272, 65535, 12068, 65534, 57184, 65534, 0, 10}, new ushort[]{0, 0, 8816, 65535, 43228, 1, 11154}, new ushort[]{42405, 0, 1}, new ushort[]{0, 2636, 38370, 22989}, new ushort[]{46234}};
