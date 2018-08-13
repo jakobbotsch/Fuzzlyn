@@ -196,7 +196,6 @@ public class Program
 
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
-        ushort var6 = default(ushort);
         try
         {
             sbyte[] var2 = new sbyte[]{126, 12, 70, 17, 94, -127, -128, -76, 127};
