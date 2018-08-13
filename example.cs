@@ -33,10 +33,10 @@ public class Program
 
     static void M0()
     {
-        byte var0 = (byte)M1(s_77);
+        byte var0 = (byte)M1();
     }
 
-    static uint M1(long arg12)
+    static uint M1()
     {
         M2(ref s_22);
         return 0;
