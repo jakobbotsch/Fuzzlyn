@@ -432,7 +432,6 @@ public class Program
 
     static ref short M28(long arg0)
     {
-        ushort[] var0 = default(ushort[]);
         int[] var1 = default(int[]);
         byte var3 = default(byte);
         long var4 = default(long);
