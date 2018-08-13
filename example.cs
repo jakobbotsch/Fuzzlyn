@@ -83,7 +83,7 @@ public class Program
     static byte s_80 = 176;
     static uint s_81 = 1575519253U;
     static ushort s_82 = 65534;
-    static int[, ] s_83 = new int[, ]{{-91266160, -155858831, -844708500, 1, 2, 1372204320, -560255575, 1289851176, -10, -1258794678}};
+    static int[, ] s_83 = new int[, ]{{-91266160}};
     static long[] s_84 = new long[]{0L};
     static ushort[] s_85 = new ushort[]{10, 33956, 5112};
     static ulong[][][][] s_86 = new ulong[][][][]{new ulong[][][]{new ulong[][]{new ulong[]{9473705828934257457UL, 11681380003416049046UL, 2UL}}, new ulong[][]{new ulong[]{18446744073709551614UL}}, new ulong[][]{new ulong[]{848190615324469612UL}, new ulong[]{10756069151345801327UL}, new ulong[]{1UL, 7048877750559284168UL}}, new ulong[][]{new ulong[]{18446744073709551615UL}, new ulong[]{0, 17351212131294472002UL}}, new ulong[][]{new ulong[]{1UL, 1UL}, new ulong[]{1UL}}, new ulong[][]{new ulong[]{0UL, 1835784703590513921UL}}}};
