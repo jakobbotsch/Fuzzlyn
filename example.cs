@@ -811,9 +811,7 @@ public class Program
 
     static uint M87()
     {
-        s_25 = s_15++;
-        s_45 = s_45;
-        return 0U;
+        return default(uint);
     }
 
     static uint M88()
