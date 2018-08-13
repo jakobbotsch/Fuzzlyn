@@ -123,7 +123,7 @@ public class Program
     static byte[][] s_120 = new byte[][]{new byte[]{0}};
     static short[][][] s_121 = new short[][][]{new short[][]{new short[]{0}}};
     static bool s_122 = false;
-    static byte s_123 = 1;
+    static byte s_123 = 0;
     static uint s_124 = 0;
     public static void Main(Fuzzlyn.Execution.IRuntime rt)
     {
