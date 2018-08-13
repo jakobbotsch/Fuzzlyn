@@ -100,11 +100,6 @@ public class Program
         return arg2[0];
     }
 
-    static byte M22()
-    {
-        return default(byte);
-    }
-
     static int[][] M25()
     {
         return default(int[][]);
