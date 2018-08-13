@@ -47,7 +47,6 @@ public class Program
     static ulong[] s_100 = new ulong[]{0};
     static bool[, ] s_101 = new bool[, ]{{false}};
     static short s_102 = 0;
-    static int[][] s_106 = new int[][]{new int[]{0}};
     static int s_108 = 0;
     static ulong s_111 = 0;
     static short s_113;
