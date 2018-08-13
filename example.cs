@@ -218,13 +218,6 @@ public class Program
             if (arg0[0, 0] > var8)
             {
                 uint var11 = s_1[0];
-                if ((ulong)M13(arg1, ref s_1[0], new int[]{469759899}) <= var11++)
-                {
-                    s_8 = var8;
-                    M13(1, ref s_1[0], s_4[0]);
-                    M13(arg1, ref s_1[0], s_4[0]);
-                }
-
                 s_rt.Checksum("c_40", var11);
             }
 
