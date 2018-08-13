@@ -468,11 +468,6 @@ public class Program
         return default(uint);
     }
 
-    static uint M88()
-    {
-        return default(uint);
-    }
-
     static ulong M89(int arg0)
     {
         return default(ulong);
