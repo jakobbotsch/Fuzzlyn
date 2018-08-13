@@ -52,6 +52,11 @@ namespace Fuzzlyn.Methods
         public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
         public int NumStatements { get; private set; }
+        /// <summary>
+        /// An overapproximation of the number of times this function will transitively call one leaf function.
+        /// For example, if this function calls two leaf functions twice, this value is >= 2.
+        /// </summary>
+        public int MaxNumLeafCalls { get; private set; }
 
         public MethodDeclarationSyntax Output()
         {
@@ -112,6 +117,9 @@ namespace Fuzzlyn.Methods
 
             _level = -1;
             Body = GenBlock(true);
+
+            if (_numCalls.Count > 0)
+                MaxNumLeafCalls = _numCalls.Max(kvp => kvp.Value * Math.Max(_funcs[kvp.Key].MaxNumLeafCalls, 1));
         }
 
         private StatementSyntax GenStatement(bool allowReturn = true)
@@ -692,6 +700,7 @@ namespace Fuzzlyn.Methods
             return (left, right);
         }
 
+        private readonly Dictionary<int, int> _numCalls = new Dictionary<int, int>();
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
         {
             Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
@@ -706,7 +715,16 @@ namespace Fuzzlyn.Methods
             }
             else
             {
-                IEnumerable<FuncGenerator> funcs = _funcs.Skip(_funcIndex + 1);
+                IEnumerable<FuncGenerator> funcs =
+                    _funcs
+                    .Skip(_funcIndex + 1)
+                    .Where(candidate =>
+                    {
+                        // Make sure we do not get too many leaf calls
+                        _numCalls.TryGetValue(candidate._funcIndex, out int candidateNumCalls);
+                        return (candidateNumCalls + 1) * candidate.MaxNumLeafCalls < Options.SingleFunctionMaxTotalCalls;
+                    });
+
                 if (type != null)
                     funcs = funcs.Where(f => f.ReturnType.IsCastableTo(type) || (f.ReturnType is RefType rt && rt.InnerType.IsCastableTo(type)));
 
@@ -724,6 +742,9 @@ namespace Fuzzlyn.Methods
                     IdentifierName(func.Name),
                     ArgumentList(
                         SeparatedList(args)));
+
+            _numCalls.TryGetValue(func._funcIndex, out int numCalls);
+            _numCalls[func._funcIndex] = numCalls + 1;
 
             if (func.ReturnType == type || func.ReturnType is RefType retRt && retRt.InnerType == type)
                 return invoc;
