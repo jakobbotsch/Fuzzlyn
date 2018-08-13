@@ -653,12 +653,7 @@ public class Program
 
     static short M52(long arg0, ushort arg1)
     {
-        ushort[] var0 = default(ushort[]);
-        var0 = new ushort[]{0, 65534, 65535, 11030, 0, 0, 1, 46467};
-        s_rt.Checksum("c_297", arg0);
-        s_rt.Checksum("c_298", arg1);
-        s_rt.Checksum("c_299", var0[0]);
-        return 0;
+        return default(short);
     }
 
     static ulong M53(ref uint arg0)
