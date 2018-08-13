@@ -88,7 +88,6 @@ public class Program
     static bool[, ] s_101 = new bool[, ]{{false}};
     static short s_102 = 0;
     static bool s_104 = true;
-    static short s_105 = 0;
     static int[][] s_106 = new int[][]{new int[]{0}};
     static uint s_107 = 0;
     static int s_108 = 0;
