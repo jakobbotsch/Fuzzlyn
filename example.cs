@@ -213,7 +213,7 @@ public class Program
         s_7 = -21984 >= arg1++;
         if (!s_7)
         {
-            arg2 = (short)(51431005U | M13(arg1, ref s_1[0], new int[]{751191425, 1, -2147483647, -2003659586, 0, -595842771}));
+            arg2 = (short)(51431005U | M13(arg1, ref s_1[0], new int[]{751191425}));
             short var8 = arg2;
             if (arg0[0, 0] > var8)
             {
