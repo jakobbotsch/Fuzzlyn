@@ -227,7 +227,7 @@ public class Program
         bool var13 = default(bool);
         uint var14 = default(uint);
         ulong var15 = default(ulong);
-        ulong var17 = default(ulong);
+        ulong var17;
         bool var18 = default(bool);
         {
             try
