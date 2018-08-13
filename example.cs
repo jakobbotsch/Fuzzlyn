@@ -445,24 +445,7 @@ public class Program
 
     static sbyte M21(int arg0)
     {
-        if (s_7)
-        {
-            arg0 = arg0;
-            arg0 = 928119432;
-        }
-
-        M22();
-        arg0 = 2147483646;
-        s_11 = (long)M22();
-        if ((byte)(91 - arg0--) >= M22())
-        {
-            arg0 = arg0++;
-            arg0 = -2147483647;
-            M22();
-        }
-
-        s_rt.Checksum("c_51", arg0);
-        return (sbyte)M22();
+        return default(sbyte);
     }
 
     static byte M22()
