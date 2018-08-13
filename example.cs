@@ -27,7 +27,6 @@ public class Program
     static sbyte s_56 = 0;
     static ulong s_57 = 0;
     static byte s_60;
-    static long s_73 = 0;
     static short[] s_75 = new short[]{0};
     static ushort s_76 = 0;
     static long s_77;
