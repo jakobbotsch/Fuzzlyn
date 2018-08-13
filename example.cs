@@ -13,7 +13,7 @@ public class Program
     static ulong[] s_10;
     static long s_11 = 0;
     static int s_12 = 0;
-    static uint[, ] s_13 = new uint[, ]{{0}};
+    static uint[, ] s_13;
     static long[] s_14 = new long[]{0};
     static byte s_15 = 0;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
