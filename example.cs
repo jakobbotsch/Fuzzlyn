@@ -314,11 +314,6 @@ public class Program
         return ref s_6;
     }
 
-    static ref int[,, ] M34(long[][] arg0)
-    {
-        return ref s_32;
-    }
-
     static uint M36()
     {
         return default(uint);
