@@ -175,11 +175,6 @@ public class Program
         return default(sbyte);
     }
 
-    static ulong M45(int arg0, ushort arg1, ref bool arg2, int arg3, short[] arg4)
-    {
-        return default(ulong);
-    }
-
     static short M46(ushort[] arg0, uint arg1)
     {
         return default(short);
