@@ -44,7 +44,6 @@ public class Program
     static ulong s_57 = 0;
     static byte s_60;
     static ushort s_63 = 0;
-    static byte s_65 = 0;
     static ushort s_66 = 0;
     static uint s_68 = 0;
     static sbyte s_69 = 0;
