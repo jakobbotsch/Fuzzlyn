@@ -80,7 +80,7 @@ public class Program
     static long s_77 = 0;
     static sbyte[] s_78 = new sbyte[]{0};
     static long s_79 = 0;
-    static byte s_80 = 176;
+    static byte s_80 = 0;
     static uint s_81 = 0;
     static ushort s_82 = 65534;
     static int[, ] s_83 = new int[, ]{{0}};
