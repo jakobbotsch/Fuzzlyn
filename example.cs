@@ -95,7 +95,7 @@ public class Program
     static ushort s_92 = 0;
     static int s_93 = 0;
     static bool s_94 = false;
-    static long s_95 = -6719449326620905016L;
+    static long s_95 = 0;
     static sbyte s_96 = 0;
     static short[] s_97 = new short[]{-9562};
     static ulong[, ] s_98 = new ulong[, ]{{16441191778846550313UL, 18446744073709551615UL}};
