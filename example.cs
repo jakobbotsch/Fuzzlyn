@@ -327,11 +327,6 @@ public class Program
         return default(ulong);
     }
 
-    static int M54(ref int arg0, ref long arg1)
-    {
-        return default(int);
-    }
-
     static ushort[][] M55(uint[] arg0, sbyte arg1)
     {
         return default(ushort[][]);
