@@ -98,7 +98,7 @@ public class Program
     static long s_95 = 0;
     static sbyte s_96 = 0;
     static short[] s_97 = new short[]{0};
-    static ulong[, ] s_98 = new ulong[, ]{{16441191778846550313UL, 18446744073709551615UL}};
+    static ulong[, ] s_98 = new ulong[, ]{{16441191778846550313UL}};
     static sbyte s_99 = -127;
     static ulong[] s_100 = new ulong[]{18446744073709551615UL};
     static bool[, ] s_101 = new bool[, ]{{false, true, true, true, true, false, false, true, false}};
