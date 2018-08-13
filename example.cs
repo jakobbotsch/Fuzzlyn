@@ -67,7 +67,7 @@ public class Program
     static byte[] s_64 = new byte[]{0};
     static byte s_65 = 0;
     static ushort s_66 = 0;
-    static uint s_67 = 1U;
+    static uint s_67 = 0;
     static uint s_68 = 1U;
     static sbyte s_69 = 1;
     static ulong s_70 = 9931359137184661811UL;
