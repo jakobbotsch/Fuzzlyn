@@ -36,7 +36,6 @@ public class Program
     static sbyte s_56 = 0;
     static ulong s_57 = 0;
     static byte s_60;
-    static ushort s_63 = 0;
     static sbyte s_69 = 0;
     static ulong s_70 = 0;
     static long s_73 = 0;
