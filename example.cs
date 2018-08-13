@@ -197,7 +197,6 @@ public class Program
     static byte M12(sbyte[, ] arg0, byte arg1, short arg2)
     {
         sbyte var0 = default(sbyte);
-        long var5;
         ushort var6 = default(ushort);
         int var7 = default(int);
         short var8 = default(short);
@@ -251,7 +250,7 @@ public class Program
         }
         finally
         {
-            var5 = (long)(1 / (short)((short)M13(arg1--, ref s_1[0], new int[]{2044349693, -2147483647, 1, -2147483648, -10, 1350566660, -71041840, 0, 450850015}) | 1));
+            long var5 = (long)(1 / (short)((short)M13(arg1--, ref s_1[0], new int[]{2044349693, -2147483647, 1, -2147483648, -10, 1350566660, -71041840, 0, 450850015}) | 1));
             s_rt.Checksum("c_35", var5);
         }
 
