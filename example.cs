@@ -547,9 +547,7 @@ public class Program
 
     static sbyte M32(byte arg0)
     {
-        M33(ref s_4);
-        s_rt.Checksum("c_145", arg0);
-        return M35(new ushort[][]{new ushort[]{0, 63006}, new ushort[]{0}, new ushort[]{48792}, new ushort[]{0, 60115, 34623}, new ushort[]{41051, 18924, 25146}}, ref s_5, ref s_40[0][0, 0]);
+        return default(sbyte);
     }
 
     static ref long M33(ref int[][] arg0)
