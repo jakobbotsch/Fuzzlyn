@@ -198,7 +198,7 @@ public class Program
     {
         sbyte var0 = default(sbyte);
         ushort var6 = default(ushort);
-        uint var11 = default(uint);
+        uint var11;
         byte var12 = default(byte);
         bool var13 = default(bool);
         uint var14 = default(uint);
