@@ -327,7 +327,7 @@ public class Program
                     var8 = -2;
                     var15 = s_5;
                     arg0 = arg0;
-                    ref byte[, ][][][, ] var16 = ref s_45;
+                    byte[, ][][][, ] var16 = s_45;
                     {
                         var17 = (ulong)M27();
                         var18 = var13;
