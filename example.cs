@@ -18,7 +18,7 @@ public class Program
     static byte s_15 = 0;
     static sbyte[, ] s_16 = new sbyte[, ]{{0}};
     static ushort s_17 = 0;
-    static byte s_18 = 1;
+    static byte s_18 = 0;
     static short s_19 = 1;
     static byte[] s_20 = new byte[]{143, 16, 1, 172, 109};
     static int s_21 = 2147483646;
