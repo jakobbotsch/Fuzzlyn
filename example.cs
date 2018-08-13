@@ -808,9 +808,7 @@ public class Program
 
     static bool M85(ref ulong arg0)
     {
-        arg0 = 7283545859550719420UL;
-        s_rt.Checksum("c_407", arg0);
-        return s_55[0];
+        return default(bool);
     }
 
     static short[][] M86(int arg0, ushort arg1, ulong arg2, long arg3, ref long arg4, sbyte[] arg5, uint arg6)
