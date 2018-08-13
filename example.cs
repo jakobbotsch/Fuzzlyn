@@ -682,7 +682,6 @@ public class Program
 
     static ref ulong[] M73(int arg0, sbyte arg1, ref sbyte arg2, bool arg3, long arg4, uint arg5)
     {
-        short var0 = default(short);
         bool var1 = default(bool);
         ulong var2 = default(ulong);
         int var3 = default(int);
