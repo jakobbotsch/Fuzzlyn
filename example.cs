@@ -262,11 +262,6 @@ public class Program
         return default(long);
     }
 
-    static uint M87()
-    {
-        return default(uint);
-    }
-
     static ulong M89(int arg0)
     {
         return default(ulong);
