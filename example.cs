@@ -8,7 +8,6 @@ public class Program
     static short s_19;
     static uint[][] s_22 = new uint[][]{new uint[]{0}};
     static byte s_25 = 1;
-    static sbyte s_26;
     static long s_29;
     static ulong s_47;
     static byte s_60;
