@@ -154,11 +154,6 @@ public class Program
         return ref s_29;
     }
 
-    static short M52(long arg0, ushort arg1)
-    {
-        return default(short);
-    }
-
     static ushort[][] M55(uint[] arg0, sbyte arg1)
     {
         return default(ushort[][]);
