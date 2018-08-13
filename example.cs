@@ -157,11 +157,6 @@ public class Program
         return default(uint);
     }
 
-    static bool M38(sbyte arg0, ushort arg1)
-    {
-        return default(bool);
-    }
-
     static ref uint M42()
     {
         return ref s_33;
