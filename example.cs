@@ -51,7 +51,6 @@ public class Program
             s_1[0] = 0;
         }
 
-        s_7 = 0 >= arg1;
         if (!s_7)
         {
             var vr1 = new int[]{0};
