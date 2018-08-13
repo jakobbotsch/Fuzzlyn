@@ -272,11 +272,6 @@ public class Program
         return default(bool[]);
     }
 
-    static short M93()
-    {
-        return default(short);
-    }
-
     static long M95()
     {
         return default(long);
