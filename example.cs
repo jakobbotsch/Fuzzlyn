@@ -59,7 +59,7 @@ public class Program
     static sbyte s_56 = 0;
     static ulong s_57 = 0;
     static byte s_58 = 0;
-    static long[] s_59 = new long[]{-2L};
+    static long[] s_59 = new long[]{0};
     static byte s_60 = 183;
     static bool s_61 = true;
     static byte s_62 = 221;
