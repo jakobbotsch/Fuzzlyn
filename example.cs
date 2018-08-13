@@ -178,54 +178,7 @@ public class Program
 
     static int M3(ushort arg0, ref ulong arg1, short arg2, long arg3)
     {
-        uint var0 = default(uint);
-        short var1 = default(short);
-        int var2 = default(int);
-        arg1 = 11318137128244086683UL;
-        if (M4(ref s_98))
-        {
-            if (s_94)
-            {
-                try
-                {
-                    s_113 = (short)M83();
-                }
-                finally
-                {
-                    var0 = s_81--;
-                    var0 = 1U;
-                    M42();
-                    s_rt.Checksum("c_623", var0);
-                }
-
-                s_11 = arg3;
-                M74(ref s_9[0]);
-            }
-        }
-
-        s_114 = 0;
-        if (M38(-10, arg0))
-        {
-            var1 = s_19--;
-            s_115 = new short[]{-2, -3486, 663, 0, 2, -2, 31317, -10};
-            s_rt.Checksum("c_624", var1);
-        }
-        else
-        {
-            M83();
-            arg1 = arg1;
-            var2 = s_20[0] & arg0;
-            M69(s_26--, (int)M61(), arg1, ref s_96, s_20[0]--, M26(), arg3) = s_46;
-            s_rt.Checksum("c_625", var2);
-        }
-
-        s_116 = 9223372036854775807L;
-        arg3 = arg3;
-        s_rt.Checksum("c_626", arg0);
-        s_rt.Checksum("c_627", arg1);
-        s_rt.Checksum("c_628", arg2);
-        s_rt.Checksum("c_629", arg3);
-        return -2147483647;
+        return default(int);
     }
 
     static bool M4(ref ulong[, ] arg0)
