@@ -446,8 +446,7 @@ public class Program
 
     static byte M22()
     {
-        s_5 = s_10[0];
-        return 1;
+        return default(byte);
     }
 
     static byte M23(byte arg0, int arg1, sbyte arg2, ref sbyte[, ] arg3, long arg4, ushort arg5, sbyte arg6, uint arg7, ushort[] arg8)
