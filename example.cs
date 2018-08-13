@@ -15,49 +15,6 @@ public class Program
         byte vr4 = (byte)vr5;
     }
 
-    static void M2()
-    {
-        ref sbyte[, ] vr47 = ref s_16;
-        ref byte vr48 = ref s_25;
-        ref short vr49 = ref s_19;
-        try
-        {
-            sbyte[] vr50 = new sbyte[]{0};
-        }
-        finally
-        {
-            sbyte vr51 = vr47[0, 0];
-            sbyte vr52 = vr47[0, 0];
-            s_rt.Checksum("c_28", vr52);
-            var vr53 = new int[]{450864205};
-            ref uint vr58 = ref s_1[0];
-            ref int[] vr59 = ref vr53;
-            int vr60 = vr59[0];
-            var vr54 = s_4[0];
-            ref uint vr61 = ref s_1[0];
-            ref int[] vr62 = ref vr54;
-            int vr63 = vr62[0];
-            s_1[0] = (uint)vr63;
-        }
-
-        if (!s_7)
-        {
-            var vr55 = new int[]{0};
-            ref uint vr64 = ref s_1[0];
-            ref int[] vr65 = ref vr55;
-            int vr66 = vr65[0];
-            vr49 = (short)(51431005U | vr66);
-            short vr56 = vr49;
-            if (vr47[0, 0] > vr56)
-            {
-                uint vr57 = s_1[0];
-                s_rt.Checksum("c_40", vr57);
-            }
-        }
-
-        s_rt.Checksum("c_264", vr49);
-    }
-
     static void M11()
     {
         ref sbyte[, ] vr67 = ref s_16;
