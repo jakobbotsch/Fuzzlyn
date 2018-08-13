@@ -10,7 +10,7 @@ public class Program
     static bool s_7 = true;
     static short s_8 = 0;
     static sbyte[] s_9 = new sbyte[]{0};
-    static ulong[] s_10 = new ulong[]{0};
+    static ulong[] s_10;
     static long s_11 = 0;
     static int s_12 = 0;
     static uint[, ] s_13 = new uint[, ]{{0}};
