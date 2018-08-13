@@ -659,14 +659,7 @@ public class Program
 
     static sbyte M49(ushort[] arg0, int arg1, short arg2)
     {
-        s_41 = 15479215369114711402UL;
-        M50(ref arg1);
-        s_9[0] = s_2[0]++;
-        arg1 ^= arg1;
-        s_rt.Checksum("c_223", arg0[0]);
-        s_rt.Checksum("c_224", arg1);
-        s_rt.Checksum("c_225", arg2);
-        return (sbyte)(s_21 & arg0[0]--);
+        return default(sbyte);
     }
 
     static ushort[, ] M50(ref int arg0)
