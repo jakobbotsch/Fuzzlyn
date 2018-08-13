@@ -201,11 +201,6 @@ public class Program
         return default(sbyte);
     }
 
-    static ref uint[, ] M20()
-    {
-        return ref s_13;
-    }
-
     static byte M22()
     {
         return default(byte);
