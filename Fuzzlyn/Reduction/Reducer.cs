@@ -704,7 +704,7 @@ namespace Fuzzlyn.Reduction
                     IfStatement(
                         PrefixUnaryExpression(
                             SyntaxKind.LogicalNotExpression,
-                            @if.Condition),
+                            ParenthesizedExpression(@if.Condition)),
                     @if.Else.Statement);
 
                 yield return newIf;
