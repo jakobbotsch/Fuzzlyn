@@ -588,7 +588,7 @@ namespace Fuzzlyn.Reduction
                     .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
 
                 // Cannot yet inline functions that have multiple returns, or returns in different position than last...
-                int numReturns = target.Body.Statements.Count(s => s is ReturnStatementSyntax);
+                int numReturns = target.DescendantNodes().Count(s => s is ReturnStatementSyntax);
                 if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
                     continue;
 
@@ -1106,6 +1106,9 @@ namespace Fuzzlyn.Reduction
             yield return @try.Block;
             yield return @try.Finally.Block;
             yield return Block(@try.Block, @try.Finally.Block);
+            // Try finally first and then block. Useful when the try-block contains a
+            // return.
+            yield return Block(@try.Finally.Block, @try.Block);
         }
 
         [Simplifier]
