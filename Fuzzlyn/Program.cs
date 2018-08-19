@@ -399,7 +399,7 @@ namespace Fuzzlyn
                 {
                     File.AppendAllText(
                         "Execution_Mismatch.txt",
-                        "Seed: " + s_programQueue[i].Item1 + Environment.NewLine + JsonConvert.SerializeObject(result, Formatting.Indented) + Environment.NewLine);
+                        "Seed: " + s_programQueue[i].Item1 + Environment.NewLine);
                     Interlocked.Increment(ref s_numDeviating);
                 }
             }
