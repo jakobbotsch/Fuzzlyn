@@ -28,7 +28,7 @@ namespace Fuzzlyn
         /// universe, for example M0 calling M1 twice, M1 calling M2 twice, M2 calling M3 twice,
         /// etc. until some big N.
         /// </summary>
-        public int SingleFunctionMaxTotalCalls { get; set; } = 50000;
+        public long SingleFunctionMaxTotalCalls { get; set; } = 100_000_000;
         public double AssignToNewVarProb { get; set; } = 0.4;
         public double NewVarIsLocalProb { get; set; } = 0.8;
         public double CompoundAssignmentProb { get; set; } = 0.1;
