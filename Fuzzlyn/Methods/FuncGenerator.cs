@@ -52,13 +52,16 @@ namespace Fuzzlyn.Methods
         public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
         public int NumStatements { get; private set; }
-        /// <summary>
-        /// An overapproximation of the number of times this function will transitively call one leaf function.
-        /// For example, if this function calls two leaf functions twice, this value is >= 2.
-        /// </summary>
-        public int MaxNumLeafCalls { get; private set; }
+
+        public override string ToString()
+            => OutputSignature().NormalizeWhitespace().ToFullString();
 
         public MethodDeclarationSyntax Output()
+        {
+            return OutputSignature().WithBody(Body);
+        }
+
+        private MethodDeclarationSyntax OutputSignature()
         {
             TypeSyntax retType;
             if (ReturnType == null)
@@ -91,8 +94,7 @@ namespace Fuzzlyn.Methods
             return
                 MethodDeclaration(retType, Name)
                 .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
-                .WithParameterList(parameters)
-                .WithBody(Body);
+                .WithParameterList(parameters);
         }
 
         public void Generate(FuzzType returnType, bool randomizeParams)
@@ -117,9 +119,6 @@ namespace Fuzzlyn.Methods
 
             _level = -1;
             Body = GenBlock(true);
-
-            if (_numCalls.Count > 0)
-                MaxNumLeafCalls = _numCalls.Max(kvp => kvp.Value * Math.Max(_funcs[kvp.Key].MaxNumLeafCalls, 1));
         }
 
         private StatementSyntax GenStatement(bool allowReturn = true)
@@ -700,7 +699,8 @@ namespace Fuzzlyn.Methods
             return (left, right);
         }
 
-        private readonly Dictionary<int, int> _numCalls = new Dictionary<int, int>();
+        // Represents the transitive call counts from this function to other functions.
+        private readonly Dictionary<int, long> _callCountMap = new Dictionary<int, long>();
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
         {
             Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
@@ -720,9 +720,20 @@ namespace Fuzzlyn.Methods
                     .Skip(_funcIndex + 1)
                     .Where(candidate =>
                     {
-                        // Make sure we do not get too many leaf calls
-                        _numCalls.TryGetValue(candidate._funcIndex, out int candidateNumCalls);
-                        return (candidateNumCalls + 1) * candidate.MaxNumLeafCalls < Options.SingleFunctionMaxTotalCalls;
+                        // Make sure we do not get too many leaf calls. Here we compute what the new transitive
+                        // number of calls would be to each function, and if it's too much, reject this candidate.
+                        // Note that we will never reject calling a leaf function directly, even if the +1 puts
+                        // us over the cap. That is intentional. We only want to limit the exponential growth
+                        // which happens when functions call functions multiple times, and those functions also
+                        // call functions multiple times.
+                        foreach (var (transFunc, transNumCall) in candidate._callCountMap)
+                        {
+                            _callCountMap.TryGetValue(transFunc, out long curNumCalls);
+                            if (curNumCalls + transNumCall > Options.SingleFunctionMaxTotalCalls)
+                                return false;
+                        }
+
+                        return true;
                     });
 
                 if (type != null)
@@ -736,15 +747,23 @@ namespace Fuzzlyn.Methods
                 type = type ?? func.ReturnType;
             }
 
+            // Update transitive call counts before generating args, so we decrease chance of
+            // calling the same methods in the arg expressions.
+            _callCountMap.TryGetValue(func._funcIndex, out long numCalls);
+            _callCountMap[func._funcIndex] = numCalls + 1;
+
+            foreach (var (transFunc, transNumCalls) in func._callCountMap)
+            {
+                _callCountMap.TryGetValue(transFunc, out long curNumCalls);
+                _callCountMap[transFunc] = curNumCalls + transNumCalls;
+            }
+
             ArgumentSyntax[] args = GenArgs(func, 0, out _);
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
                     IdentifierName(func.Name),
                     ArgumentList(
                         SeparatedList(args)));
-
-            _numCalls.TryGetValue(func._funcIndex, out int numCalls);
-            _numCalls[func._funcIndex] = numCalls + 1;
 
             if (func.ReturnType == type || func.ReturnType is RefType retRt && retRt.InnerType == type)
                 return invoc;

@@ -61,7 +61,7 @@ namespace Fuzzlyn.Reduction
             }
             else
             {
-                var origPair = new ProgramPair(debug.Assembly, release.Assembly);
+                var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
                 ProgramPairResults origResults = ProgramExecutor.RunPair(origPair);
                 if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
                     origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
@@ -75,7 +75,7 @@ namespace Fuzzlyn.Reduction
                 bool foundRuntimeCrash = false;
                 isInteresting = prog =>
                 {
-                    ProgramPairResults results = CompileAndRun(prog, out bool subProcessCrash);
+                    ProgramPairResults results = CompileAndRun(prog, false, out bool subProcessCrash);
                     if (results == null)
                     {
                         if (subProcessCrash)
@@ -225,7 +225,7 @@ namespace Fuzzlyn.Reduction
             return Reduced;
         }
 
-        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, out bool subProcessCrash)
+        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, out bool subProcessCrash)
         {
             subProcessCrash = false;
 
@@ -235,7 +235,7 @@ namespace Fuzzlyn.Reduction
             if (progDebug.Assembly == null || progRelease.Assembly == null)
                 return null;
 
-            ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
+            ProgramPair pair = new ProgramPair(trackOutput, progDebug.Assembly, progRelease.Assembly);
             ProgramPairResults results;
             if (_reduceWithChildProcesses)
             {
@@ -392,7 +392,7 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            ProgramPairResults results = CompileAndRun(Reduced, out bool subProcessCrash);
+            ProgramPairResults results = CompileAndRun(Reduced, true, out bool subProcessCrash);
 
             if (results == null)
             {
@@ -588,7 +588,7 @@ namespace Fuzzlyn.Reduction
                     .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
 
                 // Cannot yet inline functions that have multiple returns, or returns in different position than last...
-                int numReturns = target.Body.Statements.Count(s => s is ReturnStatementSyntax);
+                int numReturns = target.DescendantNodes().Count(s => s is ReturnStatementSyntax);
                 if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
                     continue;
 
@@ -704,7 +704,7 @@ namespace Fuzzlyn.Reduction
                     IfStatement(
                         PrefixUnaryExpression(
                             SyntaxKind.LogicalNotExpression,
-                            @if.Condition),
+                            ParenthesizedExpression(@if.Condition)),
                     @if.Else.Statement);
 
                 yield return newIf;
@@ -1106,6 +1106,9 @@ namespace Fuzzlyn.Reduction
             yield return @try.Block;
             yield return @try.Finally.Block;
             yield return Block(@try.Block, @try.Finally.Block);
+            // Try finally first and then block. Useful when the try-block contains a
+            // return.
+            yield return Block(@try.Finally.Block, @try.Block);
         }
 
         [Simplifier]
