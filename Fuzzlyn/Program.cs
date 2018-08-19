@@ -175,7 +175,7 @@ namespace Fuzzlyn
                 if (debug.RoslynException != null || release.RoslynException != null)
                     continue;
 
-                ProgramPairResults execResults = ProgramExecutor.RunPair(new ProgramPair(debug.Assembly, release.Assembly));
+                ProgramPairResults execResults = ProgramExecutor.RunPair(new ProgramPair(false, debug.Assembly, release.Assembly));
                 if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
                     execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
                 {
@@ -386,7 +386,7 @@ namespace Fuzzlyn
             File.AppendAllText("Seed_Trace.txt", "Starting seeds " + string.Join(" ", s_programQueue.Select(t => t.Item1)));
 
             List<ProgramPairResults> results =
-                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(t.Item2, t.Item3)).ToList());
+                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList());
 
             Trace.Assert(s_programQueue.Count == results.Count, "Returned results count is wrong");
             for (int i = 0; i < results.Count; i++)

@@ -24,10 +24,11 @@ namespace Fuzzlyn.Execution
             ChecksumSite unmatch1 = null;
             ChecksumSite unmatch2 = null;
 
-            if (debugResult.Checksum != releaseResult.Checksum)
+            if (debugResult.Checksum != releaseResult.Checksum && pair.TrackOutput)
             {
                 int index;
-                for (index = 0; index < Math.Min(debugResult.ChecksumSites.Count, releaseResult.ChecksumSites.Count); index++)
+                int count = Math.Min(debugResult.ChecksumSites.Count, releaseResult.ChecksumSites.Count);
+                for (index = 0; index < count; index++)
                 {
                     ChecksumSite val1 = debugResult.ChecksumSites[index];
                     ChecksumSite val2 = releaseResult.ChecksumSites[index];
@@ -48,30 +49,31 @@ namespace Fuzzlyn.Execution
                 Assembly asm = Assembly.Load(bytes);
                 MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
                 Action<IRuntime> entryPoint = (Action<IRuntime>)Delegate.CreateDelegate(typeof(Action<IRuntime>), mainMethodInfo);
-                using (var runtime = new Runtime())
+                var runtime = new Runtime();
+                if (pair.TrackOutput)
+                    runtime.ChecksumSites = new List<ChecksumSite>();
+                Exception ex = null;
+                try
                 {
-                    Exception ex = null;
-                    try
-                    {
-                        entryPoint(runtime);
-                    }
-                    catch (Exception caughtEx)
-                    {
-                        ex = caughtEx;
-                    }
-
-                    // A reference to the runtime stays in the loaded assembly and there may be a lot of checksum sites
-                    // so during reduction this can use a lot of memory.
-                    List<ChecksumSite> checksumSites = runtime.ChecksumSites;
-                    runtime.ChecksumSites = null;
-                    return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, checksumSites);
+                    entryPoint(runtime);
                 }
+                catch (Exception caughtEx)
+                {
+                    ex = caughtEx;
+                }
+
+                // A reference to the runtime stays in the loaded assembly and there may be a lot of checksum sites
+                // so during reduction this can use a lot of memory.
+                List<ChecksumSite> checksumSites = runtime.ChecksumSites;
+                runtime.ChecksumSites = null;
+                return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, checksumSites);
             }
         }
 
         // Launches a new instance of Fuzzlyn to run the specified programs in.
         public static List<ProgramPairResults> RunSeparately(List<ProgramPair> programs)
         {
+            return programs.Select(RunPair).ToList();
             string dotnet;
             using (Process proc = Process.GetCurrentProcess())
             using (ProcessModule mm = proc.MainModule)
@@ -105,12 +107,14 @@ namespace Fuzzlyn.Execution
 
     internal class ProgramPair
     {
-        public ProgramPair(byte[] debug, byte[] release)
+        public ProgramPair(bool trackOutput, byte[] debug, byte[] release)
         {
+            TrackOutput = trackOutput;
             Debug = debug;
             Release = release;
         }
 
+        public bool TrackOutput { get; }
         public byte[] Debug { get; }
         public byte[] Release { get; }
     }

@@ -1,38 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 
 namespace Fuzzlyn.Execution
 {
-    internal class Runtime : IRuntime, IDisposable
+    internal class Runtime : IRuntime
     {
-        private readonly HashAlgorithm _hash = SHA256.Create();
-
-        public List<ChecksumSite> ChecksumSites { get; set; } = new List<ChecksumSite>();
+        public List<ChecksumSite> ChecksumSites { get; set; }
 
         public string FinishHashCode()
         {
-            _hash.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-            return string.Concat(_hash.Hash.Select(b => b.ToString("x2")));
+            return _state.ToString("X16");
         }
 
-        public void Dispose()
-        {
-            _hash.Dispose();
-        }
-
-        private byte[] _buffer = new byte[0];
+        private ulong _state = 14695981039346656037;
         public void Checksum<T>(string id, T val)
         {
-            ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
+            if (ChecksumSites != null)
+                ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
 
-            if (Unsafe.SizeOf<T>() > _buffer.Length)
-                _buffer = new byte[Unsafe.SizeOf<T>()];
-
-            Unsafe.CopyBlockUnaligned(ref _buffer[0], ref Unsafe.As<T, byte>(ref val), (uint)Unsafe.SizeOf<T>());
-            _hash.TransformBlock(_buffer, 0, Unsafe.SizeOf<T>(), null, 0);
+            ref byte valBuf = ref Unsafe.As<T, byte>(ref val);
+            for (int i = 0; i < Unsafe.SizeOf<T>(); i++)
+            {
+                _state ^= Unsafe.AddByteOffset(ref valBuf, (IntPtr)i);
+                _state *= 1099511628211;
+            }
         }
     }
 }

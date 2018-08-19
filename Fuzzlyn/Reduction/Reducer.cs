@@ -61,7 +61,7 @@ namespace Fuzzlyn.Reduction
             }
             else
             {
-                var origPair = new ProgramPair(debug.Assembly, release.Assembly);
+                var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
                 ProgramPairResults origResults = ProgramExecutor.RunPair(origPair);
                 if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
                     origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
@@ -75,7 +75,7 @@ namespace Fuzzlyn.Reduction
                 bool foundRuntimeCrash = false;
                 isInteresting = prog =>
                 {
-                    ProgramPairResults results = CompileAndRun(prog, out bool subProcessCrash);
+                    ProgramPairResults results = CompileAndRun(prog, false, out bool subProcessCrash);
                     if (results == null)
                     {
                         if (subProcessCrash)
@@ -225,7 +225,7 @@ namespace Fuzzlyn.Reduction
             return Reduced;
         }
 
-        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, out bool subProcessCrash)
+        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, out bool subProcessCrash)
         {
             subProcessCrash = false;
 
@@ -235,7 +235,7 @@ namespace Fuzzlyn.Reduction
             if (progDebug.Assembly == null || progRelease.Assembly == null)
                 return null;
 
-            ProgramPair pair = new ProgramPair(progDebug.Assembly, progRelease.Assembly);
+            ProgramPair pair = new ProgramPair(trackOutput, progDebug.Assembly, progRelease.Assembly);
             ProgramPairResults results;
             if (_reduceWithChildProcesses)
             {
@@ -392,7 +392,7 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            ProgramPairResults results = CompileAndRun(Reduced, out bool subProcessCrash);
+            ProgramPairResults results = CompileAndRun(Reduced, true, out bool subProcessCrash);
 
             if (results == null)
             {
