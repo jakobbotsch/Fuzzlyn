@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-[assembly: InternalsVisibleTo("Fuzzlyn.Evaluation")]
 namespace Fuzzlyn
 {
     internal class CodeGenerator
