@@ -58,7 +58,15 @@ namespace Fuzzlyn.Methods
         /// </summary>
         public int MaxNumLeafCalls { get; private set; }
 
+        public override string ToString()
+            => OutputSignature().NormalizeWhitespace().ToFullString();
+
         public MethodDeclarationSyntax Output()
+        {
+            return OutputSignature().WithBody(Body);
+        }
+
+        private MethodDeclarationSyntax OutputSignature()
         {
             TypeSyntax retType;
             if (ReturnType == null)
@@ -91,8 +99,7 @@ namespace Fuzzlyn.Methods
             return
                 MethodDeclaration(retType, Name)
                 .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
-                .WithParameterList(parameters)
-                .WithBody(Body);
+                .WithParameterList(parameters);
         }
 
         public void Generate(FuzzType returnType, bool randomizeParams)
