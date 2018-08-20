@@ -92,6 +92,9 @@ namespace Fuzzlyn.Execution
                 UseShellExecute = false,
             };
 
+            // Disable tiering as even release builds will run in minopts otherwise.
+            info.EnvironmentVariables["COMPlus_TieredCompilation"] = "0";
+
             using (Process proc = Process.Start(info))
             {
                 proc.StandardInput.Write(JsonConvert.SerializeObject(programs));
