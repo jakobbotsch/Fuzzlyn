@@ -73,7 +73,6 @@ namespace Fuzzlyn.Execution
         // Launches a new instance of Fuzzlyn to run the specified programs in.
         public static List<ProgramPairResults> RunSeparately(List<ProgramPair> programs)
         {
-            return programs.Select(RunPair).ToList();
             string dotnet;
             using (Process proc = Process.GetCurrentProcess())
             using (ProcessModule mm = proc.MainModule)
