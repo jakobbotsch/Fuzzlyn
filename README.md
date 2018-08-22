@@ -7,20 +7,23 @@ We developed Fuzzlyn as a project for the 2018 Language-Based Security course at
 
 We have reported the following bugs:
 
-* [NullReferenceException thrown for multi-dimensional arrays in release](https://github.com/dotnet/coreclr/issues/18232)
-* [Wrong integer promotion in release](https://github.com/dotnet/coreclr/issues/18235)
-* [Cast to ushort is dropped in release](https://github.com/dotnet/coreclr/issues/18238)
+* [NullReferenceException thrown for multi-dimensional arrays in release](https://github.com/dotnet/coreclr/issues/18232) (fixed)
+* [Wrong integer promotion in release](https://github.com/dotnet/coreclr/issues/18235) (fixed)
+* [Cast to ushort is dropped in release](https://github.com/dotnet/coreclr/issues/18238) (fixed)
 * [Wrong value passed to generic interface method in release](https://github.com/dotnet/coreclr/issues/18259)
 * [Constant-folding int.MinValue % -1](https://github.com/dotnet/roslyn/issues/27348)
-* [Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522)
+* [Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522) (fixed)
 * [RyuJIT incorrectly reorders expression containing a CSE, resulting in exception thrown in release](https://github.com/dotnet/coreclr/issues/18770)
-* [RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780)
-* [Invalid value numbering when morphing casts that changes signedness after global morph](https://github.com/dotnet/coreclr/issues/18850)
-* [RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867)
-* [RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884)
-* [RyuJIT: Invalid ordering when assigning ref-return](https://github.com/dotnet/coreclr/issues/19243)
+* [RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780) (fixed)
+* [Invalid value numbering when morphing casts that changes signedness after global morph](https://github.com/dotnet/coreclr/issues/18850) (fixed)
+* [RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867) 
+* [RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884) (fixed)
+* [RyuJIT: Invalid ordering when assigning ref-return](https://github.com/dotnet/coreclr/issues/19243) (fixed)
 * [RyuJIT: Argument written to stack too early on Linux](https://github.com/dotnet/coreclr/issues/19256)
 * [RyuJIT: Morph forgets about side effects when optimizing casted shift](https://github.com/dotnet/coreclr/issues/19272)
+* [RyuJIT: By-ref assignment with null leads to runtime crash](https://github.com/dotnet/coreclr/issues/19444) (fixed)
+* [RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)
+* [RyuJIT: Incorrect ordering around Interlocked.Exchange and Interlocked.CompareExchange](https://github.com/dotnet/coreclr/issues/19583)
 
 Fuzzlyn has found many thousands of programs producing deviating behavior. Some of the first examples we found can be seen in the [examples folder in the v1.0 tag](https://github.com/jakobbotsch/Fuzzlyn/tree/v1.0/examples) (most of these have since been fixed). To take a couple of them, Fuzzlyn automatically found and produced the following programs:
 

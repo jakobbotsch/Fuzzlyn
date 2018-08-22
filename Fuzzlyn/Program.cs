@@ -388,20 +388,43 @@ namespace Fuzzlyn
             List<ProgramPairResults> results =
                 ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList());
 
-            Trace.Assert(s_programQueue.Count == results.Count, "Returned results count is wrong");
-            for (int i = 0; i < results.Count; i++)
+            if (results == null)
             {
-                ProgramPairResults result = results[i];
+                // Sub process crashed, check linearly
+                foreach (var (seed, debug, release) in s_programQueue)
+                {
+                    results =
+                        ProgramExecutor.RunSeparately(
+                            new List<ProgramPair> { new ProgramPair(false, debug, release) });
+
+                    if (results == null)
+                        AddExample(seed);
+                    else
+                        CheckExample(seed, results[0]);
+                }
+            }
+            else
+            {
+                Trace.Assert(s_programQueue.Count == results.Count, "Returned results count is wrong");
+                for (int i = 0; i < results.Count; i++)
+                    CheckExample(s_programQueue[i].Item1, results[i]);
+            }
+
+            void CheckExample(ulong seed, ProgramPairResults result)
+            {
                 bool checksumMismatch = result.DebugResult.Checksum != result.ReleaseResult.Checksum;
                 bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                {
-                    File.AppendAllText(
-                        "Execution_Mismatch.txt",
-                        "Seed: " + s_programQueue[i].Item1 + Environment.NewLine);
-                    Interlocked.Increment(ref s_numDeviating);
-                }
+                    AddExample(seed);
+            }
+
+            void AddExample(ulong seed)
+            {
+                File.AppendAllText(
+                    "Execution_Mismatch.txt",
+                    "Seed: " + seed + Environment.NewLine);
+                Interlocked.Increment(ref s_numDeviating);
             }
 
             s_programQueue.Clear();

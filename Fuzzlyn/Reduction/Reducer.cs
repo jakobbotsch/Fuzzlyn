@@ -19,7 +19,7 @@ namespace Fuzzlyn.Reduction
     {
         private readonly Rng _rng;
         private int _varCounter;
-        private readonly bool _reduceWithChildProcesses;
+        private bool _reduceWithChildProcesses;
         private readonly string _reduceDebugGitDir;
         private readonly Stopwatch _timer = new Stopwatch();
 
@@ -61,18 +61,32 @@ namespace Fuzzlyn.Reduction
             }
             else
             {
-                var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
-                ProgramPairResults origResults = ProgramExecutor.RunPair(origPair);
-                if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
-                    origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
-                {
-                    throw new InvalidOperationException("Program has no errors");
-                }
-
                 // This variable is kind of a hack to allow the reducer to reduce programs that crash the runtime.
                 // When we see a candidate that crashes the runtime, we switch to keep such examples instead of
                 // the original bug. These bugs are usually more interesting anyway.
                 bool foundRuntimeCrash = false;
+
+                var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
+                List<ProgramPairResults> origResultsList =
+                    ProgramExecutor.RunSeparately(new List<ProgramPair> { origPair });
+
+                ProgramPairResults origResults = null;
+                if (origResultsList == null)
+                {
+                    // Of course if we get a crash immediately we can just start out with it
+                    foundRuntimeCrash = true;
+                    _reduceWithChildProcesses = true;
+                }
+                else
+                {
+                    origResults = origResultsList[0];
+                    if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
+                        origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
+                    {
+                        throw new InvalidOperationException("Program has no errors");
+                    }
+                }
+
                 isInteresting = prog =>
                 {
                     ProgramPairResults results = CompileAndRun(prog, false, out bool subProcessCrash);

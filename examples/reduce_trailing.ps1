@@ -11,5 +11,9 @@ Get-Content -Path ..\Fuzzlyn\bin\Release\netcoreapp2.1\publish\Execution_Mismatc
 	
 	Write-Host "Reducing $seed"
 	corerun ..\Fuzzlyn\bin\Release\netcoreapp2.1\publish\Fuzzlyn.dll --seed=$seed --reduce > "reduced\\$seed.cs"
+	if ($lastexitcode -ne 0) {
+		Write-Host "  ..got error exit code ($lastexitcode). Reducing with sub processes.."
+		corerun ..\Fuzzlyn\bin\Release\netcoreapp2.1\publish\Fuzzlyn.dll --seed=$seed --reduce --reduce-use-child-processes > "reduced\\$seed.cs"
+	}
 	Write-Host "  ..done"
 }
