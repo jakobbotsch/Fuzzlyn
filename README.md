@@ -1,7 +1,7 @@
 # Fuzzlyn
 Fuzzlyn is a fuzzer which utilizes Roslyn to generate random C# programs. It runs these programs on .NET core and ensures that they give the same results when compiled in debug and release mode.
 
-We developed Fuzzlyn as a project for the 2018 Language-Based Security course at Aarhus University. Using Fuzzlyn, we have found and reported several bugs in RyuJIT used both by .NET Core and the full .NET framework. We have also found and reported a (harmless) bug in Roslyn.
+We developed Fuzzlyn as a project for the 2018 Language-Based Security course at Aarhus University. Using Fuzzlyn, we have found and reported several bugs in RyuJIT used both by .NET Core and the full .NET framework. We have also found and reported bugs in Roslyn itself.
 
 ## Bugs reported
 
@@ -24,6 +24,9 @@ We have reported the following bugs:
 * [RyuJIT: By-ref assignment with null leads to runtime crash](https://github.com/dotnet/coreclr/issues/19444) (fixed)
 * [RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)
 * [RyuJIT: Incorrect ordering around Interlocked.Exchange and Interlocked.CompareExchange](https://github.com/dotnet/coreclr/issues/19583)
+* [RyuJIT: Missing zeroing of upper bits for small struct used in Volatile.Read](https://github.com/dotnet/coreclr/issues/19599)
+* [RyuJIT: Incorrect 4-byte immediate emitted for shift causes access violation](https://github.com/dotnet/coreclr/issues/19601)
+* [Finally block belonging to unexecuted try runs anyway](https://github.com/dotnet/roslyn/issues/29481)
 
 Fuzzlyn has found many thousands of programs producing deviating behavior. Some of the first examples we found can be seen in the [examples folder in the v1.0 tag](https://github.com/jakobbotsch/Fuzzlyn/tree/v1.0/examples) (most of these have since been fixed). To take a couple of them, Fuzzlyn automatically found and produced the following programs:
 
