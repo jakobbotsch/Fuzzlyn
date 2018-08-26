@@ -133,7 +133,18 @@ namespace Fuzzlyn
                 return;
             }
 
-            if (removeFixed != null)
+            string val = Environment.GetEnvironmentVariable("COMPlus_TieredCompilation");
+            if (val != "0")
+            {
+                Console.WriteLine(
+                    "Please set the COMPlus_TieredCompilation environment variable " +
+                    "to \"0\" before starting Fuzzlyn.");
+                Console.WriteLine("For cmd use \"set COMPlus_TieredCompilation=0\".");
+                Console.WriteLine("For powershell use \"$env:COMPlus_TieredCompilation='0'\"");
+                Console.WriteLine("For bash use \"export COMPlus_TieredCompilation=0\"");
+                Console.WriteLine("For Visual Studio, check the debug tab");
+            }
+            else if (removeFixed != null)
                 RemoveFixedPrograms(options, removeFixed);
             else if (options.Reduce)
                 ReduceProgram(options, reduceDebugGitDir);
