@@ -1,2 +1,3 @@
 #!/bin/bash
+export COMPlus_TieredCompilation=0
 tail -f -n +1 ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Execution_Mismatch.txt | grep --line-buffered -Po 'Seed: \K\d+' | xargs -L1 -I {} bash -c "echo 'Processing {}'; if [ ! -f 'reduced/{}.cs' ]; then corerun ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Fuzzlyn.dll --seed={} --output-source > full.cs && (if [ \$(stat -c%s full.cs) -le 500000 ]; then corerun ../Fuzzlyn/bin/Release/netcoreapp2.1/publish/Fuzzlyn.dll --seed={} --reduce > reduced/{}.cs && git add reduced/{}.cs && git commit -m 'Add example {}' && git push origin HEAD; else echo '  ..skipping, too large'; fi); else echo '  ..skipping, already reduced'; fi"
