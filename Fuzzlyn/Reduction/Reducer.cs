@@ -399,7 +399,7 @@ namespace Fuzzlyn.Reduction
             if (ogDebugCompile.CompileErrors.Length > 0 || ogRelCompile.CompileErrors.Length > 0)
             {
                 CSharpCompilationOptions compileOpts =
-                    ogDebugCompile.CompileErrors.Length >= 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+                    ogDebugCompile.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
 
                 CompileResult result = Compiler.Compile(Reduced.NormalizeWhitespace(), compileOpts);
                 yield return $"// Roslyn gives '{result.CompileErrors[0]}'";
