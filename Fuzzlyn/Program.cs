@@ -161,8 +161,8 @@ namespace Fuzzlyn
 
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
         {
+            const string rereduceFile = "Rereduce_required.txt";
             string[] files = Directory.GetFiles(dir, "*.cs");
-            List<ulong> toRereduce = new List<ulong>();
             for (int i = 0; i < files.Length; i++)
             {
                 Console.Title = $"Processing {i + 1}/{files.Length}";
@@ -173,6 +173,8 @@ namespace Fuzzlyn
                     continue;
 
                 ulong seed = ulong.Parse(matches[0].Groups[1].Value);
+                Console.Write("Processing {0}: ", seed);
+
                 options.Seed = seed;
                 var cg = new CodeGenerator(options);
                 CompilationUnitSyntax original = cg.GenerateProgram();
@@ -181,10 +183,16 @@ namespace Fuzzlyn
                 CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
 
                 if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
+                {
+                    Console.WriteLine("Compiler error");
                     continue;
+                }
 
                 if (debug.RoslynException != null || release.RoslynException != null)
+                {
+                    Console.WriteLine("Compiler exception");
                     continue;
+                }
 
                 ProgramPairResults execResults = ProgramExecutor.RunPair(new ProgramPair(false, debug.Assembly, release.Assembly));
                 if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
@@ -194,20 +202,20 @@ namespace Fuzzlyn
                     // Otherwise we may need to rereduce it.
                     if (!IsReducedVersionInteresting(execResults, contents))
                     {
-                        toRereduce.Add(seed);
-                        Console.WriteLine("Marking {0} for rereduction", Path.GetFileName(files[i]));
+                        File.AppendAllText(rereduceFile, seed + Environment.NewLine);
+                        Console.WriteLine("Marked for rereduction");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Still interesting");
                     }
 
                     continue;
                 }
 
-                Console.WriteLine("Removing {0}", Path.GetFileName(files[i]));
+                Console.WriteLine("Deleted, no longer interesting");
                 File.Delete(files[i]);
             }
-
-            const string rereduceFile = "Rereduce_required.txt";
-            File.WriteAllText(rereduceFile, string.Join(Environment.NewLine, toRereduce));
-            Console.WriteLine("Wrote {0} seeds to be rereduced to '{1}'", toRereduce.Count, Path.GetFullPath(rereduceFile));
         }
 
         /// <summary>
