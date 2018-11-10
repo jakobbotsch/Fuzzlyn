@@ -162,7 +162,7 @@ namespace Fuzzlyn
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
         {
             const string rereduceFile = "Rereduce_required.txt";
-            string[] files = Directory.GetFiles(dir, "*.cs");
+            string[] files = Directory.GetFiles(dir, "*.cs").OrderBy(p => p.ToLowerInvariant()).ToArray();
             for (int i = 0; i < files.Length; i++)
             {
                 Console.Title = $"Processing {i + 1}/{files.Length}";
@@ -194,7 +194,16 @@ namespace Fuzzlyn
                     continue;
                 }
 
-                ProgramPairResults execResults = ProgramExecutor.RunPair(new ProgramPair(false, debug.Assembly, release.Assembly));
+                ProgramPairResults execResults = ProgramExecutor.RunSeparately(
+                    new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) })
+                    ?.Single();
+
+                if (execResults == null)
+                {
+                    Console.WriteLine("Crashed sub-process, still interesting");
+                    continue;
+                }
+
                 if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
                     execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
                 {
