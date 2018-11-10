@@ -228,6 +228,9 @@ namespace Fuzzlyn
             var debug = Execute(Compiler.DebugOptions);
             var release = Execute(Compiler.ReleaseOptions);
 
+            if (debug.stdout == null || release.stdout == null)
+                return true;
+
             if (fullResults.DebugResult.ExceptionType != fullResults.ReleaseResult.ExceptionType)
             {
                 return debug.exceptionType == fullResults.DebugResult.ExceptionType &&
@@ -239,7 +242,12 @@ namespace Fuzzlyn
             (string stdout, string exceptionType) Execute(CSharpCompilationOptions opts)
             {
                 CompileResult result = Compiler.Compile(comp, opts);
-                Trace.Assert(result.Assembly != null);
+                if (result.Assembly == null)
+                {
+                    Console.WriteLine("Got compiler errors:");
+                    Console.WriteLine(string.Join(Environment.NewLine, result.CompileErrors));
+                    return (null, null);
+                }
 
                 Assembly asm = Assembly.Load(result.Assembly);
                 MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
