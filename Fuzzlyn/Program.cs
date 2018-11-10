@@ -209,14 +209,18 @@ namespace Fuzzlyn
                 {
                     // Execute the reduced form to see if we get interesting behavior.
                     // Otherwise we may need to rereduce it.
-                    if (!IsReducedVersionInteresting(execResults, contents))
+                    // HOAX: Currently IsReducedVersionInteresting runs the programs
+                    // in our own process, so we are conservative and do not run programs
+                    // that may crash us (it is possible that the unreduced example does not
+                    // crash, but that the reduced does.
+                    if (contents.Contains("Crashes the runtime") || IsReducedVersionInteresting(execResults, contents))
                     {
-                        File.AppendAllText(rereduceFile, seed + Environment.NewLine);
-                        Console.WriteLine("Marked for rereduction");
+                        Console.WriteLine("Still interesting");
                     }
                     else
                     {
-                        Console.WriteLine("Still interesting");
+                        File.AppendAllText(rereduceFile, seed + Environment.NewLine);
+                        Console.WriteLine("Marked for rereduction");
                     }
 
                     continue;
