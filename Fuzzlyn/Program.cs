@@ -232,7 +232,7 @@ namespace Fuzzlyn
         /// and output. Output is captured by redirecting stdout during executiong.
         private static bool IsReducedVersionInteresting(ProgramPairResults fullResults, string code)
         {
-            CompilationUnitSyntax comp = ParseCompilationUnit(code);
+            CompilationUnitSyntax comp = ParseCompilationUnit(code, options: new CSharpParseOptions(LanguageVersion.Latest));
 
             var debug = Execute(Compiler.DebugOptions);
             var release = Execute(Compiler.ReleaseOptions);
