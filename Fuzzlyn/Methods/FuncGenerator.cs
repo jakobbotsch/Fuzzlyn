@@ -798,7 +798,7 @@ namespace Fuzzlyn.Methods
         {
             SyntaxKind[] acceptedTypes =
             {
-                SyntaxKind.UShortKeyword,
+                SyntaxKind.ULongKeyword,
                 SyntaxKind.LongKeyword,
                 SyntaxKind.UIntKeyword,
                 SyntaxKind.IntKeyword,
