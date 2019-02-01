@@ -16,15 +16,15 @@ We have reported the following bugs:
 * ~~[RyuJIT incorrectly reorders expression containing a CSE, resulting in exception thrown in release](https://github.com/dotnet/coreclr/issues/18770)~~
 * ~~[RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780)~~
 * ~~[Invalid value numbering when morphing casts that changes signedness after global morph](https://github.com/dotnet/coreclr/issues/18850)~~
-* [RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867) 
+* ~~[RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867)~~
 * ~~[RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884)~~
 * ~~[RyuJIT: Invalid ordering when assigning ref-return](https://github.com/dotnet/coreclr/issues/19243)~~
 * [RyuJIT: Argument written to stack too early on Linux](https://github.com/dotnet/coreclr/issues/19256)
 * ~~[RyuJIT: Morph forgets about side effects when optimizing casted shift](https://github.com/dotnet/coreclr/issues/19272)~~
 * ~~[RyuJIT: By-ref assignment with null leads to runtime crash](https://github.com/dotnet/coreclr/issues/19444)~~
-* [RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)
-* [RyuJIT: Incorrect ordering around Interlocked.Exchange and Interlocked.CompareExchange](https://github.com/dotnet/coreclr/issues/19583)
-* [RyuJIT: Missing zeroing of upper bits for small struct used in Volatile.Read](https://github.com/dotnet/coreclr/issues/19599)
+* ~~[RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)~~
+* ~~[RyuJIT: Incorrect ordering around Interlocked.Exchange and Interlocked.CompareExchange](https://github.com/dotnet/coreclr/issues/19583)~~
+* ~~[RyuJIT: Missing zeroing of upper bits for small struct used in Volatile.Read](https://github.com/dotnet/coreclr/issues/19599)~~
 * ~~[RyuJIT: Incorrect 4-byte immediate emitted for shift causes access violation](https://github.com/dotnet/coreclr/issues/19601)~~
 * ~~[Finally block belonging to unexecuted try runs anyway](https://github.com/dotnet/roslyn/issues/29481)~~
 
@@ -81,7 +81,7 @@ To run Fuzzlyn you must specify the number of programs to generate and check. To
 
 Note that this only works with .NET core (i.e. a host like `dotnet` must be running the program). This is because Fuzzlyn runs instances of itself and it uses the `dotnet` that started Fuzzlyn to do this.
 
-This command will not produce any output to stdout. However, when a program with deviating behavior is found, Fuzzlyn will append its seed and information about its execution to a file in the current directory called `Execution_Mismatch.txt`. 
+This command will not produce any output to stdout. However, when a program with deviating behavior is found, Fuzzlyn will append its seed and information about its execution to a file in the current directory called `Execution_Mismatch.txt`.
 
 ## Regenerating full programs
 
