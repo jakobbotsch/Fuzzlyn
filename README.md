@@ -19,7 +19,7 @@ We have reported the following bugs:
 * ~~[RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867)~~
 * ~~[RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884)~~
 * ~~[RyuJIT: Invalid ordering when assigning ref-return](https://github.com/dotnet/coreclr/issues/19243)~~
-* [RyuJIT: Argument written to stack too early on Linux](https://github.com/dotnet/coreclr/issues/19256)
+* ~~[RyuJIT: Argument written to stack too early on Linux](https://github.com/dotnet/coreclr/issues/19256)~~
 * ~~[RyuJIT: Morph forgets about side effects when optimizing casted shift](https://github.com/dotnet/coreclr/issues/19272)~~
 * ~~[RyuJIT: By-ref assignment with null leads to runtime crash](https://github.com/dotnet/coreclr/issues/19444)~~
 * ~~[RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)~~
