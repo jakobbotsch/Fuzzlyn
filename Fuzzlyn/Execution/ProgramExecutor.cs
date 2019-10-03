@@ -82,7 +82,7 @@ namespace Fuzzlyn.Execution
 
             string fuzzlyn = Assembly.GetExecutingAssembly().Location;
             string fuzzlynDir = Path.GetDirectoryName(fuzzlyn);
-            bool hostIsFuzzlyn = host.Equals("fuzzlyn", StringComparison.OrdinalIgnoreCase);
+            bool hostIsFuzzlyn = fuzzlyn == host;
             ProcessStartInfo info = new ProcessStartInfo
             {
                 FileName = host,
