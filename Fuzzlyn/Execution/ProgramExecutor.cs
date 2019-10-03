@@ -73,19 +73,20 @@ namespace Fuzzlyn.Execution
         // Launches a new instance of Fuzzlyn to run the specified programs in.
         public static List<ProgramPairResults> RunSeparately(List<ProgramPair> programs)
         {
-            string dotnet;
+            string host;
             using (Process proc = Process.GetCurrentProcess())
             using (ProcessModule mm = proc.MainModule)
             {
-                dotnet = mm.FileName;
+                host = mm.FileName;
             }
 
             string fuzzlyn = Assembly.GetExecutingAssembly().Location;
             string fuzzlynDir = Path.GetDirectoryName(fuzzlyn);
+            bool hostIsFuzzlyn = fuzzlyn == host;
             ProcessStartInfo info = new ProcessStartInfo
             {
-                FileName = dotnet,
-                Arguments = $"\"{fuzzlyn}\" --execute-programs",
+                FileName = host,
+                Arguments = hostIsFuzzlyn ? "--execute-programs" : "\"{fuzzlyn}\" --execute-programs",
                 WorkingDirectory = fuzzlynDir,
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,
