@@ -86,7 +86,7 @@ namespace Fuzzlyn.Execution
             ProcessStartInfo info = new ProcessStartInfo
             {
                 FileName = host,
-                Arguments = hostIsFuzzlyn ? " --execute-programs" : "fuzzlyn --execute-programs",
+                Arguments = hostIsFuzzlyn ? "--execute-programs" : "\"{fuzzlyn}\" --execute-programs",
                 WorkingDirectory = fuzzlynDir,
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,
