@@ -85,7 +85,7 @@ namespace Fuzzlyn.Execution
             ProcessStartInfo info = new ProcessStartInfo
             {
                 FileName = dotnet,
-                Arguments = $"\"{fuzzlyn}\" --execute-programs",
+                Arguments = " --execute-programs",
                 WorkingDirectory = fuzzlynDir,
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,
