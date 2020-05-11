@@ -81,14 +81,14 @@ namespace Fuzzlyn.Execution
             }
 
             string fuzzlyn = Assembly.GetExecutingAssembly().Location;
-            string fuzzlynDir = Path.GetDirectoryName(fuzzlyn);
-            bool hostIsFuzzlyn = fuzzlyn == host;
+            bool hostIsFuzzlyn = Path.ChangeExtension(fuzzlyn, ".exe") == host;
             ProcessStartInfo info = new ProcessStartInfo
             {
                 FileName = host,
-                Arguments = hostIsFuzzlyn ? "--execute-programs" : "\"{fuzzlyn}\" --execute-programs",
-                WorkingDirectory = fuzzlynDir,
+                Arguments = hostIsFuzzlyn ? "--execute-programs" : $"\"{fuzzlyn}\" --execute-programs",
+                WorkingDirectory = Environment.CurrentDirectory,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 RedirectStandardInput = true,
                 UseShellExecute = false,
             };
