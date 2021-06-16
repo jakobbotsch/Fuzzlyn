@@ -37,7 +37,9 @@ namespace Fuzzlyn.Types
             => Equals(obj as AggregateType);
 
         public override int GetHashCode()
-            => HashCode.Combine(0, RuntimeHelpers.GetHashCode(this));
+#pragma warning disable RS1024 // Compare symbols correctly
+            => RuntimeHelpers.GetHashCode(this);
+#pragma warning restore RS1024 // Compare symbols correctly
 
         /// <summary>
         /// Count recursively how many primitive fields are in this aggregate type.

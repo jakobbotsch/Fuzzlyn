@@ -44,10 +44,11 @@ namespace Fuzzlyn
             = new TableDistribution(new Dictionary<int, double>
             {
                 [(int)StatementKind.Assignment] = 0.57,
-                [(int)StatementKind.If] = 0.17,
+                [(int)StatementKind.If] = 0.14,
                 [(int)StatementKind.Block] = 0.1,
                 [(int)StatementKind.Call] = 0.1,
                 [(int)StatementKind.TryFinally] = 0.05,
+                [(int)StatementKind.Loop] = 0.03,
                 [(int)StatementKind.Return] = 0.01,
             });
         public ProbabilityDistribution ExpressionTypeDist { get; set; }

@@ -209,7 +209,7 @@ namespace Fuzzlyn
                 {
                     // Execute the reduced form to see if we get interesting behavior.
                     // Otherwise we may need to rereduce it.
-                    // HOAX: Currently IsReducedVersionInteresting runs the programs
+                    // HACK: Currently IsReducedVersionInteresting runs the programs
                     // in our own process, so we are conservative and do not run programs
                     // that may crash us (it is possible that the unreduced example does not
                     // crash, but that the reduced does.

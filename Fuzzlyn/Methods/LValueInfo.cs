@@ -9,17 +9,19 @@ namespace Fuzzlyn.Methods
     /// </summary>
     internal class LValueInfo
     {
-        public LValueInfo(ExpressionSyntax expression, FuzzType type, int refEscapeScope)
+        public LValueInfo(ExpressionSyntax expression, FuzzType type, int refEscapeScope, bool readOnly)
         {
             Expression = expression;
             Type = type;
             RefEscapeScope = refEscapeScope;
+            ReadOnly = readOnly;
         }
 
         public ExpressionSyntax Expression { get; }
         public FuzzType Type { get; }
         /// <summary>See <see cref="VariableIdentifier.RefEscapeScope"/>.</summary>
         public int RefEscapeScope { get; }
+        public bool ReadOnly { get; }
 
         public override string ToString() => Expression.ToString();
     }

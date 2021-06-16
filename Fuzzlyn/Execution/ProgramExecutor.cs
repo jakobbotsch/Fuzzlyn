@@ -95,6 +95,7 @@ namespace Fuzzlyn.Execution
 
             // Disable tiering as even release builds will run in minopts otherwise.
             info.EnvironmentVariables["COMPlus_TieredCompilation"] = "0";
+            info.EnvironmentVariables["COMPlus_EnableEHWriteThru"] = "0";
 
             using (Process proc = Process.Start(info))
             {
