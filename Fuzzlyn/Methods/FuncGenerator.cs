@@ -512,7 +512,7 @@ namespace Fuzzlyn.Methods
                 List<FuncGenerator> refReturningFuncs = new List<FuncGenerator>();
                 foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
                 {
-                    if (!(func.ReturnType is RefType rt))
+                    if (func.ReturnType is not RefType rt)
                         continue;
 
                     if (type == null || type == rt.InnerType)
@@ -633,7 +633,7 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBinary(FuzzType type)
         {
-            if (!(type is PrimitiveType pt))
+            if (type is not PrimitiveType pt)
                 return null;
 
             if (pt.Keyword == SyntaxKind.BoolKeyword)
@@ -845,7 +845,7 @@ namespace Fuzzlyn.Methods
                 SyntaxKind.SByteKeyword,
             };
 
-            if (!(type is PrimitiveType pt) || !acceptedTypes.Contains(pt.Keyword))
+            if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
                 return null;
 
             LValueInfo subject = GenExistingLValue(type, int.MinValue);
@@ -861,7 +861,7 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenNewObject(FuzzType type)
         {
-            if (!(type is AggregateType at))
+            if (type is not AggregateType at)
                 return null;
 
             ObjectCreationExpressionSyntax creation =

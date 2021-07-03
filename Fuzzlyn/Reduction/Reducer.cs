@@ -464,7 +464,7 @@ namespace Fuzzlyn.Reduction
                     continue;
                 }
 
-                if (!(node is ExpressionStatementSyntax expStmt))
+                if (node is not ExpressionStatementSyntax expStmt)
                     continue;
 
                 // Remove s_rt = rt
@@ -555,7 +555,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyStatementWithCall(SyntaxNode node)
         {
-            if (!(node is ExpressionStatementSyntax stmt))
+            if (node is not ExpressionStatementSyntax stmt)
                 yield break;
 
             // Take descendant nodes of expression to avoid simplifying M(); to M();
@@ -571,7 +571,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyLocalRemoveInitializer(SyntaxNode node)
         {
-            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1)
+            if (node is not LocalDeclarationStatementSyntax local || local.Declaration.Variables.Count != 1)
                 return node;
 
             return
@@ -586,7 +586,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier(Late = true)]
         private IEnumerable<SyntaxNode> InlineCall(SyntaxNode node)
         {
-            if (!(node is ClassDeclarationSyntax cls))
+            if (node is not ClassDeclarationSyntax cls)
                 yield break;
 
             IEnumerable<InvocationExpressionSyntax> invocs =
@@ -687,7 +687,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyIf(SyntaxNode node)
         {
-            if (!(node is IfStatementSyntax @if))
+            if (node is not IfStatementSyntax @if)
                 yield break;
 
             // Simplify to then block
@@ -728,7 +728,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyBinaryExpression(SyntaxNode node)
         {
-            if (!(node is BinaryExpressionSyntax bin))
+            if (node is not BinaryExpressionSyntax bin)
                 yield break;
 
             yield return bin.Left;
@@ -738,7 +738,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyCast(SyntaxNode node)
         {
-            if (!(node is CastExpressionSyntax cast))
+            if (node is not CastExpressionSyntax cast)
                 return node;
 
             return cast.Expression;
@@ -747,7 +747,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyParenthesized(SyntaxNode node)
         {
-            if (!(node is ParenthesizedExpressionSyntax p))
+            if (node is not ParenthesizedExpressionSyntax p)
                 return node;
 
             if (Helpers.RequiresParentheses(p.Expression) &&
@@ -762,7 +762,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyPrefixUnaryExpression(SyntaxNode node)
         {
-            if (!(node is PrefixUnaryExpressionSyntax p))
+            if (node is not PrefixUnaryExpressionSyntax p)
                 return node;
 
             return p.Operand;
@@ -771,7 +771,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyPostfixUnaryExpression(SyntaxNode node)
         {
-            if (!(node is PostfixUnaryExpressionSyntax p))
+            if (node is not PostfixUnaryExpressionSyntax p)
                 return node;
 
             return p.Operand;
@@ -780,7 +780,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyInitializer(SyntaxNode node)
         {
-            if (!(node is InitializerExpressionSyntax init))
+            if (node is not InitializerExpressionSyntax init)
                 return node;
 
             if (init.Kind() != SyntaxKind.ArrayInitializerExpression || init.Expressions.Count < 1)
@@ -792,7 +792,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyBlockFlatten(SyntaxNode node)
         {
-            if (!(node is BlockSyntax block) || !block.Statements.Any(s => s is BlockSyntax))
+            if (node is not BlockSyntax block || !block.Statements.Any(s => s is BlockSyntax))
                 return node;
 
             return block.WithStatements(
@@ -802,7 +802,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode RemoveMethodDeclaration(SyntaxNode node)
         {
-            if (!(node is MethodDeclarationSyntax method) || method.Identifier.Text == "Main")
+            if (node is not MethodDeclarationSyntax method || method.Identifier.Text == "Main")
                 return node;
 
             return null;
@@ -811,7 +811,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode RemoveTypeDeclaration(SyntaxNode node)
         {
-            if (!(node is TypeDeclarationSyntax type) || type.Identifier.Text == "Program")
+            if (node is not TypeDeclarationSyntax type || type.Identifier.Text == "Program")
                 return node;
 
             return null;
@@ -820,7 +820,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyField(SyntaxNode node)
         {
-            if (!(node is FieldDeclarationSyntax field))
+            if (node is not FieldDeclarationSyntax field)
                 yield break;
 
             // Remove
@@ -838,12 +838,12 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> RemoveMethodArgument(SyntaxNode node)
         {
-            if (!(node is CompilationUnitSyntax unit))
+            if (node is not CompilationUnitSyntax unit)
                 yield break;
 
             IEnumerable<(ParameterSyntax pm, int index)> methodParams =
                 unit.DescendantNodes().OfType<BaseMethodDeclarationSyntax>()
-                .Where(m => !(m is MethodDeclarationSyntax normalMethod) || normalMethod.Identifier.Text != "Main")
+                .Where(m => m is not MethodDeclarationSyntax normalMethod || normalMethod.Identifier.Text != "Main")
                 .SelectMany(m => m.ParameterList.Parameters.Select((p, i) => (p, i)));
 
             foreach (var (parameter, index) in methodParams)
@@ -918,7 +918,7 @@ namespace Fuzzlyn.Reduction
             // [var a = ] M(arg1, expr2)
             // for each argument
 
-            if (!(node is BlockSyntax block))
+            if (node is not BlockSyntax block)
                 yield break;
 
             IEnumerable<InvocationExpressionSyntax> invocs =
@@ -952,12 +952,12 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> CombineLocalAssignmentsInBlock(SyntaxNode node)
         {
-            if (!(node is BlockSyntax block))
+            if (node is not BlockSyntax block)
                 yield break;
 
             foreach (StatementSyntax statement in block.Statements)
             {
-                if (!(statement is LocalDeclarationStatementSyntax local))
+                if (statement is not LocalDeclarationStatementSyntax local)
                     continue;
 
                 if (local.Declaration.Variables.Count != 1 ||
@@ -967,10 +967,10 @@ namespace Fuzzlyn.Reduction
                 string localId = local.Declaration.Variables[0].Identifier.Text;
                 foreach (ExpressionStatementSyntax expStmt in block.DescendantNodes().OfType<ExpressionStatementSyntax>())
                 {
-                    if (!(expStmt.Expression is AssignmentExpressionSyntax asgn))
+                    if (expStmt.Expression is not AssignmentExpressionSyntax asgn)
                         continue;
 
-                    if (!(asgn.Left is IdentifierNameSyntax id))
+                    if (asgn.Left is not IdentifierNameSyntax id)
                         continue;
 
                     if (id.Identifier.Text != localId)
@@ -1005,7 +1005,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> InlineLocals(SyntaxNode node)
         {
-            if (!(node is BlockSyntax block))
+            if (node is not BlockSyntax block)
                 yield break;
 
             foreach (LocalDeclarationStatementSyntax local in block.Statements.OfType<LocalDeclarationStatementSyntax>())
@@ -1046,7 +1046,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyConstant(SyntaxNode node)
         {
-            if (!(node is LiteralExpressionSyntax literal) || literal.Kind() != SyntaxKind.NumericLiteralExpression)
+            if (node is not LiteralExpressionSyntax literal || literal.Kind() != SyntaxKind.NumericLiteralExpression)
                 yield break;
 
             if (literal.Token.Text == "0" || literal.Token.Text == "1" || literal.Token.Text == "-1")
@@ -1061,7 +1061,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyStructAddConstructorInitializers(SyntaxNode node)
         {
-            if (!(node is StructDeclarationSyntax @struct))
+            if (node is not StructDeclarationSyntax @struct)
                 return node;
 
             StructDeclarationSyntax newStruct = @struct;
@@ -1086,8 +1086,8 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyLocalRemoveRef(SyntaxNode node)
         {
-            if (!(node is LocalDeclarationStatementSyntax local) || local.Declaration.Variables.Count != 1 ||
-                !(local.Declaration.Type is RefTypeSyntax refTypeSyntax))
+            if (node is not LocalDeclarationStatementSyntax local || local.Declaration.Variables.Count != 1 ||
+                local.Declaration.Type is not RefTypeSyntax refTypeSyntax)
                 return node;
 
             VariableDeclaratorSyntax var = local.Declaration.Variables[0];
@@ -1114,7 +1114,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyTryFinally(SyntaxNode node)
         {
-            if (!(node is TryStatementSyntax @try) || @try.Catches.Any())
+            if (node is not TryStatementSyntax @try || @try.Catches.Any())
                 yield break;
 
             yield return @try.Block;
@@ -1128,7 +1128,7 @@ namespace Fuzzlyn.Reduction
         [Simplifier]
         private SyntaxNode SimplifyMethodRemoveReturn(SyntaxNode node)
         {
-            if (!(node is MethodDeclarationSyntax method))
+            if (node is not MethodDeclarationSyntax method)
                 return node;
 
             if (method.ReturnType is PredefinedTypeSyntax returnType &&
