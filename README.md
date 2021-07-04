@@ -27,6 +27,17 @@ We have reported the following bugs:
 * ~~[RyuJIT: Missing zeroing of upper bits for small struct used in Volatile.Read](https://github.com/dotnet/coreclr/issues/19599)~~
 * ~~[RyuJIT: Incorrect 4-byte immediate emitted for shift causes access violation](https://github.com/dotnet/coreclr/issues/19601)~~
 * ~~[Finally block belonging to unexecuted try runs anyway](https://github.com/dotnet/roslyn/issues/29481)~~
+* ~~[RyuJIT: Bad codegen with multiple field assignments](https://github.com/dotnet/runtime/issues/11559)~~
+* ~~[Runtime crash during JIT register allocation in .NET 5](https://github.com/dotnet/runtime/issues/36237)~~
+* ~~[[JIT] Runtime crash in fgMakeOutgoingStructArgCopy](https://github.com/dotnet/runtime/issues/36468)~~
+* [JIT EH write thru crash](https://github.com/dotnet/runtime/issues/54100)
+* [Invalid CSE with field seqs](https://github.com/dotnet/runtime/issues/54102)
+* [Invalid hoisting with refs/array elements proven to be constant](https://github.com/dotnet/runtime/issues/54118)
+* [JIT misses a zero extension in series of casts](https://github.com/dotnet/runtime/issues/55127)
+* [Invalid assertion prop in finally](https://github.com/dotnet/runtime/issues/55131)
+* [JIT incorrectly reorders method call and static field load](https://github.com/dotnet/runtime/issues/55140)
+* [Assertion failed 'src->IsCnsIntOrI()' with contained bitcast in field store](https://github.com/dotnet/runtime/issues/55141)
+* [JIT forgets to normalize arg on load](https://github.com/dotnet/runtime/issues/55143)
 
 Fuzzlyn has found many thousands of programs producing deviating behavior. Some of the first examples we found can be seen in the [examples folder in the v1.0 tag](https://github.com/jakobbotsch/Fuzzlyn/tree/v1.0/examples) (most of these have since been fixed). To take a couple of them, Fuzzlyn automatically found and produced the following programs:
 
