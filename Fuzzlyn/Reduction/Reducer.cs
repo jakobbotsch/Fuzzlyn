@@ -726,6 +726,19 @@ namespace Fuzzlyn.Reduction
         }
 
         [Simplifier]
+        private IEnumerable<SyntaxNode> SimplifyFor(SyntaxNode node)
+        {
+            if (node is not ForStatementSyntax @for)
+                yield break;
+
+            // Simplify 'for (var a = expr; b; c) stmt' to
+            // var a = expr; stmt
+            VariableDeclarationSyntax decl = @for.Declaration;
+            StatementSyntax body = @for.Statement;
+            yield return Block(LocalDeclarationStatement(decl), body);
+        }
+
+        [Simplifier]
         private IEnumerable<SyntaxNode> SimplifyBinaryExpression(SyntaxNode node)
         {
             if (node is not BinaryExpressionSyntax bin)
