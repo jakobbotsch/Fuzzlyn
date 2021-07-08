@@ -61,25 +61,31 @@ namespace Fuzzlyn.Reduction
             }
             else
             {
-                // This variable is kind of a hack to allow the reducer to reduce programs that crash the runtime.
-                // When we see a candidate that crashes the runtime, we switch to keep such examples instead of
-                // the original bug. These bugs are usually more interesting anyway.
-                bool foundRuntimeCrash = false;
 
                 var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
-                List<ProgramPairResults> origResultsList =
-                    ProgramExecutor.RunSeparately(new List<ProgramPair> { origPair });
+                RunSeparatelyResults origRunResults =
+                    ProgramExecutor.RunSeparately(new List<ProgramPair> { origPair }, 20000);
+
+                if (origRunResults.Kind == RunSeparatelyResultsKind.Timeout)
+                {
+                    // Currently some programs take so long that we cannot really differentiate between "hang" and "still executing".
+                    // So we do not allow to reduce programs that time out.
+                    throw new InvalidOperationException("Program times out");
+                }
+
+                // This variable is kind of a hack to allow the reducer to reduce programs that crash the runtime during reduction.
+                // We switch to keeping this behavior if that happens.
+                RunSeparatelyResultsKind interestingResult = origRunResults.Kind;
 
                 ProgramPairResults origResults = null;
-                if (origResultsList == null)
+                if (origRunResults.Kind != RunSeparatelyResultsKind.Success)
                 {
                     // Of course if we get a crash immediately we can just start out with it
-                    foundRuntimeCrash = true;
                     _reduceWithChildProcesses = true;
                 }
                 else
                 {
-                    origResults = origResultsList[0];
+                    origResults = origRunResults.Results[0];
                     if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
                         origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
                     {
@@ -89,38 +95,40 @@ namespace Fuzzlyn.Reduction
 
                 isInteresting = prog =>
                 {
-                    ProgramPairResults results = CompileAndRun(prog, false, out bool subProcessCrash);
-                    if (results == null)
-                    {
-                        if (subProcessCrash)
-                        {
-                            foundRuntimeCrash = true;
-                            return true;
-                        }
-
+                    RunSeparatelyResults results = CompileAndRun(prog, false, 20000);
+                    if (results == null || results.Kind == RunSeparatelyResultsKind.Timeout)
                         return false;
+
+                    if (interestingResult != RunSeparatelyResultsKind.Success)
+                    {
+                        // If we are looking for crash, then we can return a result immediately
+                        return results.Kind == interestingResult;
                     }
 
-                    if (foundRuntimeCrash)
-                        return false;
+                    if (results.Kind != RunSeparatelyResultsKind.Success)
+                    {
+                        interestingResult = results.Kind;
+                        return true;
+                    }
 
+                    ProgramPairResults pairResult = results.Results[0];
                     // Do exceptions first because they will almost always change checksum
                     if (origResults.DebugResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
                     {
                         // Must throw same exceptions in debug and release to be bad.
-                        return results.DebugResult.ExceptionType == origResults.DebugResult.ExceptionType &&
-                               results.ReleaseResult.ExceptionType == origResults.ReleaseResult.ExceptionType;
+                        return pairResult.DebugResult.ExceptionType == origResults.DebugResult.ExceptionType &&
+                               pairResult.ReleaseResult.ExceptionType == origResults.ReleaseResult.ExceptionType;
                     }
                     else
                     {
-                        if (results.DebugResult.ExceptionType != origResults.DebugResult.ExceptionType ||
-                            results.ReleaseResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
+                        if (pairResult.DebugResult.ExceptionType != origResults.DebugResult.ExceptionType ||
+                            pairResult.ReleaseResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
                         {
                             return false;
                         }
                     }
 
-                    return results.DebugResult.Checksum != results.ReleaseResult.Checksum;
+                    return pairResult.DebugResult.Checksum != pairResult.ReleaseResult.Checksum;
                 };
             }
 
@@ -239,10 +247,8 @@ namespace Fuzzlyn.Reduction
             return Reduced;
         }
 
-        private ProgramPairResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, out bool subProcessCrash)
+        private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, int timeout)
         {
-            subProcessCrash = false;
-
             CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
             CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
 
@@ -250,15 +256,15 @@ namespace Fuzzlyn.Reduction
                 return null;
 
             ProgramPair pair = new ProgramPair(trackOutput, progDebug.Assembly, progRelease.Assembly);
-            ProgramPairResults results;
+            RunSeparatelyResults results;
             if (_reduceWithChildProcesses)
             {
-                results = ProgramExecutor.RunSeparately(new List<ProgramPair> { pair })?.Single();
-                if (results == null)
-                    subProcessCrash = true;
+                results = ProgramExecutor.RunSeparately(new List<ProgramPair> { pair }, timeout);
             }
             else
-                results = ProgramExecutor.RunPair(pair);
+            {
+                results = new RunSeparatelyResults(RunSeparatelyResultsKind.Success, new List<ProgramPairResults> { ProgramExecutor.RunPair(pair) });
+            }
 
             return results;
         }
@@ -406,37 +412,46 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            ProgramPairResults results = CompileAndRun(Reduced, true, out bool subProcessCrash);
-
+            RunSeparatelyResults results = CompileAndRun(Reduced, true, 20000);
             if (results == null)
             {
-                Debug.Assert(subProcessCrash);
-
-                yield return $"// Crashes the runtime";
+                yield return $"// Unexpected compiler error";
                 yield break;
             }
 
-            yield return $"// Debug: {FormatResult(results.DebugResult, results.DebugFirstUnmatch)}";
-            yield return $"// Release: {FormatResult(results.ReleaseResult, results.ReleaseFirstUnmatch)}";
-
-            string FormatResult(ProgramResult result, ChecksumSite unmatch)
+            switch (results.Kind)
             {
-                if (results.DebugResult.ExceptionType != null ||
-                    results.ReleaseResult.ExceptionType != null)
-                {
-                    if (result.ExceptionType != null)
-                        return $"Throws '{result.ExceptionType}'";
+                case RunSeparatelyResultsKind.Crash:
+                    yield return $"// Crashes the runtime";
+                    yield break;
+                case RunSeparatelyResultsKind.Timeout:
+                    yield return $"// Times out";
+                    yield break;
+                case RunSeparatelyResultsKind.Success:
+                    var pairResult = results.Results[0];
+                    yield return $"// Debug: {FormatResult(pairResult.DebugResult, pairResult.DebugFirstUnmatch)}";
+                    yield return $"// Release: {FormatResult(pairResult.ReleaseResult, pairResult.ReleaseFirstUnmatch)}";
+                    break;
 
-                    return "Runs successfully";
-                }
+                    string FormatResult(ProgramResult result, ChecksumSite unmatch)
+                    {
+                        if (pairResult.DebugResult.ExceptionType != null ||
+                            pairResult.ReleaseResult.ExceptionType != null)
+                        {
+                            if (result.ExceptionType != null)
+                                return $"Throws '{result.ExceptionType}'";
 
-                if (results.DebugResult.ChecksumSites.Count != results.ReleaseResult.ChecksumSites.Count)
-                    return $"Prints {result.ChecksumSites.Count} line(s)";
+                            return "Runs successfully";
+                        }
 
-                if (unmatch != null)
-                    return $"Outputs {unmatch.Value}";
+                        if (pairResult.DebugResult.ChecksumSites.Count != pairResult.ReleaseResult.ChecksumSites.Count)
+                            return $"Prints {result.ChecksumSites.Count} line(s)";
 
-                return "";
+                        if (unmatch != null)
+                            return $"Outputs {unmatch.Value}";
+
+                        return "";
+                    }
             }
         }
 

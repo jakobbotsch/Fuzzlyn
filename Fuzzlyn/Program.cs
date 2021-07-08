@@ -194,15 +194,17 @@ namespace Fuzzlyn
                     continue;
                 }
 
-                ProgramPairResults execResults = ProgramExecutor.RunSeparately(
-                    new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) })
-                    ?.Single();
+                RunSeparatelyResults runResults = ProgramExecutor.RunSeparately(
+                    new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) },
+                    60000);
 
-                if (execResults == null)
+                if (runResults.Kind != RunSeparatelyResultsKind.Success)
                 {
-                    Console.WriteLine("Crashed sub-process, still interesting");
+                    Console.WriteLine("Got {0} from sub-process, still interesting", runResults.Kind);
                     continue;
                 }
+
+                ProgramPairResults execResults = runResults.Results[0];
 
                 if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
                     execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
@@ -425,29 +427,33 @@ namespace Fuzzlyn
 
             File.AppendAllText("Seed_Trace.txt", "Starting seeds " + string.Join(" ", s_programQueue.Select(t => t.Item1)));
 
-            List<ProgramPairResults> results =
-                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList());
+            RunSeparatelyResults results =
+                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 20000);
 
-            if (results == null)
+            if (results.Kind != RunSeparatelyResultsKind.Success)
             {
-                // Sub process crashed, check linearly
+                // Did not finish run, go linearly
                 foreach (var (seed, debug, release) in s_programQueue)
                 {
                     results =
                         ProgramExecutor.RunSeparately(
-                            new List<ProgramPair> { new ProgramPair(false, debug, release) });
+                            new List<ProgramPair> { new ProgramPair(false, debug, release) }, 20000);
 
-                    if (results == null)
-                        AddExample(seed);
+                    // Skip time outs as we currently can produce some very long running programs.
+                    if (results.Kind == RunSeparatelyResultsKind.Timeout)
+                        continue;
+
+                    if (results.Kind == RunSeparatelyResultsKind.Crash)
+                        AddExample(seed, results.Kind);
                     else
-                        CheckExample(seed, results[0]);
+                        CheckExample(seed, results.Results[0]);
                 }
             }
             else
             {
-                Trace.Assert(s_programQueue.Count == results.Count, "Returned results count is wrong");
-                for (int i = 0; i < results.Count; i++)
-                    CheckExample(s_programQueue[i].Item1, results[i]);
+                Trace.Assert(s_programQueue.Count == results.Results.Count, "Returned results count is wrong");
+                for (int i = 0; i < results.Results.Count; i++)
+                    CheckExample(s_programQueue[i].Item1, results.Results[i]);
             }
 
             void CheckExample(ulong seed, ProgramPairResults result)
@@ -456,14 +462,17 @@ namespace Fuzzlyn
                 bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                    AddExample(seed);
+                    AddExample(seed, RunSeparatelyResultsKind.Success);
             }
 
-            void AddExample(ulong seed)
+            void AddExample(ulong seed, RunSeparatelyResultsKind kind)
             {
-                File.AppendAllText(
-                    "Execution_Mismatch.txt",
-                    "Seed: " + seed + Environment.NewLine);
+                string line = "Seed: " + seed;
+                if (kind != RunSeparatelyResultsKind.Success)
+                    line += $" ({kind})";
+                line += Environment.NewLine;
+
+                File.AppendAllText("Execution_Mismatch.txt", line);
                 Interlocked.Increment(ref s_numDeviating);
             }
 

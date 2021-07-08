@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Fuzzlyn.Execution
 {
@@ -71,7 +73,7 @@ namespace Fuzzlyn.Execution
         }
 
         // Launches a new instance of Fuzzlyn to run the specified programs in.
-        public static List<ProgramPairResults> RunSeparately(List<ProgramPair> programs)
+        public static RunSeparatelyResults RunSeparately(List<ProgramPair> programs, int timeout)
         {
             string host;
             using (Process proc = Process.GetCurrentProcess())
@@ -101,10 +103,20 @@ namespace Fuzzlyn.Execution
             {
                 proc.StandardInput.Write(JsonConvert.SerializeObject(programs));
                 proc.StandardInput.Close();
-                string results = proc.StandardOutput.ReadToEnd();
-                proc.WaitForExit();
+                Task<string> resultsTask = proc.StandardOutput.ReadToEndAsync();
+                if (!proc.WaitForExit(timeout))
+                {
+                    proc.Kill();
+                    resultsTask.ContinueWith(t => { }, TaskContinuationOptions.OnlyOnFaulted);
+                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null);
+                }
+                string results = resultsTask.Result;
 
-                return JsonConvert.DeserializeObject<List<ProgramPairResults>>(results);
+                var pairResults = JsonConvert.DeserializeObject<List<ProgramPairResults>>(results);
+                if (pairResults == null)
+                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null);
+
+                return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, pairResults);
             }
         }
     }
@@ -163,5 +175,24 @@ namespace Fuzzlyn.Execution
         public string ExceptionStackTrace { get; }
         [JsonIgnore]
         public List<ChecksumSite> ChecksumSites { get; }
+    }
+
+    internal enum RunSeparatelyResultsKind
+    {
+        Crash,
+        Timeout,
+        Success
+    }
+
+    internal class RunSeparatelyResults
+    {
+        public RunSeparatelyResults(RunSeparatelyResultsKind kind, List<ProgramPairResults> results)
+        {
+            Kind = kind;
+            Results = results;
+        }
+
+        public RunSeparatelyResultsKind Kind { get; }
+        public List<ProgramPairResults> Results { get; }
     }
 }

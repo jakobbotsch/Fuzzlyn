@@ -1,7 +1,7 @@
 $env:COMPlus_TieredCompilation='0'
 $env:COMPlus_JitEnableEHWriteThru='0'
 Get-Content -Path ..\Fuzzlyn\bin\Release\publish\Execution_Mismatch.txt -Wait | % {
-	if ($_ -notmatch '^Seed: [0-9]+$') {
+	if ($_ -notmatch '^Seed: [0-9]+') {
 	    return
 	}
 
