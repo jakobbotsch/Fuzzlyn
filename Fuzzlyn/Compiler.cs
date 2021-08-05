@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Emit;
 using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -49,7 +50,7 @@ namespace Fuzzlyn
                 }
 
                 if (!result.Success)
-                    return new CompileResult(null, result.Diagnostics, null);
+                    return new CompileResult(null, result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToImmutableArray(), null);
 
                 return new CompileResult(null, ImmutableArray<Diagnostic>.Empty, ms.ToArray());
             }
@@ -58,15 +59,15 @@ namespace Fuzzlyn
 
     internal class CompileResult
     {
-        public CompileResult(Exception roslynException, ImmutableArray<Diagnostic> compileDiagnostics, byte[] assembly)
+        public CompileResult(Exception roslynException, ImmutableArray<Diagnostic> compileErrors, byte[] assembly)
         {
             RoslynException = roslynException;
-            CompileDiagnostics = compileDiagnostics;
+            CompileErrors = compileErrors;
             Assembly = assembly;
         }
 
         public Exception RoslynException { get; }
-        public ImmutableArray<Diagnostic> CompileDiagnostics { get; }
+        public ImmutableArray<Diagnostic> CompileErrors { get; }
         public byte[] Assembly { get; }
     }
 }

@@ -1,20 +1,45 @@
 # Fuzzlyn
 Fuzzlyn is a fuzzer which utilizes Roslyn to generate random C# programs. It runs these programs on .NET core and ensures that they give the same results when compiled in debug and release mode.
 
-We developed Fuzzlyn as a project for the 2018 Language-Based Security course at Aarhus University. Using Fuzzlyn, we have found and reported several bugs in RyuJIT used both by .NET Core and the full .NET framework. We have also found and reported (a harmless) bug in Roslyn.
+We developed Fuzzlyn as a project for the 2018 Language-Based Security course at Aarhus University. Using Fuzzlyn, we have found and reported several bugs in RyuJIT used both by .NET Core and the full .NET framework. We have also found and reported bugs in Roslyn itself.
 
 ## Bugs reported
 
 We have reported the following bugs:
 
-* [NullReferenceException thrown for multi-dimensional arrays in release](https://github.com/dotnet/coreclr/issues/18232)
-* [Wrong integer promotion in release](https://github.com/dotnet/coreclr/issues/18235)
-* [Cast to ushort is dropped in release](https://github.com/dotnet/coreclr/issues/18238)
-* [Wrong value passed to generic interface method in release](https://github.com/dotnet/coreclr/issues/18259)
+* ~~[NullReferenceException thrown for multi-dimensional arrays in release](https://github.com/dotnet/coreclr/issues/18232)~~
+* ~~[Wrong integer promotion in release](https://github.com/dotnet/coreclr/issues/18235)~~
+* ~~[Cast to ushort is dropped in release](https://github.com/dotnet/coreclr/issues/18238)~~
+* ~~[Wrong value passed to generic interface method in release](https://github.com/dotnet/coreclr/issues/18259)~~
 * [Constant-folding int.MinValue % -1](https://github.com/dotnet/roslyn/issues/27348)
-* [Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522)
+* ~~[Deterministic program outputs indeterministic results on Linux in release](https://github.com/dotnet/coreclr/issues/18522)~~
+* ~~[RyuJIT incorrectly reorders expression containing a CSE, resulting in exception thrown in release](https://github.com/dotnet/coreclr/issues/18770)~~
+* ~~[RyuJIT incorrectly narrows value on ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18780)~~
+* ~~[Invalid value numbering when morphing casts that changes signedness after global morph](https://github.com/dotnet/coreclr/issues/18850)~~
+* ~~[RyuJIT spills 16 bit value but reloads as 32 bits in ARM32/x86 in release](https://github.com/dotnet/coreclr/issues/18867)~~
+* ~~[RyuJIT fails to preserve variable allocated to RCX around shift on x64 in release](https://github.com/dotnet/coreclr/issues/18884)~~
+* ~~[RyuJIT: Invalid ordering when assigning ref-return](https://github.com/dotnet/coreclr/issues/19243)~~
+* ~~[RyuJIT: Argument written to stack too early on Linux](https://github.com/dotnet/coreclr/issues/19256)~~
+* ~~[RyuJIT: Morph forgets about side effects when optimizing casted shift](https://github.com/dotnet/coreclr/issues/19272)~~
+* ~~[RyuJIT: By-ref assignment with null leads to runtime crash](https://github.com/dotnet/coreclr/issues/19444)~~
+* ~~[RyuJIT: Mishandling of subrange assertion for rewritten call parameter](https://github.com/dotnet/coreclr/issues/19558)~~
+* ~~[RyuJIT: Incorrect ordering around Interlocked.Exchange and Interlocked.CompareExchange](https://github.com/dotnet/coreclr/issues/19583)~~
+* ~~[RyuJIT: Missing zeroing of upper bits for small struct used in Volatile.Read](https://github.com/dotnet/coreclr/issues/19599)~~
+* ~~[RyuJIT: Incorrect 4-byte immediate emitted for shift causes access violation](https://github.com/dotnet/coreclr/issues/19601)~~
+* ~~[Finally block belonging to unexecuted try runs anyway](https://github.com/dotnet/roslyn/issues/29481)~~
+* ~~[RyuJIT: Bad codegen with multiple field assignments](https://github.com/dotnet/runtime/issues/11559)~~
+* ~~[Runtime crash during JIT register allocation in .NET 5](https://github.com/dotnet/runtime/issues/36237)~~
+* ~~[[JIT] Runtime crash in fgMakeOutgoingStructArgCopy](https://github.com/dotnet/runtime/issues/36468)~~
+* [JIT EH write thru crash](https://github.com/dotnet/runtime/issues/54100)
+* [Invalid CSE with field seqs](https://github.com/dotnet/runtime/issues/54102)
+* [Invalid hoisting with refs/array elements proven to be constant](https://github.com/dotnet/runtime/issues/54118)
+* [JIT misses a zero extension in series of casts](https://github.com/dotnet/runtime/issues/55127)
+* [Invalid assertion prop in finally](https://github.com/dotnet/runtime/issues/55131)
+* [JIT incorrectly reorders method call and static field load](https://github.com/dotnet/runtime/issues/55140)
+* [Assertion failed 'src->IsCnsIntOrI()' with contained bitcast in field store](https://github.com/dotnet/runtime/issues/55141)
+* [JIT forgets to normalize arg on load](https://github.com/dotnet/runtime/issues/55143)
 
-Fuzzlyn has found many hundreds of programs producing deviating behavior. Some examples can be seen in the [examples](examples) folder. To take a couple of examples, Fuzzlyn automatically found and produced the following programs:
+Fuzzlyn has found many thousands of programs producing deviating behavior. Some of the first examples we found can be seen in the [examples folder in the v1.0 tag](https://github.com/jakobbotsch/Fuzzlyn/tree/v1.0/examples) (most of these have since been fixed). To take a couple of them, Fuzzlyn automatically found and produced the following programs:
 
 ```csharp
 // Generated by Fuzzlyn on 2018-06-03 16:17:09
@@ -67,7 +92,7 @@ To run Fuzzlyn you must specify the number of programs to generate and check. To
 
 Note that this only works with .NET core (i.e. a host like `dotnet` must be running the program). This is because Fuzzlyn runs instances of itself and it uses the `dotnet` that started Fuzzlyn to do this.
 
-This command will not produce any output to stdout. However, when a program with deviating behavior is found, Fuzzlyn will append its seed and information about its execution to a file in the current directory called `Execution_Mismatch.txt`. 
+This command will not produce any output to stdout. However, when a program with deviating behavior is found, Fuzzlyn will append its seed and information about its execution to a file in the current directory called `Execution_Mismatch.txt`.
 
 ## Regenerating full programs
 

@@ -31,6 +31,9 @@ namespace Fuzzlyn.Execution
             return HashCode.Combine(Id, Value);
         }
 
+        public override string ToString()
+            => $"{Id}: {Value}";
+
         public static bool operator ==(ChecksumSite site1, ChecksumSite site2)
         {
             return EqualityComparer<ChecksumSite>.Default.Equals(site1, site2);

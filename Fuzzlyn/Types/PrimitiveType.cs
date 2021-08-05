@@ -20,20 +20,20 @@ namespace Fuzzlyn.Types
         public override TypeSyntax GenReferenceTo() => PredefinedType(Token(Keyword));
         public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Info.AllowedAdditionalAssignments;
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as PrimitiveType);
-        }
-
         public bool Equals(PrimitiveType other)
         {
             return other != null &&
                    Keyword == other.Keyword;
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as PrimitiveType);
+        }
+
         public override int GetHashCode()
         {
-            return -303665852 + Keyword.GetHashCode();
+            return HashCode.Combine(2, Keyword);
         }
 
         public static bool operator ==(PrimitiveType type1, PrimitiveType type2)
@@ -62,14 +62,6 @@ namespace Fuzzlyn.Types
                 SyntaxKind.OrAssignmentExpression,
                 SyntaxKind.LeftShiftAssignmentExpression,
                 SyntaxKind.RightShiftAssignmentExpression,
-                SyntaxKind.PreIncrementExpression,
-                SyntaxKind.PostIncrementExpression,
-                SyntaxKind.PreDecrementExpression,
-                SyntaxKind.PostDecrementExpression,
-            };
-
-            SyntaxKind[] charAssigns =
-            {
                 SyntaxKind.PreIncrementExpression,
                 SyntaxKind.PostIncrementExpression,
                 SyntaxKind.PreDecrementExpression,
@@ -144,14 +136,6 @@ namespace Fuzzlyn.Types
                     GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((sbyte)rng.NextUInt64())),
                     Type = typeof(sbyte),
                     IsIntegral = true,
-                },
-                [SyntaxKind.CharKeyword] = new PrimitiveTypeInfo
-                {
-                    AllowedAdditionalAssignments = charAssigns,
-                    GenRandomLiteral = rng => LiteralExpression(SyntaxKind.CharacterLiteralExpression, Literal((char)rng.Next(32, 127))),
-                    Type = typeof(char),
-                    IsIntegral = true,
-                    IsUnsigned = true,
                 },
                 [SyntaxKind.BoolKeyword] = new PrimitiveTypeInfo
                 {
