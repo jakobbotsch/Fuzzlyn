@@ -370,7 +370,10 @@ namespace Fuzzlyn
                 action(unit, gen.Random.Seed);
                 int numGen = Interlocked.Increment(ref numGenerated);
                 if (numGen % 100 == 0)
+                {
                     Console.Title = $"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found";
+                    Console.WriteLine($"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found");
+                }
             });
         }
 
