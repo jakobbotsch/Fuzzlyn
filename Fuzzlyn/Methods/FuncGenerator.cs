@@ -21,6 +21,7 @@ namespace Fuzzlyn.Methods
         private readonly int _funcIndex;
         private int _varCounter;
         private int _level;
+        private int _finallyCount;
         private readonly Func<string> _genChecksumSiteId;
 
         public FuncGenerator(
@@ -50,8 +51,17 @@ namespace Fuzzlyn.Methods
         public FuzzType ReturnType { get; private set; }
         public VariableIdentifier[] Parameters { get; private set; }
         public string Name { get; }
+        public int NumStatements { get; private set; }
+
+        public override string ToString()
+            => OutputSignature().NormalizeWhitespace().ToFullString();
 
         public MethodDeclarationSyntax Output()
+        {
+            return OutputSignature().WithBody(Body);
+        }
+
+        private MethodDeclarationSyntax OutputSignature()
         {
             TypeSyntax retType;
             if (ReturnType == null)
@@ -84,8 +94,7 @@ namespace Fuzzlyn.Methods
             return
                 MethodDeclaration(retType, Name)
                 .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
-                .WithParameterList(parameters)
-                .WithBody(Body);
+                .WithParameterList(parameters);
         }
 
         public void Generate(FuzzType returnType, bool randomizeParams)
@@ -102,89 +111,109 @@ namespace Fuzzlyn.Methods
                     string name = $"arg{i}";
                     // A ref to a by-ref parameter can escape to at least its parent method
                     int refEscapeScope = type is RefType ? 1 : 0;
-                    Parameters[i] = new VariableIdentifier(type, name, refEscapeScope);
+                    Parameters[i] = new VariableIdentifier(type, name, refEscapeScope, readOnly: false);
                 }
             }
             else
                 Parameters = Array.Empty<VariableIdentifier>();
 
             _level = -1;
-            Body = GenBlock(ReturnType != null);
+            Body = GenBlock(Parameters, root: true);
         }
 
-        private StatementSyntax GenStatement()
+        private StatementSyntax GenStatement(bool allowReturn = true)
         {
+            if (_finallyCount > 0)
+                allowReturn = false;
+
             while (true)
             {
                 StatementKind kind =
                     (StatementKind)Options.StatementTypeDist.Sample(Random.Rng);
 
-                if ((kind == StatementKind.Block || kind == StatementKind.If) &&
+                if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryFinally || kind == StatementKind.Loop) &&
                     ShouldRejectRecursion())
+                    continue;
+
+                if (kind == StatementKind.Return && !allowReturn)
                     continue;
 
                 switch (kind)
                 {
                     case StatementKind.Block:
-                        return GenBlock(false);
+                        return GenBlock();
                     case StatementKind.Assignment:
                         return GenAssignmentStatement();
                     case StatementKind.Call:
                         return GenCallStatement(tryExisting: ShouldRejectRecursion());
                     case StatementKind.If:
                         return GenIf();
+                    case StatementKind.TryFinally:
+                        return GenTryFinally();
                     case StatementKind.Return:
                         return GenReturn();
+                    case StatementKind.Loop:
+                        return GenLoop();
                     default:
                         throw new Exception("Unreachable");
                 }
             }
+
+            bool ShouldRejectRecursion()
+                => Options.StatementRejection.Reject(_level, Random.Rng);
         }
 
-        private bool ShouldRejectRecursion()
+        private BlockSyntax GenBlock(VariableIdentifier[] vars = null, bool root = false, int numStatements = -1)
         {
-            double rand = Random.NextDouble();
-            double n = Options.StatementRejectionLevelParameterN;
-            double h = Options.StatementRejectionLevelParameterH;
-            double levelPow = Math.Pow(_level, n);
-            return rand < levelPow / (levelPow + Math.Pow(h, n));
-        }
+            if (numStatements == -1)
+                numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
 
-        private BlockSyntax GenBlock(bool root)
-        {
             _level++;
 
             ScopeFrame scope = new ScopeFrame();
             _scope.Add(scope);
 
-            if (root)
-                scope.Variables.AddRange(Parameters);
+            if (vars != null)
+                scope.Variables.AddRange(vars);
 
             BlockSyntax block = Block(GenStatements());
 
             _scope.RemoveAt(_scope.Count - 1);
+
             _level--;
 
             return block;
 
             IEnumerable<StatementSyntax> GenStatements()
             {
-                int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
                 StatementSyntax retStmt = null;
-                for (int i = 0; i < numStatements; i++)
+                int numGenerated = 0;
+                while (true)
                 {
-                    StatementSyntax stmt = GenStatement();
+                    StatementSyntax stmt = GenStatement(allowReturn: !root);
+
                     if (stmt is ReturnStatementSyntax)
                     {
                         retStmt = stmt;
                         break;
                     }
 
+                    NumStatements++;
                     yield return stmt;
-                }
 
-                if (root && retStmt == null)
-                    retStmt = GenReturn();
+                    numGenerated++;
+                    if (numGenerated < numStatements)
+                        continue;
+
+                    // For first block we ensure we get a minimum amount of statements
+                    if (root && _funcIndex == 0)
+                    {
+                        if (_funcs.Sum(f => f.NumStatements) < Options.ProgramMinStatements)
+                            continue;
+                    }
+
+                    break;
+                }
 
                 if (Options.EnableChecksumming)
                 {
@@ -192,8 +221,14 @@ namespace Fuzzlyn.Methods
                         yield return stmt;
                 }
 
+                if (root && retStmt == null && ReturnType != null)
+                    retStmt = GenReturn();
+
                 if (retStmt != null)
+                {
+                    NumStatements++;
                     yield return retStmt;
+                }
             }
         }
 
@@ -216,13 +251,13 @@ namespace Fuzzlyn.Methods
                     if (newType is RefType newRt)
                     {
                         LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue);
-                        variable = new VariableIdentifier(newType, varName, rhsLV.RefEscapeScope);
+                        variable = new VariableIdentifier(newType, varName, rhsLV.RefEscapeScope, readOnly: false);
                         rhs = RefExpression(rhsLV.Expression);
                     }
                     else
                     {
                         rhs = GenExpression(newType);
-                        variable = new VariableIdentifier(newType, varName, -(_scope.Count - 1));
+                        variable = new VariableIdentifier(newType, varName, -(_scope.Count - 1), readOnly: false);
                     }
 
                     LocalDeclarationStatementSyntax decl =
@@ -240,7 +275,7 @@ namespace Fuzzlyn.Methods
                 }
 
                 StaticField newStatic = Statics.GenerateNewField(newType);
-                lvalue = new LValueInfo(IdentifierName(newStatic.Var.Name), newType, int.MaxValue);
+                lvalue = new LValueInfo(IdentifierName(newStatic.Var.Name), newType, int.MaxValue, readOnly: false);
             }
 
             // Determine if we should generate a ref-reassignment. In that case we cannot do anything
@@ -323,17 +358,40 @@ namespace Fuzzlyn.Methods
 
         private StatementSyntax GenIf()
         {
-            StatementSyntax gen = null;
-            ExpressionSyntax guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            ExpressionSyntax guard;
+            int attempts = 0;
+            do
+            {
+                guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            } while (guard is LiteralExpressionSyntax && attempts++ < 20);
+
+            StatementSyntax gen;
             if (Random.FlipCoin(0.5))
             {
-                gen = IfStatement(guard, GenBlock(false));
+                gen = IfStatement(guard, GenBlock());
             }
             else
             {
-                gen = IfStatement(guard, GenBlock(false), ElseClause(GenBlock(false)));
+                gen = IfStatement(guard, GenBlock(), ElseClause(GenBlock()));
             }
             return gen;
+        }
+
+        private StatementSyntax GenTryFinally()
+        {
+            int numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
+            int tryStatements = Random.Next(numStatements);
+            int finallyStatements = numStatements - tryStatements;
+
+            BlockSyntax body = GenBlock(numStatements: tryStatements);
+            _finallyCount++;
+            BlockSyntax finallyBody = GenBlock(numStatements: finallyStatements);
+            _finallyCount--;
+            return
+                TryStatement(
+                    body,
+                    List<CatchClauseSyntax>(),
+                    FinallyClause(finallyBody));
         }
 
         private StatementSyntax GenReturn()
@@ -350,6 +408,39 @@ namespace Fuzzlyn.Methods
             return ReturnStatement(expr);
         }
 
+        private StatementSyntax GenLoop()
+        {
+            string varName = $"var{_varCounter++}";
+            VariableIdentifier indVar = new VariableIdentifier(Types.GetPrimitiveType(SyntaxKind.IntKeyword), varName, -(_scope.Count - 1), true);
+
+            VariableDeclarationSyntax decl =
+                VariableDeclaration(
+                    indVar.Type.GenReferenceTo(),
+                    SingletonSeparatedList(
+                        VariableDeclarator(indVar.Name)
+                        .WithInitializer(
+                            EqualsValueClause(
+                                LiteralExpression(
+                                    SyntaxKind.NumericLiteralExpression,
+                                    Literal(0))))));
+
+            ExpressionSyntax cond =
+                BinaryExpression(
+                    SyntaxKind.LessThanExpression,
+                    IdentifierName(indVar.Name),
+                    LiteralExpression(
+                        SyntaxKind.NumericLiteralExpression,
+                        Literal(2)));
+
+            ExpressionSyntax incr =
+                PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, IdentifierName(indVar.Name));
+
+            BlockSyntax block = GenBlock(new[] { indVar });
+
+            ForStatementSyntax @for = ForStatement(decl, SeparatedList<ExpressionSyntax>(), cond, SingletonSeparatedList(incr), block);
+            return @for;
+        }
+
         private ExpressionSyntax GenExpression(FuzzType type)
         {
             Debug.Assert(!(type is RefType));
@@ -360,7 +451,7 @@ namespace Fuzzlyn.Methods
                 switch (kind)
                 {
                     case ExpressionKind.MemberAccess:
-                        gen = GenMemberAccess(type)?.Expression;
+                        gen = GenMemberAccess(type);
                         break;
                     case ExpressionKind.Literal:
                         gen = GenLiteral(type);
@@ -404,7 +495,7 @@ namespace Fuzzlyn.Methods
             if (lv == null)
             {
                 StaticField newStatic = Statics.GenerateNewField(type);
-                lv = new LValueInfo(IdentifierName(newStatic.Var.Name), type, int.MaxValue);
+                lv = new LValueInfo(IdentifierName(newStatic.Var.Name), type, int.MaxValue, readOnly: false);
             }
 
             return lv;
@@ -421,7 +512,7 @@ namespace Fuzzlyn.Methods
                 List<FuncGenerator> refReturningFuncs = new List<FuncGenerator>();
                 foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
                 {
-                    if (!(func.ReturnType is RefType rt))
+                    if (func.ReturnType is not RefType rt)
                         continue;
 
                     if (type == null || type == rt.InnerType)
@@ -460,17 +551,17 @@ namespace Fuzzlyn.Methods
                             SeparatedList(
                                 args)));
 
-                return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope);
+                return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false);
             }
 
-            List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static);
+            List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, allowReadOnly: false);
             if (lvalues.Count == 0)
             {
                 // We typically fall back to generating a static, so just try to find a static if we found no local.
                 if (kind != LValueKind.Local)
                     return null;
 
-                lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true);
+                lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true, allowReadOnly: false);
                 if (lvalues.Count == 0)
                     return null;
             }
@@ -486,17 +577,17 @@ namespace Fuzzlyn.Methods
         /// * A field in one of these, if aggregate type
         /// * An element in one of these, if array type
         /// </summary>
-        private LValueInfo GenMemberAccess(FuzzType ft)
+        private ExpressionSyntax GenMemberAccess(FuzzType ft)
         {
             List<LValueInfo> paths =
                 Random.FlipCoin(Options.MemberAccessSelectLocalProb)
-                ? CollectVariablePaths(ft, int.MinValue, true, false)
-                : CollectVariablePaths(ft, int.MinValue, false, true);
+                ? CollectVariablePaths(ft, int.MinValue, true, false, allowReadOnly: true)
+                : CollectVariablePaths(ft, int.MinValue, false, true, allowReadOnly: true);
 
-            return paths.Count > 0 ? Random.NextElement(paths) : null;
+            return paths.Count > 0 ? Random.NextElement(paths).Expression : null;
         }
 
-        private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics)
+        private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics, bool allowReadOnly)
         {
             List<LValueInfo> paths = new List<LValueInfo>();
 
@@ -505,7 +596,9 @@ namespace Fuzzlyn.Methods
                 foreach (ScopeFrame sf in _scope)
                 {
                     foreach (VariableIdentifier variable in sf.Variables)
+                    {
                         AppendVariablePaths(paths, variable);
+                    }
                 }
             }
 
@@ -529,7 +622,7 @@ namespace Fuzzlyn.Methods
             bool IsAllowedType(FuzzType other)
                 => type == null || (other == type || (other is RefType rt && rt.InnerType == type));
 
-            paths.RemoveAll(lv => lv.RefEscapeScope < minRefEscapeScope || !IsAllowedType(lv.Type));
+            paths.RemoveAll(lv => lv.RefEscapeScope < minRefEscapeScope || (lv.ReadOnly && !allowReadOnly) || !IsAllowedType(lv.Type));
             return paths;
         }
 
@@ -540,7 +633,7 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBinary(FuzzType type)
         {
-            if (!(type is PrimitiveType pt))
+            if (type is not PrimitiveType pt)
                 return null;
 
             if (pt.Keyword == SyntaxKind.BoolKeyword)
@@ -551,34 +644,32 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenBoolProducingBinary()
         {
-            FuzzType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
-            ExpressionSyntax left, right;
+            PrimitiveType leftType;
+            PrimitiveType rightType;
             SyntaxKind op = (SyntaxKind)Options.BinaryBoolDist.Sample(Random.Rng);
             if (op == SyntaxKind.LogicalAndExpression || op == SyntaxKind.LogicalOrExpression ||
                 op == SyntaxKind.ExclusiveOrExpression || op == SyntaxKind.BitwiseAndExpression ||
                 op == SyntaxKind.BitwiseOrExpression)
             {
                 // &&, ||, ^, &, | must be between bools to produce bool
-                left = GenExpression(boolType);
-                right = GenExpression(boolType);
+                PrimitiveType boolType = Types.GetPrimitiveType(SyntaxKind.BoolKeyword);
+                leftType = rightType = boolType;
             }
             else if (op == SyntaxKind.EqualsExpression || op == SyntaxKind.NotEqualsExpression)
             {
-                PrimitiveType leftType = Types.PickPrimitiveType(f => true);
-                left = GenExpression(leftType);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => true);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Equality.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
             else
             {
                 Debug.Assert(op == SyntaxKind.LessThanOrEqualExpression || op == SyntaxKind.LessThanExpression ||
                              op == SyntaxKind.GreaterThanOrEqualExpression || op == SyntaxKind.GreaterThanExpression);
 
-                PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-                PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-                left = GenExpression(leftType);
-                right = GenExpression(rightType);
+                leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
+                rightType = Types.PickPrimitiveType(f => BinOpTable.Relop.GetResultType(leftType.Keyword, f.Keyword).HasValue);
             }
+
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             return BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
         }
@@ -595,15 +686,21 @@ namespace Fuzzlyn.Methods
         {
             Debug.Assert(type.Info.IsIntegral);
             SyntaxKind op = (SyntaxKind)Options.BinaryIntegralDist.Sample(Random.Rng);
+
+            BinOpTable table;
             if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
-                return GenIntegralProducingBinary(type); // todo: handle. Needs separate table.
+            {
+                table = BinOpTable.Shifts;
+                return GenIntegralProducingBinary(type);
+            }
+            else
+                table = BinOpTable.Arithmetic;
 
             PrimitiveType leftType = Types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
-            PrimitiveType rightType = Types.PickPrimitiveType(f => BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, f.Keyword).HasValue);
-            ExpressionSyntax left = GenExpression(leftType);
-            ExpressionSyntax right = GenExpression(rightType);
-            while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax)
-                right = GenExpression(rightType);
+            PrimitiveType rightType =
+                Types.PickPrimitiveType(f => table.GetResultType(leftType.Keyword, f.Keyword).HasValue);
+
+            var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
             if (op == SyntaxKind.ModuloExpression || op == SyntaxKind.DivideExpression)
             {
@@ -617,18 +714,36 @@ namespace Fuzzlyn.Methods
             }
 
             ExpressionSyntax expr = BinaryExpression(op, ParenthesizeIfNecessary(left), ParenthesizeIfNecessary(right));
-            if (BinOpTable.GetImplicitlyConvertedToType(leftType.Keyword, rightType.Keyword) != type.Keyword)
+
+            if (table.GetResultType(leftType.Keyword, rightType.Keyword) != type.Keyword)
                 expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
 
             return expr;
         }
 
+        private (ExpressionSyntax, ExpressionSyntax) GenLeftRightForBinary(FuzzType leftType, FuzzType rightType)
+        {
+            ExpressionSyntax left = GenExpression(leftType);
+            ExpressionSyntax right;
+            // There are two reasons we don't allow both left and right to be literals:
+            // 1. If the computation overflows, this gives a C# compiler error
+            // 2. The compiler is required to constant fold these expressions which is not interesting.
+            do
+            {
+                right = GenExpression(rightType);
+            } while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax);
+
+            return (left, right);
+        }
+
+        // Represents the transitive call counts from this function to other functions.
+        private readonly Dictionary<int, long> _callCountMap = new Dictionary<int, long>();
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
         {
             Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
             FuncGenerator func;
-            if (allowNew && Random.FlipCoin(Options.GenNewMethodProb))
+            if (allowNew && Random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, Random.Rng))
             {
                 type = type ?? Types.PickType(Options.ReturnTypeIsByRefProb);
 
@@ -637,7 +752,27 @@ namespace Fuzzlyn.Methods
             }
             else
             {
-                IEnumerable<FuncGenerator> funcs = _funcs.Skip(_funcIndex + 1);
+                IEnumerable<FuncGenerator> funcs =
+                    _funcs
+                    .Skip(_funcIndex + 1)
+                    .Where(candidate =>
+                    {
+                        // Make sure we do not get too many leaf calls. Here we compute what the new transitive
+                        // number of calls would be to each function, and if it's too much, reject this candidate.
+                        // Note that we will never reject calling a leaf function directly, even if the +1 puts
+                        // us over the cap. That is intentional. We only want to limit the exponential growth
+                        // which happens when functions call functions multiple times, and those functions also
+                        // call functions multiple times.
+                        foreach (var (transFunc, transNumCall) in candidate._callCountMap)
+                        {
+                            _callCountMap.TryGetValue(transFunc, out long curNumCalls);
+                            if (curNumCalls + transNumCall > Options.SingleFunctionMaxTotalCalls)
+                                return false;
+                        }
+
+                        return true;
+                    });
+
                 if (type != null)
                     funcs = funcs.Where(f => f.ReturnType.IsCastableTo(type) || (f.ReturnType is RefType rt && rt.InnerType.IsCastableTo(type)));
 
@@ -647,6 +782,17 @@ namespace Fuzzlyn.Methods
 
                 func = Random.NextElement(list);
                 type = type ?? func.ReturnType;
+            }
+
+            // Update transitive call counts before generating args, so we decrease chance of
+            // calling the same methods in the arg expressions.
+            _callCountMap.TryGetValue(func._funcIndex, out long numCalls);
+            _callCountMap[func._funcIndex] = numCalls + 1;
+
+            foreach (var (transFunc, transNumCalls) in func._callCountMap)
+            {
+                _callCountMap.TryGetValue(transFunc, out long curNumCalls);
+                _callCountMap[transFunc] = curNumCalls + transNumCalls;
             }
 
             ArgumentSyntax[] args = GenArgs(func, 0, out _);
@@ -689,7 +835,7 @@ namespace Fuzzlyn.Methods
         {
             SyntaxKind[] acceptedTypes =
             {
-                SyntaxKind.UShortKeyword,
+                SyntaxKind.ULongKeyword,
                 SyntaxKind.LongKeyword,
                 SyntaxKind.UIntKeyword,
                 SyntaxKind.IntKeyword,
@@ -699,7 +845,7 @@ namespace Fuzzlyn.Methods
                 SyntaxKind.SByteKeyword,
             };
 
-            if (!(type is PrimitiveType pt) || !acceptedTypes.Contains(pt.Keyword))
+            if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
                 return null;
 
             LValueInfo subject = GenExistingLValue(type, int.MinValue);
@@ -715,7 +861,7 @@ namespace Fuzzlyn.Methods
 
         private ExpressionSyntax GenNewObject(FuzzType type)
         {
-            if (!(type is AggregateType at))
+            if (type is not AggregateType at)
                 return null;
 
             ObjectCreationExpressionSyntax creation =
@@ -768,11 +914,11 @@ namespace Fuzzlyn.Methods
         private static void AppendVariablePaths(List<LValueInfo> paths, VariableIdentifier var)
         {
             ExpressionSyntax varAccess = IdentifierName(var.Name);
-            AddPathsRecursive(varAccess, var.Type, var.RefEscapeScope);
+            AddPathsRecursive(varAccess, var.Type, var.RefEscapeScope, var.ReadOnly);
 
-            void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope)
+            void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
             {
-                LValueInfo info = new LValueInfo(curAccess, curType, curRefEscapeScope);
+                LValueInfo info = new LValueInfo(curAccess, curType, curRefEscapeScope, readOnly);
                 paths.Add(info);
 
                 if (curType is RefType rt)
@@ -790,7 +936,8 @@ namespace Fuzzlyn.Methods
                                             Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))),
                                             arr.Rank)))),
                             arr.ElementType,
-                            curRefEscapeScope: int.MaxValue);
+                            curRefEscapeScope: int.MaxValue,
+                            readOnly: false);
                         break;
                     case AggregateType agg:
                         foreach (AggregateField field in agg.Fields)
@@ -801,7 +948,8 @@ namespace Fuzzlyn.Methods
                                     curAccess,
                                     IdentifierName(field.Name)),
                                 field.Type,
-                                curRefEscapeScope: agg.IsClass ? int.MaxValue : curRefEscapeScope);
+                                curRefEscapeScope: agg.IsClass ? int.MaxValue : curRefEscapeScope,
+                                readOnly: agg.IsClass ? false : readOnly);
                         }
                         break;
                 }
@@ -816,6 +964,8 @@ namespace Fuzzlyn.Methods
         Call,
         If,
         Return,
+        TryFinally,
+        Loop,
     }
 
     internal enum ExpressionKind

@@ -4,11 +4,12 @@ namespace Fuzzlyn
 {
     internal class VariableIdentifier
     {
-        public VariableIdentifier(FuzzType type, string name, int refEscapeScope)
+        public VariableIdentifier(FuzzType type, string name, int refEscapeScope, bool readOnly)
         {
             Type = type;
             Name = name;
             RefEscapeScope = refEscapeScope;
+            ReadOnly = readOnly;
         }
 
         public FuzzType Type { get; }
@@ -22,5 +23,6 @@ namespace Fuzzlyn
         /// * etc.
         /// </summary>
         public int RefEscapeScope { get; }
+        public bool ReadOnly { get; }
     }
 }
