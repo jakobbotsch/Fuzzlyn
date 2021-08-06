@@ -435,8 +435,8 @@ namespace Fuzzlyn.Reduction
 
                     string FormatResult(ProgramResult result, ChecksumSite unmatch)
                     {
-                        if (pairResult.DebugResult.ExceptionType != null ||
-                            pairResult.ReleaseResult.ExceptionType != null)
+                        if (pairResult.DebugResult?.ExceptionType != null ||
+                            pairResult.ReleaseResult?.ExceptionType != null)
                         {
                             if (result.ExceptionType != null)
                                 return $"Throws '{result.ExceptionType}'";
@@ -444,7 +444,7 @@ namespace Fuzzlyn.Reduction
                             return "Runs successfully";
                         }
 
-                        if (pairResult.DebugResult.ChecksumSites.Count != pairResult.ReleaseResult.ChecksumSites.Count)
+                        if (pairResult.DebugResult?.ChecksumSites?.Count != pairResult.ReleaseResult?.ChecksumSites?.Count)
                             return $"Prints {result.ChecksumSites.Count} line(s)";
 
                         if (unmatch != null)
