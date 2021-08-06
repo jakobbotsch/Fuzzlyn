@@ -428,8 +428,6 @@ namespace Fuzzlyn
             if (s_programQueue.Count <= 0)
                 return;
 
-            File.AppendAllText("Seed_Trace.txt", "Starting seeds " + string.Join(" ", s_programQueue.Select(t => t.Item1)));
-
             RunSeparatelyResults results =
                 ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 20000);
 
