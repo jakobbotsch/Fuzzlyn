@@ -82,12 +82,12 @@ namespace Fuzzlyn.Execution
                 host = mm.FileName;
             }
 
-            string fuzzlyn = Assembly.GetExecutingAssembly().Location;
-            bool hostIsFuzzlyn = Path.ChangeExtension(fuzzlyn, ".exe") == host;
+            string fuzzlynAssemblyPath = Assembly.GetExecutingAssembly().Location;
+            bool hostIsFuzzlyn = Path.ChangeExtension(host, ".dll") == fuzzlynAssemblyPath;
             ProcessStartInfo info = new ProcessStartInfo
             {
                 FileName = host,
-                Arguments = hostIsFuzzlyn ? "--execute-programs" : $"\"{fuzzlyn}\" --execute-programs",
+                Arguments = hostIsFuzzlyn ? "--execute-programs" : $"\"{fuzzlynAssemblyPath}\" --execute-programs",
                 WorkingDirectory = Environment.CurrentDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
