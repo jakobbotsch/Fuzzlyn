@@ -297,8 +297,8 @@ namespace Fuzzlyn.Reduction
                     ProcessStartInfo startInfo = new ProcessStartInfo
                     {
                         WindowStyle = ProcessWindowStyle.Hidden,
-                        FileName = "cmd.exe",
-                        Arguments = $"/C git {cmd}",
+                        FileName = "git",
+                        Arguments = cmd,
                         WorkingDirectory = _reduceDebugGitDir,
                     };
                     process.StartInfo = startInfo;
