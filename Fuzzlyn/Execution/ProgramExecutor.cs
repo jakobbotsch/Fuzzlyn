@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,8 +13,26 @@ namespace Fuzzlyn.Execution
 {
     internal static class ProgramExecutor
     {
+        [Flags]
+        private enum ErrorModes
+        {
+            SYSTEM_DEFAULT         = 0x0,
+            SEM_FAILCRITICALERRORS     = 0x0001,
+            SEM_NOALIGNMENTFAULTEXCEPT = 0x0004,
+            SEM_NOGPFAULTERRORBOX      = 0x0002,
+            SEM_NOOPENFILEERRORBOX     = 0x8000
+        }
+
+        [DllImport("kernel32.dll")]
+        private static extern ErrorModes SetErrorMode(ErrorModes uMode);
+
         public static void Run()
         {
+            // Prevent post-mortem debuggers from launching here. We get
+            // runtime crashes sometimes and the parent Fuzzlyn process will
+            // handle it.
+            SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+
             List<ProgramPair> programs = JsonConvert.DeserializeObject<List<ProgramPair>>(Console.In.ReadToEnd());
             List<ProgramPairResults> results = programs.Select(RunPair).ToList();
             Console.Write(JsonConvert.SerializeObject(results));
