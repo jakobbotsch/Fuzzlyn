@@ -372,7 +372,7 @@ namespace Fuzzlyn
                 if (numGen % 100 == 0)
                 {
                     Console.Title = $"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found";
-                    Console.WriteLine($"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found");
+                    Console.WriteLine($"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found, {s_numFalseTimeouts} false timeouts");
                 }
             });
         }
@@ -423,16 +423,21 @@ namespace Fuzzlyn
         }
 
         private static int s_numDeviating;
+        private static int s_numFalseTimeouts;
         private static void ExecuteQueue()
         {
             if (s_programQueue.Count <= 0)
                 return;
 
+            Stopwatch timer = Stopwatch.StartNew();
             RunSeparatelyResults results =
-                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 20000);
+                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 100000);
+            timer.Stop();
+            Console.WriteLine("Programs executed in {0:F1}s", timer.Elapsed.TotalSeconds);
 
             if (results.Kind != RunSeparatelyResultsKind.Success)
             {
+                bool any = false;
                 // Did not finish run, go linearly
                 foreach (var (seed, debug, release) in s_programQueue)
                 {
@@ -442,13 +447,19 @@ namespace Fuzzlyn
 
                     // Skip time outs as we currently can produce some very long running programs.
                     if (results.Kind == RunSeparatelyResultsKind.Timeout)
+                    {
+                        any = true;
                         continue;
+                    }
 
                     if (results.Kind == RunSeparatelyResultsKind.Crash)
                         AddExample(seed, results.Kind);
                     else
                         CheckExample(seed, results.Results[0]);
                 }
+
+                if (!any)
+                    Interlocked.Increment(ref s_numFalseTimeouts);
             }
             else
             {

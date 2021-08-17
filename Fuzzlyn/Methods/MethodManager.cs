@@ -30,7 +30,26 @@ namespace Fuzzlyn.Methods
             gen.Generate(null, false);
         }
 
-        internal IEnumerable<MethodDeclarationSyntax> OutputMethods()
-            => _funcs.Select(f => f.Output());
+        internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<AggregateType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()
+        {
+            var staticFuncs = new List<MethodDeclarationSyntax>();
+            var methodLists = new Dictionary<AggregateType, List<MethodDeclarationSyntax>>();
+            foreach (FuncGenerator func in _funcs)
+            {
+                if (func.InstanceType == null)
+                {
+                    staticFuncs.Add(func.Output());
+                }
+                else
+                {
+                    if (!methodLists.TryGetValue(func.InstanceType, out var methods))
+                        methodLists.Add(func.InstanceType, methods = new List<MethodDeclarationSyntax>());
+
+                    methods.Add(func.Output());
+                }
+            }
+
+            return (staticFuncs, methodLists);
+        }
     }
 }

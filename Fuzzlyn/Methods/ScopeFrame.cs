@@ -4,6 +4,6 @@ namespace Fuzzlyn.Methods
 {
     internal class ScopeFrame
     {
-        public List<VariableIdentifier> Variables { get; } = new List<VariableIdentifier>();
+        public List<ScopeValue> Values { get; } = new List<ScopeValue>();
     }
 }

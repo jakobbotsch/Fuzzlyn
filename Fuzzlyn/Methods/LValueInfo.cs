@@ -19,7 +19,7 @@ namespace Fuzzlyn.Methods
 
         public ExpressionSyntax Expression { get; }
         public FuzzType Type { get; }
-        /// <summary>See <see cref="VariableIdentifier.RefEscapeScope"/>.</summary>
+        /// <summary>See <see cref="ScopeValue.RefEscapeScope"/>.</summary>
         public int RefEscapeScope { get; }
         public bool ReadOnly { get; }
 

@@ -7,24 +7,37 @@ namespace Fuzzlyn.Statics
 {
     internal class StaticField
     {
-        public StaticField(VariableIdentifier var, ExpressionSyntax initializer)
+        public StaticField(FuzzType type, string name, ExpressionSyntax initializer)
         {
-            Var = var;
+            Type = type;
+            Name = name;
             Initializer = initializer;
         }
 
-        public VariableIdentifier Var { get; }
+        public FuzzType Type { get; }
+        public string Name { get; }
         public ExpressionSyntax Initializer { get; }
+
+        public ExpressionSyntax CreateAccessor(bool prefixWithClass)
+        {
+            ExpressionSyntax accessor;
+            if (prefixWithClass)
+                accessor = MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(CodeGenerator.ClassNameForStaticMethods), IdentifierName(Name));
+            else
+                accessor = IdentifierName(Name);
+
+            return accessor;
+        }
 
         public FieldDeclarationSyntax Output()
             => FieldDeclaration(
                 VariableDeclaration(
-                    Var.Type.GenReferenceTo(),
+                    Type.GenReferenceTo(),
                     SingletonSeparatedList(
                         VariableDeclarator(
-                            Identifier(Var.Name))
+                            Identifier(Name))
                         .WithInitializer(
                             EqualsValueClause(Initializer)))))
-               .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)));
+               .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword)));
     }
 }

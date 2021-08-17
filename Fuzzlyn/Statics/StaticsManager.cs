@@ -28,7 +28,7 @@ namespace Fuzzlyn.Statics
         {
             List<StaticField> fields = _fields;
             if (type != null)
-                fields = _fields.Where(f => f.Var.Type == type).ToList();
+                fields = _fields.Where(f => f.Type == type).ToList();
 
             if (!fields.Any())
                 return GenerateNewField(type);
@@ -41,7 +41,7 @@ namespace Fuzzlyn.Statics
             type = type ?? Types.PickType();
 
             string name = "s_" + (++_counter);
-            StaticField field = new StaticField(new VariableIdentifier(type, name, int.MaxValue, readOnly: false), LiteralGenerator.GenLiteral(Random, type));
+            StaticField field = new StaticField(type, name, LiteralGenerator.GenLiteral(Random, type));
             _fields.Add(field);
             return field;
         }

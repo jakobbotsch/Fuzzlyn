@@ -47,9 +47,10 @@ namespace Fuzzlyn.Methods
         public FuzzlynOptions Options => Random.Options;
         public TypeManager Types { get; }
         public StaticsManager Statics { get; }
+        public AggregateType InstanceType { get; private set; }
         public BlockSyntax Body { get; private set; }
         public FuzzType ReturnType { get; private set; }
-        public VariableIdentifier[] Parameters { get; private set; }
+        public FuncParameter[] Parameters { get; private set; }
         public string Name { get; }
         public int NumStatements { get; private set; }
 
@@ -71,7 +72,7 @@ namespace Fuzzlyn.Methods
 
             IEnumerable<ParameterSyntax> GenParameters()
             {
-                foreach (VariableIdentifier pm in Parameters)
+                foreach (FuncParameter pm in Parameters)
                 {
                     if (pm.Type is RefType rt)
                     {
@@ -91,9 +92,15 @@ namespace Fuzzlyn.Methods
 
             ParameterListSyntax parameters = ParameterList(SeparatedList(GenParameters()));
 
+            SyntaxTokenList memberMods;
+            if (InstanceType == null)
+                memberMods = TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword));
+            else
+                memberMods = TokenList(Token(SyntaxKind.InternalKeyword));
+
             return
                 MethodDeclaration(retType, Name)
-                .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)))
+                .WithModifiers(memberMods)
                 .WithParameterList(parameters);
         }
 
@@ -101,24 +108,42 @@ namespace Fuzzlyn.Methods
         {
             ReturnType = returnType;
 
+            List<ScopeValue> initialVars = new List<ScopeValue>();
             if (randomizeParams)
             {
+                if (Random.FlipCoin(Options.InstanceMethodProb))
+                    InstanceType = Types.PickAggregateType();
+
                 int numArgs = Options.MethodParameterCountDist.Sample(Random.Rng);
-                Parameters = new VariableIdentifier[numArgs];
+                Parameters = new FuncParameter[numArgs];
                 for (int i = 0; i < Parameters.Length; i++)
                 {
                     FuzzType type = Types.PickType(Options.ParameterIsByRefProb);
                     string name = $"arg{i}";
+                    Parameters[i] = new FuncParameter(type, name);
+                }
+
+                if (InstanceType != null)
+                {
+                    // We cannot return refs to 'this', but we can pass them to funcs.
+                    // For classes this is quite limited since 'this' is readonly.
+                    initialVars.Add(new ScopeValue(InstanceType, ThisExpression(), refEscapeScope: 0, readOnly: InstanceType.IsClass));
+                }
+
+                foreach (FuncParameter param in Parameters)
+                {
                     // A ref to a by-ref parameter can escape to at least its parent method
-                    int refEscapeScope = type is RefType ? 1 : 0;
-                    Parameters[i] = new VariableIdentifier(type, name, refEscapeScope, readOnly: false);
+                    int refEscapeScope = param.Type is RefType ? 1 : 0;
+                    initialVars.Add(new ScopeValue(param.Type, IdentifierName(param.Name), refEscapeScope, false));
                 }
             }
             else
-                Parameters = Array.Empty<VariableIdentifier>();
+            {
+                Parameters = Array.Empty<FuncParameter>();
+            }
 
             _level = -1;
-            Body = GenBlock(Parameters, root: true);
+            Body = GenBlock(initialVars, root: true);
         }
 
         private StatementSyntax GenStatement(bool allowReturn = true)
@@ -163,7 +188,7 @@ namespace Fuzzlyn.Methods
                 => Options.StatementRejection.Reject(_level, Random.Rng);
         }
 
-        private BlockSyntax GenBlock(VariableIdentifier[] vars = null, bool root = false, int numStatements = -1)
+        private BlockSyntax GenBlock(IEnumerable<ScopeValue> vars = null, bool root = false, int numStatements = -1)
         {
             if (numStatements == -1)
                 numStatements = Options.BlockStatementCountDist.Sample(Random.Rng);
@@ -174,7 +199,7 @@ namespace Fuzzlyn.Methods
             _scope.Add(scope);
 
             if (vars != null)
-                scope.Variables.AddRange(vars);
+                scope.Values.AddRange(vars);
 
             BlockSyntax block = Block(GenStatements());
 
@@ -217,7 +242,7 @@ namespace Fuzzlyn.Methods
 
                 if (Options.EnableChecksumming)
                 {
-                    foreach (StatementSyntax stmt in GenChecksumming(scope.Variables, _genChecksumSiteId))
+                    foreach (StatementSyntax stmt in GenChecksumming(prefixRuntimeAccess: InstanceType != null, scope.Values, _genChecksumSiteId))
                         yield return stmt;
                 }
 
@@ -232,6 +257,9 @@ namespace Fuzzlyn.Methods
             }
         }
 
+        private ExpressionSyntax AccessStatic(StaticField stat)
+            => stat.CreateAccessor(InstanceType != null);
+
         private StatementSyntax GenAssignmentStatement()
         {
             LValueInfo lvalue = null;
@@ -245,19 +273,19 @@ namespace Fuzzlyn.Methods
                 // or always if the new type is a by-ref type (we cannot have static by-refs).
                 if (newType is RefType || Random.FlipCoin(Options.NewVarIsLocalProb))
                 {
-                    VariableIdentifier variable;
+                    ScopeValue variable;
                     string varName = $"var{_varCounter++}";
                     ExpressionSyntax rhs;
                     if (newType is RefType newRt)
                     {
                         LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue);
-                        variable = new VariableIdentifier(newType, varName, rhsLV.RefEscapeScope, readOnly: false);
+                        variable = new ScopeValue(newType, IdentifierName(varName), rhsLV.RefEscapeScope, readOnly: false);
                         rhs = RefExpression(rhsLV.Expression);
                     }
                     else
                     {
                         rhs = GenExpression(newType);
-                        variable = new VariableIdentifier(newType, varName, -(_scope.Count - 1), readOnly: false);
+                        variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), readOnly: false);
                     }
 
                     LocalDeclarationStatementSyntax decl =
@@ -265,17 +293,17 @@ namespace Fuzzlyn.Methods
                             VariableDeclaration(
                                 variable.Type.GenReferenceTo(),
                                 SingletonSeparatedList(
-                                    VariableDeclarator(variable.Name)
+                                    VariableDeclarator(varName)
                                     .WithInitializer(
                                         EqualsValueClause(rhs)))));
 
-                    _scope.Last().Variables.Add(variable);
+                    _scope.Last().Values.Add(variable);
 
                     return decl;
                 }
 
                 StaticField newStatic = Statics.GenerateNewField(newType);
-                lvalue = new LValueInfo(IdentifierName(newStatic.Var.Name), newType, int.MaxValue, readOnly: false);
+                lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false);
             }
 
             // Determine if we should generate a ref-reassignment. In that case we cannot do anything
@@ -411,13 +439,13 @@ namespace Fuzzlyn.Methods
         private StatementSyntax GenLoop()
         {
             string varName = $"var{_varCounter++}";
-            VariableIdentifier indVar = new VariableIdentifier(Types.GetPrimitiveType(SyntaxKind.IntKeyword), varName, -(_scope.Count - 1), true);
+            ScopeValue indVar = new ScopeValue(Types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
 
             VariableDeclarationSyntax decl =
                 VariableDeclaration(
                     indVar.Type.GenReferenceTo(),
                     SingletonSeparatedList(
-                        VariableDeclarator(indVar.Name)
+                        VariableDeclarator(varName)
                         .WithInitializer(
                             EqualsValueClause(
                                 LiteralExpression(
@@ -427,13 +455,13 @@ namespace Fuzzlyn.Methods
             ExpressionSyntax cond =
                 BinaryExpression(
                     SyntaxKind.LessThanExpression,
-                    IdentifierName(indVar.Name),
+                    IdentifierName(varName),
                     LiteralExpression(
                         SyntaxKind.NumericLiteralExpression,
                         Literal(2)));
 
             ExpressionSyntax incr =
-                PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, IdentifierName(indVar.Name));
+                PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indVar.Expression);
 
             BlockSyntax block = GenBlock(new[] { indVar });
 
@@ -495,7 +523,7 @@ namespace Fuzzlyn.Methods
             if (lv == null)
             {
                 StaticField newStatic = Statics.GenerateNewField(type);
-                lv = new LValueInfo(IdentifierName(newStatic.Var.Name), type, int.MaxValue, readOnly: false);
+                lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false);
             }
 
             return lv;
@@ -530,6 +558,7 @@ namespace Fuzzlyn.Methods
 
                 FuncGenerator funcToCall = Random.NextElement(refReturningFuncs);
 
+                ExpressionSyntax invocExpr = GenInvocFuncExpr(funcToCall);
                 // When calling a func that returns a by-ref, we need to take into account that the C# compiler
                 // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
                 // allowed to pass non-local by-refs. The following example illustrates the analysis performed
@@ -546,7 +575,7 @@ namespace Fuzzlyn.Methods
                 ArgumentSyntax[] args = GenArgs(funcToCall, minRefEscapeScope, out int argsMinRefEscapeScope);
                 InvocationExpressionSyntax invoc =
                     InvocationExpression(
-                        IdentifierName(funcToCall.Name),
+                        invocExpr,
                         ArgumentList(
                             SeparatedList(
                                 args)));
@@ -595,7 +624,7 @@ namespace Fuzzlyn.Methods
             {
                 foreach (ScopeFrame sf in _scope)
                 {
-                    foreach (VariableIdentifier variable in sf.Variables)
+                    foreach (ScopeValue variable in sf.Values)
                     {
                         AppendVariablePaths(paths, variable);
                     }
@@ -605,7 +634,9 @@ namespace Fuzzlyn.Methods
             if (collectStatics)
             {
                 foreach (StaticField stat in Statics.Fields)
-                    AppendVariablePaths(paths, stat.Var);
+                {
+                    AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false));
+                }
             }
 
             Debug.Assert(type == null || !(type is RefType), "Cannot collect variables of ref type");
@@ -745,7 +776,7 @@ namespace Fuzzlyn.Methods
             FuncGenerator func;
             if (allowNew && Random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, Random.Rng))
             {
-                type = type ?? Types.PickType(Options.ReturnTypeIsByRefProb);
+                type ??= Types.PickType(Options.ReturnTypeIsByRefProb);
 
                 func = new FuncGenerator(_funcs, Random, Types, Statics, _genChecksumSiteId);
                 func.Generate(type, true);
@@ -781,7 +812,7 @@ namespace Fuzzlyn.Methods
                     return null;
 
                 func = Random.NextElement(list);
-                type = type ?? func.ReturnType;
+                type ??= func.ReturnType;
             }
 
             // Update transitive call counts before generating args, so we decrease chance of
@@ -795,10 +826,11 @@ namespace Fuzzlyn.Methods
                 _callCountMap[transFunc] = curNumCalls + transNumCalls;
             }
 
+            ExpressionSyntax invocFuncExpr = GenInvocFuncExpr(func);
             ArgumentSyntax[] args = GenArgs(func, 0, out _);
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
-                    IdentifierName(func.Name),
+                    invocFuncExpr,
                     ArgumentList(
                         SeparatedList(args)));
 
@@ -806,6 +838,34 @@ namespace Fuzzlyn.Methods
                 return invoc;
 
             return CastExpression(type.GenReferenceTo(), invoc);
+        }
+
+        // Generates the expression that comes before the parentheses of the call.
+        private ExpressionSyntax GenInvocFuncExpr(FuncGenerator func)
+        {
+            if (InstanceType == null && func.InstanceType == null)
+            {
+                // Both are static, call directly without any class prefix
+                return IdentifierName(func.Name);
+            }
+
+            if (func.InstanceType == null)
+            {
+                // Invoke static function in different class
+                return
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName(CodeGenerator.ClassNameForStaticMethods),
+                        IdentifierName(func.Name));
+            }
+
+            // Instance method, generate receiver
+            ExpressionSyntax receiver = GenExpression(func.InstanceType);
+            return
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    receiver,
+                    IdentifierName(func.Name));
         }
 
         private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope, out int argsMinRefEscapeScope)
@@ -879,13 +939,35 @@ namespace Fuzzlyn.Methods
             return CastExpression(type.GenReferenceTo(), GenExpression(type));
         }
 
-        internal static IEnumerable<StatementSyntax> GenChecksumming(IEnumerable<VariableIdentifier> variables, Func<string> siteIdGenerator)
+        internal static IEnumerable<StatementSyntax> GenChecksumming(bool prefixRuntimeAccess, IEnumerable<ScopeValue> variables, Func<string> siteIdGenerator)
         {
             List<LValueInfo> paths = new List<LValueInfo>();
-            foreach (VariableIdentifier variable in variables)
+            foreach (ScopeValue variable in variables)
                 AppendVariablePaths(paths, variable);
 
             paths.RemoveAll(lv => !(lv.Type is PrimitiveType) && !(lv.Type is RefType rt && rt.InnerType is PrimitiveType));
+
+            ExpressionSyntax checksumCall;
+
+            if (prefixRuntimeAccess)
+            {
+                checksumCall =
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName(CodeGenerator.ClassNameForStaticMethods),
+                            IdentifierName("s_rt")),
+                        IdentifierName("Checksum"));
+            }
+            else
+            {
+                checksumCall =
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("s_rt"),
+                        IdentifierName("Checksum"));
+            }
 
             foreach (LValueInfo lvalue in paths)
             {
@@ -896,13 +978,9 @@ namespace Fuzzlyn.Methods
                         Literal(checksumSiteId));
 
                 ExpressionSyntax expr = lvalue.Expression;
-                ExpressionStatementSyntax stmt = 
+                ExpressionStatementSyntax stmt =
                     ExpressionStatement(
-                        InvocationExpression(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName("s_rt"),
-                                IdentifierName("Checksum")))
+                        InvocationExpression(checksumCall)
                         .WithArgumentList(
                             ArgumentList(
                                 SeparatedList(new[] { Argument(id), Argument(expr) }))));
@@ -911,10 +989,9 @@ namespace Fuzzlyn.Methods
             }
         }
 
-        private static void AppendVariablePaths(List<LValueInfo> paths, VariableIdentifier var)
+        private static void AppendVariablePaths(List<LValueInfo> paths, ScopeValue var)
         {
-            ExpressionSyntax varAccess = IdentifierName(var.Name);
-            AddPathsRecursive(varAccess, var.Type, var.RefEscapeScope, var.ReadOnly);
+            AddPathsRecursive(var.Expression, var.Type, var.RefEscapeScope, var.ReadOnly);
 
             void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
             {

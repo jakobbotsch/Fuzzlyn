@@ -16,6 +16,8 @@ namespace Fuzzlyn
 {
     internal class CodeGenerator
     {
+        internal const string ClassNameForStaticMethods = "Program";
+
         private int checksumSiteId;
 
         public CodeGenerator(FuzzlynOptions options)
@@ -47,14 +49,15 @@ namespace Fuzzlyn
         {
             CompilationUnitSyntax unit = CompilationUnit();
 
-            IEnumerable<MemberDeclarationSyntax> types =
-                Types.OutputTypes();
+            (List<MethodDeclarationSyntax> staticFuncs, Dictionary<AggregateType, List<MethodDeclarationSyntax>> typeMethods) = Methods.OutputMethods();
+
+            IEnumerable<MemberDeclarationSyntax> types = Types.OutputTypes(typeMethods);
 
             // Append 'Program' class containing statics and methods, followed by main method
             MemberDeclarationSyntax programClass =
-                ClassDeclaration("Program")
+                ClassDeclaration(ClassNameForStaticMethods)
                 .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                .WithMembers(OutputProgramMembers().ToSyntaxList());
+                .WithMembers(OutputProgramMembers(staticFuncs).ToSyntaxList());
 
             types = types.Concat(new[] { programClass });
 
@@ -64,7 +67,7 @@ namespace Fuzzlyn
             return unit;
         }
 
-        private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers()
+        private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers(List<MethodDeclarationSyntax> methods)
         {
             if (Options.EnableChecksumming)
             {
@@ -74,13 +77,11 @@ namespace Fuzzlyn
                             ParseTypeName("Fuzzlyn.Execution.IRuntime"),
                             SingletonSeparatedList(
                                 VariableDeclarator("s_rt"))))
-                    .WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword)));
+                    .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword)));
             }
 
             foreach (FieldDeclarationSyntax stat in Statics.OutputStatics())
                 yield return stat;
-
-            List<MethodDeclarationSyntax> methods = Methods.OutputMethods().ToList();
 
             ParameterListSyntax parameters = ParameterList();
 
@@ -124,7 +125,7 @@ namespace Fuzzlyn
                 if (Options.EnableChecksumming)
                 {
                     IEnumerable<StatementSyntax> staticChecksums =
-                        FuncGenerator.GenChecksumming(Statics.Fields.Select(s => s.Var), GenerateChecksumSiteId);
+                        FuncGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
 
                     foreach (StatementSyntax checksumStatement in staticChecksums)
                         yield return checksumStatement;

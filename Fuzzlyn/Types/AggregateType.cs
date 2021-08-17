@@ -63,15 +63,15 @@ namespace Fuzzlyn.Types
             return count;
         }
 
-        public TypeDeclarationSyntax Output()
+        public TypeDeclarationSyntax Output(List<MethodDeclarationSyntax> methods)
         {
             if (IsClass)
-                return ClassDeclaration(Name).WithMembers(OutputMembers().ToSyntaxList());
+                return ClassDeclaration(Name).WithMembers(OutputMembers(methods).ToSyntaxList());
 
-            return StructDeclaration(Name).WithMembers(OutputMembers().ToSyntaxList());
+            return StructDeclaration(Name).WithMembers(OutputMembers(methods).ToSyntaxList());
         }
 
-        private IEnumerable<MemberDeclarationSyntax> OutputMembers()
+        private IEnumerable<MemberDeclarationSyntax> OutputMembers(List<MethodDeclarationSyntax> methods)
         {
             foreach (AggregateField field in _fields)
             {
@@ -84,6 +84,9 @@ namespace Fuzzlyn.Types
             }
 
             yield return OutputCtor();
+
+            foreach (MethodDeclarationSyntax method in methods)
+                yield return method;
         }
 
         private ConstructorDeclarationSyntax OutputCtor()

@@ -57,16 +57,16 @@ namespace Fuzzlyn.Types
             return type;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> OutputTypes()
+        public IEnumerable<TypeDeclarationSyntax> OutputTypes(Dictionary<AggregateType, List<MethodDeclarationSyntax>> associatedFuncs)
         {
             foreach (AggregateType type in _aggTypes)
-                yield return type.Output();
+            {
+                yield return type.Output(associatedFuncs.GetValueOrDefault(type) ?? new List<MethodDeclarationSyntax>());
+            }
         }
 
         public void GenerateTypes()
         {
-            SyntaxKind[] standardAssignments = new SyntaxKind[0];
-
             SyntaxKind[] primitiveTypes =
             {
                 SyntaxKind.BoolKeyword,
