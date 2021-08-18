@@ -28,10 +28,13 @@ namespace Fuzzlyn.Execution
 
         public static void Run()
         {
-            // Prevent post-mortem debuggers from launching here. We get
-            // runtime crashes sometimes and the parent Fuzzlyn process will
-            // handle it.
-            SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Prevent post-mortem debuggers from launching here. We get
+                // runtime crashes sometimes and the parent Fuzzlyn process will
+                // handle it.
+                SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+            }
 
             List<ProgramPair> programs = JsonConvert.DeserializeObject<List<ProgramPair>>(Console.In.ReadToEnd());
             List<ProgramPairResults> results = programs.Select(RunPair).ToList();
