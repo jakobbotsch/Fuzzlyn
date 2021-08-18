@@ -597,6 +597,109 @@ namespace Fuzzlyn.Reduction
                             local.Declaration.Variables[0].WithInitializer(null))));
         }
 
+        [Simplifier]
+        private IEnumerable<SyntaxNode> MakeInstanceMethodsStatic(SyntaxNode node)
+        {
+            if (node is not CompilationUnitSyntax comp)
+                yield break;
+
+            ClassDeclarationSyntax programClass =
+                comp.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(cls => cls.Identifier.ValueText == CodeGenerator.ClassNameForStaticMethods);
+            if (programClass == null)
+                yield break;
+
+            foreach (TypeDeclarationSyntax type in comp.DescendantNodes().OfType<TypeDeclarationSyntax>())
+            {
+                if (type == programClass)
+                    continue;
+
+                foreach (MemberDeclarationSyntax member in type.Members)
+                {
+                    if (member is not MethodDeclarationSyntax meth)
+                        continue;
+
+                    if (meth.Modifiers.Any(mod => mod.Kind() == SyntaxKind.StaticKeyword))
+                        continue;
+
+                    // Add this parameter. Currently this is never byref although we might want to do that for structs.
+                    ParameterSyntax thisParam =
+                        Parameter(
+                            Identifier("argThis"))
+                        .WithType(IdentifierName(type.Identifier));
+
+                    ExpressionSyntax useThisArg = IdentifierName("argThis");
+                    MethodDeclarationSyntax newMeth = meth.WithParameterList(ParameterList(meth.ParameterList.Parameters.Insert(0, thisParam)));
+                    // Replace uses in body of 'this' with arg
+                    newMeth =
+                        newMeth.ReplaceNodes(
+                            newMeth.DescendantNodes().OfType<ThisExpressionSyntax>(),
+                            (origNode, node) => useThisArg);
+
+                    SyntaxNode CreateNewMemberAccess(SyntaxNode origNode, SyntaxNode node)
+                    {
+                        if (node is not MemberAccessExpressionSyntax mem)
+                            return node;
+
+                        if (mem.Expression is not IdentifierNameSyntax id)
+                            return node;
+
+                        if (id.Identifier.ValueText != programClass.Identifier.ValueText)
+                            return node;
+
+                        return mem.Name;
+                    }
+
+                    // Replace references to 'Program' in body
+                    newMeth =
+                        newMeth.ReplaceNodes(
+                            newMeth.DescendantNodes(),
+                            CreateNewMemberAccess);
+
+                    // Add static
+                    newMeth = newMeth.AddModifiers(Token(SyntaxKind.StaticKeyword));
+
+                    SyntaxNode CreateNewInvoc(SyntaxNode origNode, SyntaxNode node)
+                    {
+                        if (node is not InvocationExpressionSyntax invoc)
+                            return node;
+
+                        if (invoc.Expression is not MemberAccessExpressionSyntax mem)
+                            return node;
+
+                        if (mem.Name is not IdentifierNameSyntax id)
+                            return node;
+
+                        if (id.Identifier.ValueText != meth.Identifier.ValueText)
+                            return node;
+
+                        ExpressionSyntax access;
+                        if (node.FirstAncestorOrSelf<ClassDeclarationSyntax>()?.Identifier.ValueText == programClass.Identifier.ValueText)
+                            access = IdentifierName(meth.Identifier.ValueText);
+                        else
+                            access = MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(programClass.Identifier.ValueText), IdentifierName(meth.Identifier.ValueText));
+
+                        return invoc.WithExpression(access).WithArgumentList(ArgumentList(invoc.ArgumentList.Arguments.Insert(0, Argument(mem.Expression))));
+                    }
+
+                    var reps = new Dictionary<SyntaxNode, SyntaxNode>
+                    {
+                        [programClass] = programClass.AddMembers(newMeth),
+                        [meth] = null,
+                    };
+                    // Add new member into class and remove old member
+                    CompilationUnitSyntax compWithMovedFunc =
+                        comp.ReplaceNodes(reps.Keys, (origNode, node) => reps[origNode]);
+
+                    // Now replace calls to this function globally
+                    compWithMovedFunc = compWithMovedFunc.ReplaceNodes(compWithMovedFunc.DescendantNodes(), CreateNewInvoc);
+
+                    yield return compWithMovedFunc;
+                }
+            }
+        }
+
         // Inline calls. We only do this late since it is better to reduce each call before inlining.
         [Simplifier(Late = true)]
         private IEnumerable<SyntaxNode> InlineCall(SyntaxNode node)
