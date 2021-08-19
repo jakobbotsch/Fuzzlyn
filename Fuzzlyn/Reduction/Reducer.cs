@@ -263,7 +263,7 @@ namespace Fuzzlyn.Reduction
             }
             else
             {
-                results = new RunSeparatelyResults(RunSeparatelyResultsKind.Success, new List<ProgramPairResults> { ProgramExecutor.RunPair(pair) });
+                results = new RunSeparatelyResults(RunSeparatelyResultsKind.Success, new List<ProgramPairResults> { ProgramExecutor.RunPair(pair) }, null);
             }
 
             return results;
@@ -422,6 +422,15 @@ namespace Fuzzlyn.Reduction
             switch (results.Kind)
             {
                 case RunSeparatelyResultsKind.Crash:
+                    if (!string.IsNullOrWhiteSpace(results.CrashError))
+                    {
+                        yield return $"// Exits with error:";
+                        foreach (string line in results.CrashError.Replace("\r", "").Split('\n'))
+                            yield return $"// {line}";
+
+                        yield break;
+                    }
+
                     yield return $"// Crashes the runtime";
                     yield break;
                 case RunSeparatelyResultsKind.Timeout:
@@ -1174,7 +1183,7 @@ namespace Fuzzlyn.Reduction
             }
         }
 
-        [Simplifier]
+        [Simplifier(Late = true)]
         private IEnumerable<SyntaxNode> SimplifyConstant(SyntaxNode node)
         {
             if (node is not LiteralExpressionSyntax literal || literal.Kind() != SyntaxKind.NumericLiteralExpression)

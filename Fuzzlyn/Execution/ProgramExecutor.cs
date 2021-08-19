@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Fuzzlyn.Execution
@@ -125,19 +124,24 @@ namespace Fuzzlyn.Execution
                 proc.StandardInput.Write(JsonConvert.SerializeObject(programs));
                 proc.StandardInput.Close();
                 Task<string> resultsTask = proc.StandardOutput.ReadToEndAsync();
+                Task<string> errorTask = proc.StandardError.ReadToEndAsync();
                 if (!proc.WaitForExit(timeout))
                 {
                     proc.Kill();
                     resultsTask.ContinueWith(t => { }, TaskContinuationOptions.OnlyOnFaulted);
-                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null);
+                    errorTask.ContinueWith(t => { }, TaskContinuationOptions.OnlyOnFaulted);
+                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null, null);
                 }
-                string results = resultsTask.Result;
+                string stdout = resultsTask.Result;
+                string stderr = errorTask.Result;
 
-                var pairResults = JsonConvert.DeserializeObject<List<ProgramPairResults>>(results);
+                var pairResults = JsonConvert.DeserializeObject<List<ProgramPairResults>>(stdout);
                 if (pairResults == null)
-                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null);
+                {
+                    return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null, stderr);
+                }
 
-                return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, pairResults);
+                return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, pairResults, null);
             }
         }
     }
@@ -207,13 +211,15 @@ namespace Fuzzlyn.Execution
 
     internal class RunSeparatelyResults
     {
-        public RunSeparatelyResults(RunSeparatelyResultsKind kind, List<ProgramPairResults> results)
+        public RunSeparatelyResults(RunSeparatelyResultsKind kind, List<ProgramPairResults> results, string crashError)
         {
             Kind = kind;
             Results = results;
+            CrashError = crashError;
         }
 
         public RunSeparatelyResultsKind Kind { get; }
         public List<ProgramPairResults> Results { get; }
+        public string CrashError { get; }
     }
 }

@@ -26,4 +26,8 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0-preview.4.21253.7" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM xcopy $(TargetPath) $(ProjectDir)publish\windows-x64 /Y" />
+  </Target>
+
 </Project>
