@@ -125,7 +125,8 @@ namespace Fuzzlyn
         public int MaxArrayTotalSize { get; set; } = 300;
         public int MaxArrayLengthPerDimension { get; set; } = 10;
         public double InstanceMethodProb { get; set; } = 0.5;
-        public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.4);
+        public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.2);
+        public ProbabilityDistribution MethodArgListArgsCountDist { get; set; } = new GeometricDistribution(0.5);
         public double ParameterIsByRefProb { get; set; } = 0.25;
         public double LocalIsByRefProb { get; set; } = 0.10;
         public double ReturnTypeIsByRefProb { get; set; } = 0.20;

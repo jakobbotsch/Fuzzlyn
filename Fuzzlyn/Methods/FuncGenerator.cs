@@ -88,6 +88,8 @@ namespace Fuzzlyn.Methods
                             .WithType(pm.Type.GenReferenceTo());
                     }
                 }
+
+                yield return Parameter(Token(SyntaxKind.ArgListKeyword));
             }
 
             ParameterListSyntax parameters = ParameterList(SeparatedList(GenParameters()));
@@ -870,24 +872,40 @@ namespace Fuzzlyn.Methods
 
         private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope, out int argsMinRefEscapeScope)
         {
-            ArgumentSyntax[] args = new ArgumentSyntax[funcToCall.Parameters.Length];
+            ArgumentSyntax[] args = new ArgumentSyntax[funcToCall.Parameters.Length + 1 /* arglist arg */];
+            int numArgListArgs = Options.MethodArgListArgsCountDist.Sample(Random.Rng);
+            ArgumentSyntax[] argListArgs = new ArgumentSyntax[numArgListArgs];
             argsMinRefEscapeScope = int.MaxValue;
 
-            for (int i = 0; i < args.Length; i++)
+            for (int i = 0; i < args.Length - 1 + numArgListArgs; i++)
             {
-                FuzzType paramType = funcToCall.Parameters[i].Type;
-                if (paramType is RefType rt)
+                ref ArgumentSyntax arg = ref args[0];
+                FuzzType argType;
+                if (i < args.Length - 1)
                 {
-                    LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
-                    argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
-                    args[i] = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
+                    arg = ref args[i];
+                    argType = funcToCall.Parameters[i].Type;
                 }
                 else
                 {
-                    args[i] = Argument(GenExpression(paramType));
+                    arg = ref argListArgs[i - (args.Length - 1)];
+                    argType = Types.PickType(Options.ParameterIsByRefProb);
+                }
+
+                if (argType is RefType rt)
+                {
+                    LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
+                    argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
+                    arg = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
+                }
+                else
+                {
+                    arg = Argument(GenExpression(argType));
                 }
             }
 
+            // Pack arg list args into args
+            args[^1] = Argument(InvocationExpression(LiteralExpression(SyntaxKind.ArgListExpression, Token(SyntaxKind.ArgListKeyword))).WithArgumentList(ArgumentList(SeparatedList(argListArgs))));
             return args;
         }
 

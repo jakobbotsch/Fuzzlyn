@@ -120,7 +120,15 @@ namespace Fuzzlyn
                 yield return
                     ExpressionStatement(
                         InvocationExpression(
-                            IdentifierName(methods[0].Identifier)));
+                            IdentifierName(methods[0].Identifier))
+                        .WithArgumentList(
+                            ArgumentList(
+                                SingletonSeparatedList<ArgumentSyntax>(
+                                    Argument(
+                                        InvocationExpression(
+                                            LiteralExpression(
+                                                SyntaxKind.ArgListExpression,
+                                                Token(SyntaxKind.ArgListKeyword))))))));
 
                 if (Options.EnableChecksumming)
                 {
