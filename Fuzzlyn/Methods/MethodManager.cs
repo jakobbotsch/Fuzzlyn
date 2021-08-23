@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -30,26 +31,21 @@ namespace Fuzzlyn.Methods
             gen.Generate(null, false);
         }
 
-        internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<AggregateType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()
+        internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<FuzzType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()
         {
             var staticFuncs = new List<MethodDeclarationSyntax>();
-            var methodLists = new Dictionary<AggregateType, List<MethodDeclarationSyntax>>();
-            foreach (FuncGenerator func in _funcs)
+            var typeMethods = new Dictionary<FuzzType, List<MethodDeclarationSyntax>>();
+            foreach (FuzzType type in ((IEnumerable<FuzzType>)Types.AggregateTypes).Concat(Types.InterfaceTypes))
             {
-                if (func.InstanceType == null)
-                {
-                    staticFuncs.Add(func.Output());
-                }
-                else
-                {
-                    if (!methodLists.TryGetValue(func.InstanceType, out var methods))
-                        methodLists.Add(func.InstanceType, methods = new List<MethodDeclarationSyntax>());
-
-                    methods.Add(func.Output());
-                }
+                typeMethods.Add(type, new List<MethodDeclarationSyntax>());
             }
 
-            return (staticFuncs, methodLists);
+            foreach (FuncGenerator func in _funcs)
+            {
+                func.Output(staticFuncs, typeMethods);
+            }
+
+            return (staticFuncs, typeMethods);
         }
     }
 }

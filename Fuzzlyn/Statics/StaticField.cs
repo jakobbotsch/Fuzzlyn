@@ -38,6 +38,6 @@ namespace Fuzzlyn.Statics
                             Identifier(Name))
                         .WithInitializer(
                             EqualsValueClause(Initializer)))))
-               .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword)));
+               .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)));
     }
 }

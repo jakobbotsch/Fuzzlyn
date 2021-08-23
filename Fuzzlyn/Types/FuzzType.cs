@@ -10,7 +10,9 @@ namespace Fuzzlyn.Types
         public abstract TypeSyntax GenReferenceTo();
 
         public bool IsCastableTo(FuzzType other)
-            => Equals(other) || (this is PrimitiveType pt && other is PrimitiveType opt && pt.Info.IsIntegral && opt.Info.IsIntegral);
+            => Equals(other) ||
+               (this is PrimitiveType pt && other is PrimitiveType opt && pt.Info.IsIntegral && opt.Info.IsIntegral) ||
+               (this is AggregateType agg && other is InterfaceType it && agg.Implements(it));
 
         public ArrayType MakeArrayType(int rank = 1)
             => new ArrayType(this, rank);

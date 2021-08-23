@@ -34,9 +34,13 @@ namespace Fuzzlyn
         public double CompoundAssignmentProb { get; set; } = 0.1;
         public double IncDecAssignmentStatementProb { get; set; } = 0.1;
 
-        public ProbabilityDistribution MakeAggregateTypeCountDist { get; set; } = new GeometricDistribution(0.4);
-        public ProbabilityDistribution MaxStructFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
-        public ProbabilityDistribution MaxClassFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
+        public ProbabilityDistribution NumAggregateTypesDist { get; set; } = new GeometricDistribution(0.4);
+        public ProbabilityDistribution NumStructFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
+        public ProbabilityDistribution NumClassFieldsDist { get; set; } = new UniformRangeDistribution(1, 10);
+        public ProbabilityDistribution NumInterfaceTypesDist { get; set; } = new GeometricDistribution(0.5);
+        // For each interface this distribution indicates how many more types to implement it on.
+        // Should always give at least 1.
+        public ProbabilityDistribution NumImplementorsDist { get; set; } = new GeometricDistribution(0.5, 1);
         public ProbabilityDistribution MakeArrayCountDist { get; set; } = new GeometricDistribution(0.8);
         public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
         public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
@@ -67,6 +71,7 @@ namespace Fuzzlyn
         // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
         // https://www.desmos.com/calculator/lxqwr6if6d
         public HillEquationParameters StatementRejection { get; set; } = new HillEquationParameters(2.4, 2);
+        public HillEquationParameters ExpressionRejection { get; set; } = new HillEquationParameters(3.5, 3);
         // Probability that we will attempt to generate a new method when trying to generate a call.
         public double GenNewFunctionProb { get; set; } = 0.07;
         // Controls the probability of generating a new function as a function of the total number of current
@@ -124,7 +129,13 @@ namespace Fuzzlyn
 
         public int MaxArrayTotalSize { get; set; } = 300;
         public int MaxArrayLengthPerDimension { get; set; } = 10;
-        public double InstanceMethodProb { get; set; } = 0.5;
+        public ProbabilityDistribution FuncKindDist { get; set; }
+            = new TableDistribution(new Dictionary<int, double>
+            {
+                [(int)FuncKind.StaticMethod] = 0.47,
+                [(int)FuncKind.InstanceMethod] = 0.47,
+                [(int)FuncKind.InterfaceMethod] = 0.06,
+            });
         public ProbabilityDistribution MethodParameterCountDist { get; set; } = new GeometricDistribution(0.4);
         public double ParameterIsByRefProb { get; set; } = 0.25;
         public double LocalIsByRefProb { get; set; } = 0.10;

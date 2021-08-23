@@ -49,7 +49,7 @@ namespace Fuzzlyn
         {
             CompilationUnitSyntax unit = CompilationUnit();
 
-            (List<MethodDeclarationSyntax> staticFuncs, Dictionary<AggregateType, List<MethodDeclarationSyntax>> typeMethods) = Methods.OutputMethods();
+            (List<MethodDeclarationSyntax> staticFuncs, Dictionary<FuzzType, List<MethodDeclarationSyntax>> typeMethods) = Methods.OutputMethods();
 
             IEnumerable<MemberDeclarationSyntax> types = Types.OutputTypes(typeMethods);
 
@@ -77,7 +77,7 @@ namespace Fuzzlyn
                             ParseTypeName("Fuzzlyn.Execution.IRuntime"),
                             SingletonSeparatedList(
                                 VariableDeclarator("s_rt"))))
-                    .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword)));
+                    .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)));
             }
 
             foreach (FieldDeclarationSyntax stat in Statics.OutputStatics())
@@ -125,7 +125,7 @@ namespace Fuzzlyn
                 if (Options.EnableChecksumming)
                 {
                     IEnumerable<StatementSyntax> staticChecksums =
-                        FuncGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
+                        FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
 
                     foreach (StatementSyntax checksumStatement in staticChecksums)
                         yield return checksumStatement;

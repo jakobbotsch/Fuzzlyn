@@ -12,7 +12,7 @@ namespace Fuzzlyn
 {
     internal static class LiteralGenerator
     {
-        public static ExpressionSyntax GenLiteral(Randomizer random, FuzzType type)
+        public static ExpressionSyntax GenLiteral(TypeManager types, Randomizer random, FuzzType type)
         {
             switch (type)
             {
@@ -23,10 +23,12 @@ namespace Fuzzlyn
                         ObjectCreationExpression(type.GenReferenceTo())
                         .WithArgumentList(
                             ArgumentList(
-                                SeparatedList(agg.Fields.Select(af => Argument(GenLiteral(random, af.Type))))));
+                                SeparatedList(agg.Fields.Select(af => Argument(GenLiteral(types, random, af.Type))))));
                 case ArrayType arr:
                     List<int> dims = GenArrayDimensions(random, arr);
-                    return GenArrayCreation(random, arr, dims);
+                    return GenArrayCreation(types, random, arr, dims);
+                case InterfaceType it:
+                    return GenLiteral(types, random, random.NextElement(types.GetImplementingTypes(it)));
                 default:
                     throw new Exception("Unreachable");
             }
@@ -73,7 +75,7 @@ namespace Fuzzlyn
             }
 
             List<int> dimensions = new List<int>(dimsRequired);
-            while (true)
+            for (int tries = 0; tries < 100; tries++)
             {
                 // If we are constructing an aggregate type start out by the number of fields, to limit
                 // the number of constants required here.
@@ -96,15 +98,20 @@ namespace Fuzzlyn
 
                 dimensions.Clear();
             }
+
+            for (int i = 0; i < dimsRequired; i++)
+                dimensions.Add(1);
+
+            return dimensions;
         }
 
-        private static ExpressionSyntax GenArrayCreation(Randomizer random, ArrayType at, List<int> dimensions)
+        private static ExpressionSyntax GenArrayCreation(TypeManager types, Randomizer random, ArrayType at, List<int> dimensions)
         {
             return ArrayCreationExpression(at.GenReferenceToArrayType())
-                   .WithInitializer(GenArrayInitializer(random, at, dimensions, 0));
+                   .WithInitializer(GenArrayInitializer(types, random, at, dimensions, 0));
         }
 
-        private static InitializerExpressionSyntax GenArrayInitializer(Randomizer random, ArrayType at, List<int> dimensions, int index)
+        private static InitializerExpressionSyntax GenArrayInitializer(TypeManager types, Randomizer random, ArrayType at, List<int> dimensions, int index)
         {
             return
                 InitializerExpression(
@@ -115,7 +122,7 @@ namespace Fuzzlyn
             ExpressionSyntax GenInner()
             {
                 if (index != at.Rank - 1)
-                    return GenArrayInitializer(random, at, dimensions, index + 1);
+                    return GenArrayInitializer(types, random, at, dimensions, index + 1);
 
                 if (at.ElementType is ArrayType innerArr)
                 {
@@ -124,12 +131,12 @@ namespace Fuzzlyn
                     // (this means we will create inner arrays of different length)
                     List<int> restOfDimensions = dimensions.Skip(index + 1).ToList();
                     restOfDimensions[0] = random.Next(1, restOfDimensions[0] + 1);
-                    ExpressionSyntax creation = GenArrayCreation(random, innerArr, restOfDimensions);
+                    ExpressionSyntax creation = GenArrayCreation(types, random, innerArr, restOfDimensions);
                     return creation;
                 }
 
                 Debug.Assert(index == dimensions.Count - 1);
-                return GenLiteral(random, at.ElementType);
+                return GenLiteral(types, random, at.ElementType);
             }
         }
 

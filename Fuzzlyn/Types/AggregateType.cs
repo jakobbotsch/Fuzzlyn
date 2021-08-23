@@ -12,7 +12,7 @@ namespace Fuzzlyn.Types
     // Class or struct type.
     public class AggregateType : FuzzType
     {
-        private readonly List<AggregateField> _fields = new List<AggregateField>();
+        private readonly List<AggregateField> _fields = new();
 
         public AggregateType(bool isClass, string name, List<AggregateField> fields)
         {
@@ -24,8 +24,9 @@ namespace Fuzzlyn.Types
         public string Name { get; }
         public IReadOnlyList<AggregateField> Fields => _fields;
         public bool IsClass { get; }
+        public HashSet<InterfaceType> ImplementedInterfaces { get; }  = new();
 
-        public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
+        public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
 
         public override TypeSyntax GenReferenceTo()
             => IdentifierName(Name);
@@ -63,12 +64,25 @@ namespace Fuzzlyn.Types
             return count;
         }
 
+        public bool Implements(InterfaceType it)
+            => ImplementedInterfaces.Contains(it);
+
         public TypeDeclarationSyntax Output(List<MethodDeclarationSyntax> methods)
         {
-            if (IsClass)
-                return ClassDeclaration(Name).WithMembers(OutputMembers(methods).ToSyntaxList());
+            TypeDeclarationSyntax ty = IsClass ? ClassDeclaration(Name) : StructDeclaration(Name);
 
-            return StructDeclaration(Name).WithMembers(OutputMembers(methods).ToSyntaxList());
+            ty = ty.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
+            if (ImplementedInterfaces.Count > 0)
+            {
+                ty = ty.WithBaseList(
+                    BaseList(
+                        SeparatedList(
+                            ImplementedInterfaces.Select(it => (BaseTypeSyntax)SimpleBaseType(it.GenReferenceTo())))));
+            }
+
+            ty = ty.WithMembers(OutputMembers(methods).ToSyntaxList());
+
+            return ty;
         }
 
         private IEnumerable<MemberDeclarationSyntax> OutputMembers(List<MethodDeclarationSyntax> methods)

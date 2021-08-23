@@ -30,5 +30,16 @@ namespace Fuzzlyn
 
         public T NextElement<T>(IReadOnlyList<T> list)
             => list[Next(list.Count)];
+
+        public void Shuffle<T>(List<T> list)
+        {
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                int swapIndex = Next(i + 1, list.Count);
+                T temp = list[i];
+                list[i] = list[swapIndex];
+                list[swapIndex] = temp;
+            }
+        }
     }
 }
