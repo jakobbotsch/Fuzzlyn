@@ -370,11 +370,11 @@ namespace Fuzzlyn.Reduction
                 UpdateReduced("Move locals up", localsMoved);
 
             // Step 2: Remove by binary searches. Prefer large ones first to remove as much as fast as possible.
-            List<string> names =
+            List<(string TypeName, string MethodName)> names =
                 Reduced.DescendantNodes()
                 .OfType<MethodDeclarationSyntax>()
                 .OrderByDescending(m => m.DescendantNodes().Count())
-                .Select(m => m.Identifier.Text)
+                .Select(m => (((TypeDeclarationSyntax)m.Parent).Identifier.Text, m.Identifier.Text))
                 .ToList();
 
             for (int i = 0; i < names.Count; i++)
@@ -383,9 +383,9 @@ namespace Fuzzlyn.Reduction
                 bool isMethodInteresting(MethodDeclarationSyntax orig, MethodDeclarationSyntax @new)
                     => isInteresting(Reduced.ReplaceNode(orig, @new));
 
-                var method = Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == names[i]);
+                var method = Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => ((TypeDeclarationSyntax)m.Parent).Identifier.Text == names[i].TypeName && m.Identifier.Text == names[i].MethodName);
                 var newMethod = (MethodDeclarationSyntax)new CoarseStatementRemover(isMethodInteresting).Visit(method);
-                UpdateReduced($"Bulk remove statements in {names[i]}", Reduced.ReplaceNode(method, newMethod));
+                UpdateReduced($"Bulk remove statements in {names[i].TypeName}.{names[i].MethodName}", Reduced.ReplaceNode(method, newMethod));
             }
         }
 
@@ -946,6 +946,25 @@ namespace Fuzzlyn.Reduction
                 return node;
 
             return null;
+        }
+
+        [Simplifier]
+        private IEnumerable<SyntaxNode> RemoveBasesFromBaseList(SyntaxNode node)
+        {
+            if (node is not TypeDeclarationSyntax type)
+                yield break;
+
+            if (type.BaseList == null)
+                yield break;
+
+            if (type.BaseList.Types.Count == 1)
+            {
+                yield return type.WithBaseList(null);
+                yield break;
+            }
+
+            for (int i = 0; i < type.BaseList.Types.Count; i++)
+                yield return type.WithBaseList(BaseList(type.BaseList.Types.RemoveAt(i)));
         }
 
         [Simplifier]
