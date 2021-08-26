@@ -35,6 +35,7 @@ namespace Fuzzlyn
             bool dumpOptions = false;
             bool? output = null;
             bool? executePrograms = null;
+            string executeInput = null;
             bool? enableChecksumming = null;
             bool? reduce = null;
             bool? reduceInChildProcesses = null;
@@ -54,6 +55,7 @@ namespace Fuzzlyn
                 { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
                 { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
                 { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
+                { "execute-input=", "Instead of stdin, read programs to execute from this file", v => executeInput = v },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "reduce-use-child-processes", "Check reduced example candidates in child processes", v => reduceInChildProcesses = v != null },
@@ -91,7 +93,7 @@ namespace Fuzzlyn
 
             if (executePrograms.HasValue && executePrograms.Value)
             {
-                ProgramExecutor.Run();
+                ProgramExecutor.Run(executeInput);
                 return;
             }
 

@@ -25,7 +25,7 @@ namespace Fuzzlyn.Execution
         [DllImport("kernel32.dll")]
         private static extern ErrorModes SetErrorMode(ErrorModes uMode);
 
-        public static void Run()
+        public static void Run(string executeInput)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -35,7 +35,12 @@ namespace Fuzzlyn.Execution
                 SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
             }
 
-            List<ProgramPair> programs = JsonConvert.DeserializeObject<List<ProgramPair>>(Console.In.ReadToEnd());
+            string input;
+            if (executeInput == null)
+                input = Console.In.ReadToEnd();
+            else
+                input = File.ReadAllText(executeInput);
+            List<ProgramPair> programs = JsonConvert.DeserializeObject<List<ProgramPair>>(input);
             List<ProgramPairResults> results = programs.Select(RunPair).ToList();
             Console.Write(JsonConvert.SerializeObject(results));
         }
