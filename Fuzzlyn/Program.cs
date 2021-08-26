@@ -430,7 +430,7 @@ namespace Fuzzlyn
             RunSeparatelyResults results =
                 ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 100000);
             timer.Stop();
-            Console.WriteLine("Programs executed in {0:F1}s", timer.Elapsed.TotalSeconds);
+            Console.WriteLine("Programs executed with {0} in {1:F1}s", results.Kind, timer.Elapsed.TotalSeconds);
 
             if (results.Kind != RunSeparatelyResultsKind.Success)
             {
