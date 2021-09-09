@@ -7,7 +7,7 @@ namespace Fuzzlyn.UnitTests
 {
     public class ArrayTypes
     {
-        private readonly PrimitiveType _int = new PrimitiveType(SyntaxKind.IntKeyword);
+        private readonly PrimitiveType _int = new(SyntaxKind.IntKeyword);
 
         [Fact]
         public void TestArrayOfArray()

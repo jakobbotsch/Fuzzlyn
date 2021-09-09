@@ -12,7 +12,7 @@ namespace Fuzzlyn.Methods
 {
     internal class MethodManager
     {
-        private readonly List<FuncGenerator> _funcs = new List<FuncGenerator>();
+        private readonly List<FuncGenerator> _funcs = new();
 
         public MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
         {
@@ -27,7 +27,7 @@ namespace Fuzzlyn.Methods
 
         internal void GenerateMethods(Func<string> genChecksumSiteId)
         {
-            FuncGenerator gen = new FuncGenerator(_funcs, Random, Types, Statics, genChecksumSiteId);
+            FuncGenerator gen = new(_funcs, Random, Types, Statics, genChecksumSiteId);
             gen.Generate(null, false);
         }
 

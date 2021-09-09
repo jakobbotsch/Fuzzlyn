@@ -11,7 +11,7 @@ namespace Fuzzlyn.Statics
     /// </summary>
     internal class StaticsManager
     {
-        private readonly List<StaticField> _fields = new List<StaticField>();
+        private readonly List<StaticField> _fields = new();
         private int _counter;
 
         public StaticsManager(Randomizer random, TypeManager types)
@@ -41,7 +41,7 @@ namespace Fuzzlyn.Statics
             type = type ?? Types.PickType();
 
             string name = "s_" + (++_counter);
-            StaticField field = new StaticField(type, name, LiteralGenerator.GenLiteral(Types, Random, type));
+            StaticField field = new(type, name, LiteralGenerator.GenLiteral(Types, Random, type));
             _fields.Add(field);
             return field;
         }

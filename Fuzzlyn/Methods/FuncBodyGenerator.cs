@@ -108,7 +108,7 @@ namespace Fuzzlyn.Methods
 
             _statementLevel++;
 
-            ScopeFrame scope = new ScopeFrame();
+            ScopeFrame scope = new();
             _scope.Add(scope);
 
             if (vars != null)
@@ -352,7 +352,7 @@ namespace Fuzzlyn.Methods
         private StatementSyntax GenLoop()
         {
             string varName = $"var{_varCounter++}";
-            ScopeValue indVar = new ScopeValue(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
+            ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
 
             VariableDeclarationSyntax decl =
                 VariableDeclaration(
@@ -463,7 +463,7 @@ namespace Fuzzlyn.Methods
 
             if (kind == LValueKind.RefReturningCall)
             {
-                List<FuncGenerator> refReturningFuncs = new List<FuncGenerator>();
+                List<FuncGenerator> refReturningFuncs = new();
                 foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
                 {
                     if (func.ReturnType is not RefType rt)
@@ -552,7 +552,7 @@ namespace Fuzzlyn.Methods
         /// <param name="requireAssignable">Whether the collected lvalues must be able to appear as the LHS of an assignment with an RHS of type <paramref name="type"/>.</param>
         private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics, bool requireAssignable)
         {
-            List<LValueInfo> paths = new List<LValueInfo>();
+            List<LValueInfo> paths = new();
 
             if (collectLocals)
             {
@@ -901,7 +901,7 @@ namespace Fuzzlyn.Methods
 
         internal static IEnumerable<StatementSyntax> GenChecksumming(bool prefixRuntimeAccess, IEnumerable<ScopeValue> variables, Func<string> siteIdGenerator)
         {
-            List<LValueInfo> paths = new List<LValueInfo>();
+            List<LValueInfo> paths = new();
             foreach (ScopeValue variable in variables)
                 AppendVariablePaths(paths, variable);
 
@@ -955,7 +955,7 @@ namespace Fuzzlyn.Methods
 
             void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
             {
-                LValueInfo info = new LValueInfo(curAccess, curType, curRefEscapeScope, readOnly);
+                LValueInfo info = new(curAccess, curType, curRefEscapeScope, readOnly);
                 paths.Add(info);
 
                 if (curType is RefType rt)

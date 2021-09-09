@@ -12,7 +12,7 @@ namespace Fuzzlyn
         internal static string GenerateString(Random rand)
         {
             const string pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-            StringBuilder sb = new StringBuilder(rand.Next(5, 11));
+            StringBuilder sb = new(rand.Next(5, 11));
             for (int i = 0; i < sb.Capacity; i++)
                 sb.Append(pool[rand.Next(pool.Length)]);
 

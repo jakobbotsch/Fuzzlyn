@@ -15,7 +15,7 @@ namespace Fuzzlyn.Types
                (this is AggregateType agg && other is InterfaceType it && agg.Implements(it));
 
         public ArrayType MakeArrayType(int rank = 1)
-            => new ArrayType(this, rank);
+            => new(this, rank);
 
         public abstract override int GetHashCode();
         public abstract override bool Equals(object obj);

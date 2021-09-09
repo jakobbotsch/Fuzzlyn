@@ -42,7 +42,7 @@ namespace Fuzzlyn
             string reduceDebugGitDir = null;
             string removeFixed = null;
             bool? stats = null;
-            OptionSet optionSet = new OptionSet
+            OptionSet optionSet = new()
             {
                 { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
                 { "parallelism=", "Number of cores to use", (int? p) => parallelism = p },
@@ -270,8 +270,8 @@ namespace Fuzzlyn
                 Exception ex = null;
                 TextWriter origOut = Console.Out;
 
-                MemoryStream ms = new MemoryStream();
-                StreamWriter sw = new StreamWriter(ms, Encoding.UTF8);
+                MemoryStream ms = new();
+                StreamWriter sw = new(ms, Encoding.UTF8);
 
                 try
                 {
@@ -298,7 +298,7 @@ namespace Fuzzlyn
             var cg = new CodeGenerator(options);
             CompilationUnitSyntax original = cg.GenerateProgram();
 
-            Reducer reducer = new Reducer(original, options.Seed.Value, options.ReduceWithChildProcesses, reduceDebugGitDir);
+            Reducer reducer = new(original, options.Seed.Value, options.ReduceWithChildProcesses, reduceDebugGitDir);
             CompilationUnitSyntax reduced = reducer.Reduce();
             Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
         }
@@ -315,7 +315,7 @@ namespace Fuzzlyn
 
         private static void GenerateProgramsAndGetStats(FuzzlynOptions options)
         {
-            List<double> sizes = new List<double>();
+            List<double> sizes = new();
             void AddProgramSize(CompilationUnitSyntax unit, ulong seed)
             {
                 unit = unit.NormalizeWhitespace();
@@ -356,7 +356,7 @@ namespace Fuzzlyn
 
         private static void GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
         {
-            ParallelOptions po = new ParallelOptions
+            ParallelOptions po = new()
             {
                 MaxDegreeOfParallelism = options.Parallelism
             };
@@ -364,7 +364,7 @@ namespace Fuzzlyn
             int numGenerated = 0;
             Parallel.For(0, options.NumPrograms, po, i =>
             {
-                CodeGenerator gen = new CodeGenerator(options);
+                CodeGenerator gen = new(options);
                 CompilationUnitSyntax unit = gen.GenerateProgram();
                 action(unit, gen.Random.Seed);
                 int numGen = Interlocked.Increment(ref numGenerated);
@@ -376,8 +376,8 @@ namespace Fuzzlyn
             });
         }
 
-        private static readonly object s_fileLock = new object();
-        private static readonly List<(ulong, byte[], byte[])> s_programQueue = new List<(ulong, byte[], byte[])>();
+        private static readonly object s_fileLock = new();
+        private static readonly List<(ulong, byte[], byte[])> s_programQueue = new();
         private static void Compile(CompilationUnitSyntax program, ulong seed)
         {
             byte[] debug = DoCompilation(Compiler.DebugOptions);

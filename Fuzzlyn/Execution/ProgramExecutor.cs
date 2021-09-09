@@ -110,7 +110,7 @@ namespace Fuzzlyn.Execution
 
             string fuzzlynAssemblyPath = Assembly.GetExecutingAssembly().Location;
             bool hostIsFuzzlyn = Path.ChangeExtension(host, ".dll") == fuzzlynAssemblyPath;
-            ProcessStartInfo info = new ProcessStartInfo
+            ProcessStartInfo info = new()
             {
                 FileName = host,
                 Arguments = hostIsFuzzlyn ? "--execute-programs" : $"\"{fuzzlynAssemblyPath}\" --execute-programs",

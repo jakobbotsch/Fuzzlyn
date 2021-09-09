@@ -24,13 +24,13 @@ namespace Fuzzlyn
             MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
         };
 
-        private static readonly CSharpParseOptions s_parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
+        private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 
         public static readonly CSharpCompilationOptions DebugOptions =
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug);
+            new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug);
 
         public static readonly CSharpCompilationOptions ReleaseOptions =
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release);
+            new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release);
 
         public static CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
         {

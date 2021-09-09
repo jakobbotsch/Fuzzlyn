@@ -13,7 +13,7 @@ namespace Fuzzlyn.Methods
 {
     internal class FuncGenerator
     {
-        private readonly List<ScopeFrame> _scope = new List<ScopeFrame>();
+        private readonly List<ScopeFrame> _scope = new();
         private readonly List<FuncGenerator> _funcs;
         private readonly Func<string> _genChecksumSiteId;
         private readonly List<(AggregateType Type, FuncBodyGenerator Body)> _bodies = new();

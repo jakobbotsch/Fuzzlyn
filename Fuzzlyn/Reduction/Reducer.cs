@@ -21,7 +21,7 @@ namespace Fuzzlyn.Reduction
         private int _varCounter;
         private bool _reduceWithChildProcesses;
         private readonly string _reduceDebugGitDir;
-        private readonly Stopwatch _timer = new Stopwatch();
+        private readonly Stopwatch _timer = new();
 
         public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses, string reduceDebugGitDir)
         {
@@ -137,7 +137,7 @@ namespace Fuzzlyn.Reduction
             UpdateReduced("Removing header comments", Original.WithLeadingTrivia());
             CoarseSimplify(isInteresting);
 
-            List<(string, IEnumerator<SyntaxNode>)> simplifierEnumerators = new List<(string, IEnumerator<SyntaxNode>)>();
+            List<(string, IEnumerator<SyntaxNode>)> simplifierEnumerators = new();
             bool first = true;
             bool any = true;
             while (any)
@@ -255,7 +255,7 @@ namespace Fuzzlyn.Reduction
             if (progDebug.Assembly == null || progRelease.Assembly == null)
                 return null;
 
-            ProgramPair pair = new ProgramPair(trackOutput, progDebug.Assembly, progRelease.Assembly);
+            ProgramPair pair = new(trackOutput, progDebug.Assembly, progRelease.Assembly);
             RunSeparatelyResults results;
             if (_reduceWithChildProcesses)
             {
@@ -292,9 +292,9 @@ namespace Fuzzlyn.Reduction
 
             void Git(string cmd)
             {
-                using (Process process = new Process())
+                using (Process process = new())
                 {
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    ProcessStartInfo startInfo = new()
                     {
                         WindowStyle = ProcessWindowStyle.Hidden,
                         FileName = "git",
@@ -316,7 +316,7 @@ namespace Fuzzlyn.Reduction
         {
             // Step 1: Declare all non-ref variables at the start of the methods with a default value.
             // This will hopefully allow us to remove more assignments than otherwise.
-            Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new();
 
             foreach (MethodDeclarationSyntax method in Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>())
             {
@@ -331,7 +331,7 @@ namespace Fuzzlyn.Reduction
                 if (decls.Count == 0)
                     continue;
 
-                Dictionary<SyntaxNode, SyntaxNode> assignmentReplacements = new Dictionary<SyntaxNode, SyntaxNode>();
+                Dictionary<SyntaxNode, SyntaxNode> assignmentReplacements = new();
                 foreach (LocalDeclarationStatementSyntax decl in decls)
                 {
                     assignmentReplacements.Add(
@@ -477,7 +477,7 @@ namespace Fuzzlyn.Reduction
             CompilationUnitSyntax withArgRemoved =
                 Reduced.ReplaceNode(mainMethod, mainMethod.WithParameterList(ParameterList()));
 
-            Dictionary<SyntaxNode, SyntaxNode> replacements = new Dictionary<SyntaxNode, SyntaxNode>();
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new();
             foreach (SyntaxNode node in withArgRemoved.DescendantNodes())
             {
                 // Remove s_rt field
@@ -524,7 +524,7 @@ namespace Fuzzlyn.Reduction
         }
 
         private readonly List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)> _simplifiers =
-            new List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)>();
+            new();
 
         private void GetSimplifierEnumerators(
             SyntaxNode node, bool late, List<(string name, IEnumerator<SyntaxNode> enumerator)> simplifyEnumerators)
@@ -735,8 +735,8 @@ namespace Fuzzlyn.Reduction
 
                 Debug.Assert(target != null);
 
-                List<StatementSyntax> finalStatements = new List<StatementSyntax>();
-                Dictionary<string, string> idReplacements = new Dictionary<string, string>();
+                List<StatementSyntax> finalStatements = new();
+                Dictionary<string, string> idReplacements = new();
                 // Since we may assign to arguments, we need to introduce a local for each argument.
                 // We also need to do this because a variable may go through an implicit conversion when
                 // being passed as an arg, so the assignments here replicate that as well.

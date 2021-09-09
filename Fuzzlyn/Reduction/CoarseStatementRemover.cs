@@ -32,7 +32,7 @@ namespace Fuzzlyn.Reduction
             else
             {
                 // Remove everything but insert an insert statement.
-                List<StatementSyntax> stmts = new List<StatementSyntax>();
+                List<StatementSyntax> stmts = new();
                 if (!(orig.ReturnType is PredefinedTypeSyntax preType && preType.Keyword.IsKind(SyntaxKind.VoidKeyword)))
                     stmts.Add(ReturnStatement(DefaultExpression(orig.ReturnType)));
 

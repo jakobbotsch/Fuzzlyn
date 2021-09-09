@@ -31,7 +31,7 @@ namespace Fuzzlyn.Types
             if (_type != null)
                 return _type;
 
-            List<int> ranks = new List<int> { Rank };
+            List<int> ranks = new() { Rank };
             // int[][] => ArrayType(ArrayType(Int, 1), 1)
             // int[][,] => ArrayType(ArrayType(Int, 2), 1)
             FuzzType innerElem = ElementType;

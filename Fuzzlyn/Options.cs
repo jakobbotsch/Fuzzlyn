@@ -147,7 +147,7 @@ namespace NDesk.Options {
 
 	public class OptionValueCollection : IList, IList<string> {
 
-		List<string> values = new List<string> ();
+		List<string> values = new();
 		OptionContext c;
 
 		internal OptionValueCollection (OptionContext c)
@@ -365,7 +365,7 @@ namespace NDesk.Options {
 		private OptionValueType ParsePrototype ()
 		{
 			char type = '\0';
-			List<string> seps = new List<string> ();
+			List<string> seps = new();
 			for (int i = 0; i < names.Length; ++i) {
 				string name = names [i];
 				if (name.Length == 0)
@@ -559,7 +559,7 @@ namespace NDesk.Options {
 		{
 			if (option == null)
 				throw new ArgumentNullException ("option");
-			List<string> added = new List<string> (option.Names.Length);
+			List<string> added = new(option.Names.Length);
 			try {
 				// KeyedCollection.InsertItem/SetItem handle the 0th name.
 				for (int i = 1; i < option.Names.Length; ++i) {
@@ -716,7 +716,7 @@ namespace NDesk.Options {
 			OptionContext c = CreateOptionContext ();
 			c.OptionIndex = -1;
 			bool process = true;
-			List<string> unprocessed = new List<string> ();
+			List<string> unprocessed = new();
 			Option def = Contains ("<>") ? this ["<>"] : null;
 			foreach (string argument in arguments) {
 				++c.OptionIndex;
@@ -749,7 +749,7 @@ namespace NDesk.Options {
 			return false;
 		}
 
-		private readonly Regex ValueOption = new Regex (
+		private readonly Regex ValueOption = new(
 			@"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
 		protected bool GetOptionParts (string argument, out string flag, out string name, out string sep, out string value)
@@ -904,7 +904,7 @@ namespace NDesk.Options {
 
 				List<string> lines = GetLines (localizer (GetDescription (p.Description)));
 				o.WriteLine (lines [0]);
-				string prefix = new string (' ', OptionWidth+2);
+				string prefix = new(' ', OptionWidth+2);
 				for (int i = 1; i < lines.Count; ++i) {
 					o.Write (prefix);
 					o.WriteLine (lines [i]);
@@ -997,7 +997,7 @@ namespace NDesk.Options {
 		{
 			if (description == null)
 				return string.Empty;
-			StringBuilder sb = new StringBuilder (description.Length);
+			StringBuilder sb = new(description.Length);
 			int start = -1;
 			for (int i = 0; i < description.Length; ++i) {
 				switch (description [i]) {
@@ -1037,7 +1037,7 @@ namespace NDesk.Options {
 
 		private static List<string> GetLines (string description)
 		{
-			List<string> lines = new List<string> ();
+			List<string> lines = new();
 			if (string.IsNullOrEmpty (description)) {
 				lines.Add (string.Empty);
 				return lines;

@@ -74,7 +74,7 @@ namespace Fuzzlyn
                 elemType = innerArr.ElementType;
             }
 
-            List<int> dimensions = new List<int>(dimsRequired);
+            List<int> dimensions = new(dimsRequired);
             for (int tries = 0; tries < 100; tries++)
             {
                 // If we are constructing an aggregate type start out by the number of fields, to limit

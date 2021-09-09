@@ -140,7 +140,7 @@ namespace Fuzzlyn.Types
         private AggregateType GenerateAggregateType(bool isClass, string name)
         {
             int numFields = (isClass ? Options.NumClassFieldsDist : Options.NumStructFieldsDist).Sample(Random.Rng);
-            List<AggregateField> fields = new List<AggregateField>(numFields);
+            List<AggregateField> fields = new(numFields);
             for (int i = 0; i < numFields; i++)
             {
                 FuzzType type;
