@@ -385,13 +385,15 @@ namespace Fuzzlyn
 
             if (debug != null && release != null)
             {
+                bool execute = false;
                 lock (s_programQueue)
                 {
                     s_programQueue.Add((seed, debug, release));
-
-                    if (s_programQueue.Count >= 100)
-                        ExecuteQueue();
+                    execute = s_programQueue.Count >= 100;
                 }
+
+                if (execute)
+                    ExecuteQueue();
             }
 
             byte[] DoCompilation(CSharpCompilationOptions opts)
@@ -425,12 +427,19 @@ namespace Fuzzlyn
         private static int s_numFalseTimeouts;
         private static void ExecuteQueue()
         {
-            if (s_programQueue.Count <= 0)
-                return;
+            List<(ulong, byte[], byte[])> progs;
+            lock (s_programQueue)
+            {
+                if (s_programQueue.Count <= 0)
+                    return;
+
+                progs = new List<(ulong, byte[], byte[])>(s_programQueue);
+                s_programQueue.Clear();
+            }
 
             Stopwatch timer = Stopwatch.StartNew();
             RunSeparatelyResults results =
-                ProgramExecutor.RunSeparately(s_programQueue.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 100000);
+                ProgramExecutor.RunSeparately(progs.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 100000);
             timer.Stop();
             Console.WriteLine("Programs executed with {0} in {1:F1}s", results.Kind, timer.Elapsed.TotalSeconds);
 
@@ -438,7 +447,7 @@ namespace Fuzzlyn
             {
                 bool any = false;
                 // Did not finish run, go linearly
-                foreach (var (seed, debug, release) in s_programQueue)
+                foreach (var (seed, debug, release) in progs)
                 {
                     results =
                         ProgramExecutor.RunSeparately(
@@ -462,9 +471,9 @@ namespace Fuzzlyn
             }
             else
             {
-                Trace.Assert(s_programQueue.Count == results.Results.Count, "Returned results count is wrong");
+                Trace.Assert(progs.Count == results.Results.Count, "Returned results count is wrong");
                 for (int i = 0; i < results.Results.Count; i++)
-                    CheckExample(s_programQueue[i].Item1, results.Results[i]);
+                    CheckExample(progs[i].Item1, results.Results[i]);
             }
 
             void CheckExample(ulong seed, ProgramPairResults result)
@@ -483,11 +492,11 @@ namespace Fuzzlyn
                     line += $" ({kind})";
                 line += Environment.NewLine;
 
-                File.AppendAllText("Execution_Mismatch.txt", line);
+                lock (s_fileLock)
+                    File.AppendAllText("Execution_Mismatch.txt", line);
+
                 Interlocked.Increment(ref s_numDeviating);
             }
-
-            s_programQueue.Clear();
         }
     }
 }
