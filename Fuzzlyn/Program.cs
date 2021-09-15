@@ -41,6 +41,7 @@ namespace Fuzzlyn
             bool? reduceInChildProcesses = null;
             string reduceDebugGitDir = null;
             string removeFixed = null;
+            string outputPath = null;
             bool? stats = null;
             OptionSet optionSet = new()
             {
@@ -58,6 +59,7 @@ namespace Fuzzlyn
                 { "execute-input=", "Instead of stdin, read programs to execute from this file", v => executeInput = v },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
+                { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
                 { "reduce-use-child-processes", "Check reduced example candidates in child processes", v => reduceInChildProcesses = v != null },
                 { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
                 { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
@@ -149,7 +151,7 @@ namespace Fuzzlyn
             else if (removeFixed != null)
                 RemoveFixedPrograms(options, removeFixed);
             else if (options.Reduce)
-                ReduceProgram(options, reduceDebugGitDir);
+                ReduceProgram(options, outputPath, reduceDebugGitDir);
             else if (options.Stats)
                 GenerateProgramsAndGetStats(options);
             else if (options.Output)
@@ -164,15 +166,18 @@ namespace Fuzzlyn
             string[] files = Directory.GetFiles(dir, "*.cs").OrderBy(p => p.ToLowerInvariant()).ToArray();
             for (int i = 0; i < files.Length; i++)
             {
-                Console.Title = $"Processing {i + 1}/{files.Length}";
+                Console.Write("Processing {0}/{1}", i + 1, files.Length);
 
                 string contents = File.ReadAllText(files[i]);
                 MatchCollection matches = Regex.Matches(contents, "// Seed: ([0-9]+)");
                 if (matches.Count != 1)
+                {
+                    Console.WriteLine();
                     continue;
+                }
 
                 ulong seed = ulong.Parse(matches[0].Groups[1].Value);
-                Console.Write("Processing {0}: ", seed);
+                Console.Write(" (seed {0}): ", seed);
 
                 options.Seed = seed;
                 var cg = new CodeGenerator(options);
@@ -293,14 +298,18 @@ namespace Fuzzlyn
             }
         }
 
-        private static void ReduceProgram(FuzzlynOptions options, string reduceDebugGitDir)
+        private static void ReduceProgram(FuzzlynOptions options, string outputPath, string reduceDebugGitDir)
         {
             var cg = new CodeGenerator(options);
             CompilationUnitSyntax original = cg.GenerateProgram();
 
             Reducer reducer = new(original, options.Seed.Value, options.ReduceWithChildProcesses, reduceDebugGitDir);
             CompilationUnitSyntax reduced = reducer.Reduce();
-            Console.WriteLine(reduced.NormalizeWhitespace().ToFullString());
+            string source = reduced.NormalizeWhitespace().ToFullString();
+            if (outputPath != null)
+                File.WriteAllText(outputPath, source);
+            else
+                Console.WriteLine(source);
         }
 
         private static void GenerateProgramsAndOutput(FuzzlynOptions options)
@@ -351,7 +360,7 @@ namespace Fuzzlyn
         private static void GenerateProgramsAndCheck(FuzzlynOptions options)
         {
             GeneratePrograms(options, Compile);
-            ExecuteQueue();
+            ExecuteQueue(1);
         }
 
         private static void GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
@@ -370,7 +379,6 @@ namespace Fuzzlyn
                 int numGen = Interlocked.Increment(ref numGenerated);
                 if (numGen % 100 == 0)
                 {
-                    Console.Title = $"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found";
                     Console.WriteLine($"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found, {s_numFalseTimeouts} false timeouts");
                 }
             });
@@ -393,7 +401,7 @@ namespace Fuzzlyn
                 }
 
                 if (execute)
-                    ExecuteQueue();
+                    ExecuteQueue(100);
             }
 
             byte[] DoCompilation(CSharpCompilationOptions opts)
@@ -425,12 +433,12 @@ namespace Fuzzlyn
 
         private static int s_numDeviating;
         private static int s_numFalseTimeouts;
-        private static void ExecuteQueue()
+        private static void ExecuteQueue(int numMinPrograms = 1)
         {
             List<(ulong, byte[], byte[])> progs;
             lock (s_programQueue)
             {
-                if (s_programQueue.Count <= 0)
+                if (s_programQueue.Count < numMinPrograms)
                     return;
 
                 progs = new List<(ulong, byte[], byte[])>(s_programQueue);

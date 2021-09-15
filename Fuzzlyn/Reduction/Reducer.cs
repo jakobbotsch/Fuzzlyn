@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction
@@ -22,6 +23,7 @@ namespace Fuzzlyn.Reduction
         private bool _reduceWithChildProcesses;
         private readonly string _reduceDebugGitDir;
         private readonly Stopwatch _timer = new();
+        private TimeSpan _nextUpdate;
 
         public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses, string reduceDebugGitDir)
         {
@@ -173,7 +175,7 @@ namespace Fuzzlyn.Reduction
                 {
                     for (int i = 0; i < list.Count; i++)
                     {
-                        Console.Title = $"Simplifying {simplifyType}. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {i}/{list.Count}";
+                        WriteUpdateToConsole($"\rSimplifying {simplifyType}. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {i}/{list.Count}");
 
                         // Fisher-Yates shuffle.
                         int nodeIndex = _rng.Next(i, list.Count);
@@ -231,6 +233,8 @@ namespace Fuzzlyn.Reduction
                 }
             }
 
+            FinishConsoleUpdates();
+
             List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
 
             SimplifyRuntime();
@@ -245,6 +249,25 @@ namespace Fuzzlyn.Reduction
             UpdateReduced("Add header comments", Reduced.WithLeadingTrivia(newTrivia));
 
             return Reduced;
+        }
+
+        private void WriteUpdateToConsole(string text)
+        {
+            if (_timer.Elapsed < _nextUpdate)
+                return;
+
+            _nextUpdate = _timer.Elapsed + TimeSpan.FromMilliseconds(500);
+
+            if (Console.IsOutputRedirected)
+                return;
+
+            Console.Write(text.PadRight(Console.BufferWidth));
+        }
+
+        private void FinishConsoleUpdates()
+        {
+            if (!Console.IsOutputRedirected)
+                Console.WriteLine();
         }
 
         private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, int timeout)
@@ -379,7 +402,7 @@ namespace Fuzzlyn.Reduction
 
             for (int i = 0; i < names.Count; i++)
             {
-                Console.Title = $"Simplifying coarsely. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Method {i + 1}/{names.Count}.";
+                WriteUpdateToConsole($"Simplifying coarsely. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Method {i + 1}/{names.Count}.");
                 bool isMethodInteresting(MethodDeclarationSyntax orig, MethodDeclarationSyntax @new)
                     => isInteresting(Reduced.ReplaceNode(orig, @new));
 
@@ -387,6 +410,8 @@ namespace Fuzzlyn.Reduction
                 var newMethod = (MethodDeclarationSyntax)new CoarseStatementRemover(isMethodInteresting).Visit(method);
                 UpdateReduced($"Bulk remove statements in {names[i].TypeName}.{names[i].MethodName}", Reduced.ReplaceNode(method, newMethod));
             }
+
+            FinishConsoleUpdates();
         }
 
         private IEnumerable<string> GetOutputComments(CompileResult ogDebugCompile, CompileResult ogRelCompile)
