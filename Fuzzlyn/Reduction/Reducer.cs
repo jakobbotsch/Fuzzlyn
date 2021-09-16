@@ -261,7 +261,7 @@ namespace Fuzzlyn.Reduction
             if (Console.IsOutputRedirected)
                 return;
 
-            Console.Write(text.PadRight(Console.BufferWidth));
+            Console.Write("\r" + text.PadRight(Console.BufferWidth));
         }
 
         private void FinishConsoleUpdates()
