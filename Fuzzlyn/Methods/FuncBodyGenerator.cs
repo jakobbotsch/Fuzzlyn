@@ -672,10 +672,7 @@ namespace Fuzzlyn.Methods
 
             BinOpTable table;
             if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
-            {
                 table = BinOpTable.Shifts;
-                return GenIntegralProducingBinary(type);
-            }
             else
                 table = BinOpTable.Arithmetic;
 
