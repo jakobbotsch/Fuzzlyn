@@ -400,6 +400,10 @@ namespace Fuzzlyn.Methods
                     case ExpressionKind.Literal:
                         gen = GenLiteral(type);
                         break;
+                    case ExpressionKind.Unary:
+                        if (AllowRecursion())
+                            gen = GenUnary(type);
+                        break;
                     case ExpressionKind.Binary:
                         if (AllowRecursion())
                             gen = GenBinary(type);
@@ -419,11 +423,6 @@ namespace Fuzzlyn.Methods
                     case ExpressionKind.NewObject:
                         if (AllowRecursion())
                             gen = GenNewObject(type);
-                        break;
-                    case ExpressionKind.Cast:
-                        gen = null;
-                        continue;
-                        gen = GenCast(type);
                         break;
                     default:
                         throw new Exception("Unreachable");
@@ -614,6 +613,39 @@ namespace Fuzzlyn.Methods
             return LiteralGenerator.GenLiteral(_types, _random, type);
         }
 
+        private ExpressionSyntax GenUnary(FuzzType type)
+        {
+            if (type is not PrimitiveType pt)
+                return null;
+
+            if (pt.Keyword == SyntaxKind.BoolKeyword)
+            {
+                return PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, ParenthesizeIfNecessary(GenNonLiteralExpression(type)));
+            }
+
+            // Unary minus is not valid for ulong, so there we always pick ~
+            SyntaxKind op =
+                pt.Keyword == SyntaxKind.ULongKeyword
+                ?  SyntaxKind.BitwiseNotExpression
+                : (SyntaxKind)Options.UnaryIntegralDist.Sample(_random.Rng);
+
+            ExpressionSyntax expr = PrefixUnaryExpression(op, ParenthesizeIfNecessary(GenNonLiteralExpression(type)));
+
+            UnOpTable table = op switch
+            {
+                SyntaxKind.UnaryPlusExpression => UnOpTable.UnaryPlus,
+                SyntaxKind.UnaryMinusExpression => UnOpTable.UnaryMinus,
+                SyntaxKind.BitwiseNotExpression => UnOpTable.BitwiseNot,
+                _ => throw new Exception("Unexpected syntax kind sampled for unary integer op: " + op),
+            };
+
+            Debug.Assert(table.GetResultType(pt.Keyword).HasValue);
+            if (table.GetResultType(pt.Keyword).Value != pt.Keyword)
+                expr = CastExpression(type.GenReferenceTo(), ParenthesizedExpression(expr));
+
+            return expr;
+        }
+
         private ExpressionSyntax GenBinary(FuzzType type)
         {
             if (type is not PrimitiveType pt)
@@ -704,16 +736,24 @@ namespace Fuzzlyn.Methods
         private (ExpressionSyntax, ExpressionSyntax) GenLeftRightForBinary(FuzzType leftType, FuzzType rightType)
         {
             ExpressionSyntax left = GenExpression(leftType);
-            ExpressionSyntax right;
             // There are two reasons we don't allow both left and right to be literals:
             // 1. If the computation overflows, this gives a C# compiler error
             // 2. The compiler is required to constant fold these expressions which is not interesting.
+            if (left is LiteralExpressionSyntax)
+                return (left, GenNonLiteralExpression(rightType));
+
+            return (left, GenExpression(rightType));
+        }
+
+        private ExpressionSyntax GenNonLiteralExpression(FuzzType type)
+        {
+            ExpressionSyntax gen;
             do
             {
-                right = GenExpression(rightType);
-            } while (left is LiteralExpressionSyntax && right is LiteralExpressionSyntax);
+                gen = GenExpression(type);
+            } while (gen is LiteralExpressionSyntax);
 
-            return (left, right);
+            return gen;
         }
 
         private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
@@ -891,11 +931,6 @@ namespace Fuzzlyn.Methods
             return creation;
         }
 
-        private ExpressionSyntax GenCast(FuzzType type)
-        {
-            return CastExpression(type.GenReferenceTo(), GenExpression(type));
-        }
-
         internal static IEnumerable<StatementSyntax> GenChecksumming(bool prefixRuntimeAccess, IEnumerable<ScopeValue> variables, Func<string> siteIdGenerator)
         {
             List<LValueInfo> paths = new();
@@ -1006,14 +1041,13 @@ namespace Fuzzlyn.Methods
     {
         MemberAccess,
         Literal,
+        Unary,
         Binary,
-        Ternary,
         Assignment,
         Call,
         Increment,
         Decrement,
         NewObject,
-        Cast,
     }
 
 }

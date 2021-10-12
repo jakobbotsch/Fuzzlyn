@@ -58,11 +58,11 @@ namespace Fuzzlyn
         public ProbabilityDistribution ExpressionTypeDist { get; set; }
             = new TableDistribution(new Dictionary<int, double>
             {
-                [(int)ExpressionKind.MemberAccess] = 0.44,
-                [(int)ExpressionKind.Literal] = 0.20,
-                [(int)ExpressionKind.Call] = 0.1,
-                [(int)ExpressionKind.Cast] = 0.1,
-                [(int)ExpressionKind.NewObject] = 0.01,
+                [(int)ExpressionKind.MemberAccess] = 0.46,
+                [(int)ExpressionKind.Literal] = 0.21,
+                [(int)ExpressionKind.Call] = 0.11,
+                [(int)ExpressionKind.NewObject] = 0.02,
+                [(int)ExpressionKind.Unary] = 0.05,
                 [(int)ExpressionKind.Binary] = 0.05,
                 [(int)ExpressionKind.Increment] = 0.05,
                 [(int)ExpressionKind.Decrement] = 0.05,
@@ -94,6 +94,14 @@ namespace Fuzzlyn
                 [10] = 0.04,
                 [int.MaxValue - 1] = 0.1,
                 [int.MaxValue] = 0.1,
+            });
+
+        public ProbabilityDistribution UnaryIntegralDist { get; set; }
+            = new TableDistribution(new Dictionary<int, double>
+            {
+                [(int)SyntaxKind.UnaryPlusExpression] = 0.02,
+                [(int)SyntaxKind.UnaryMinusExpression] = 0.49,
+                [(int)SyntaxKind.BitwiseNotExpression] = 0.49,
             });
 
         public ProbabilityDistribution BinaryIntegralDist { get; set; }
