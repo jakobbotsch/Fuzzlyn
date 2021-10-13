@@ -4,8 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NDesk.Options;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -29,9 +29,7 @@ namespace Fuzzlyn
             string outputExamplesSummaryTo = null;
             string host = null;
             int? parallelism = null;
-            FuzzlynOptions options = null;
             bool help = false;
-            bool dumpOptions = false;
             bool? output = null;
             bool? enableChecksumming = null;
             bool? reduce = null;
@@ -46,11 +44,6 @@ namespace Fuzzlyn
                 { "num-programs=|n=", "Number of programs to generate. Mutually exclusive with seconds-to-run.", (int v) => numPrograms = v },
                 { "seconds-to-run=", "Seconds to run Fuzzlyn for. Mutually exclusive with num-programs.", (int v) => timeToRun = new TimeSpan(0, 0, v) },
                 {
-                    "options=",
-                    "Path to options.json. Command-line options will override options from this file.",
-                    s => options = JsonConvert.DeserializeObject<FuzzlynOptions>(File.ReadAllText(s))
-                },
-                {
                     "output-examples-summary-to=",
                     "File to output a summary of examples found to. " +
                     "When a new example is found a line will be output " +
@@ -58,7 +51,6 @@ namespace Fuzzlyn
                     "case (seed, type, crash info)",
                     v => outputExamplesSummaryTo = v },
                 { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
-                { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
                 { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
@@ -100,8 +92,7 @@ namespace Fuzzlyn
                 return;
             }
 
-            if (options == null)
-                options = new FuzzlynOptions();
+            FuzzlynOptions options = new();
 
             if (seed.HasValue)
                 options.Seed = seed.Value;
@@ -133,12 +124,6 @@ namespace Fuzzlyn
             if (options.Reduce && !options.Seed.HasValue)
             {
                 Console.WriteLine("Error: Cannot reduce without a seed.");
-                return;
-            }
-
-            if (dumpOptions)
-            {
-                Console.Write(JsonConvert.SerializeObject(options, Formatting.Indented));
                 return;
             }
 
@@ -520,7 +505,7 @@ namespace Fuzzlyn
 
                 if (options.OutputExamplesSummaryTo != null)
                 {
-                    string line = JsonConvert.SerializeObject(example) + Environment.NewLine;
+                    string line = JsonSerializer.Serialize(example) + Environment.NewLine;
                     lock (s_fileLock)
                         File.AppendAllText(options.OutputExamplesSummaryTo, line);
                 }
@@ -531,7 +516,7 @@ namespace Fuzzlyn
 
         private static int s_numDeviating;
 
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         private enum ExampleKind
         {
             Crash,
