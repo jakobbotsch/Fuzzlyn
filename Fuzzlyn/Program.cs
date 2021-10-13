@@ -1,22 +1,18 @@
-﻿using Fuzzlyn.Execution;
-using Fuzzlyn.ProbabilityDistributions;
+﻿using Fuzzlyn.ExecutionServer;
 using Fuzzlyn.Reduction;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Emit;
 using NDesk.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -29,16 +25,16 @@ namespace Fuzzlyn
         {
             ulong? seed = null;
             int? numPrograms = null;
+            TimeSpan? timeToRun = null;
+            string outputExamplesSummaryTo = null;
+            string host = null;
             int? parallelism = null;
             FuzzlynOptions options = null;
             bool help = false;
             bool dumpOptions = false;
             bool? output = null;
-            bool? executePrograms = null;
-            string executeInput = null;
             bool? enableChecksumming = null;
             bool? reduce = null;
-            bool? reduceInChildProcesses = null;
             string reduceDebugGitDir = null;
             string removeFixed = null;
             string outputPath = null;
@@ -46,21 +42,27 @@ namespace Fuzzlyn
             OptionSet optionSet = new()
             {
                 { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
-                { "parallelism=", "Number of cores to use", (int? p) => parallelism = p },
-                { "num-programs=|n=", "Number of programs to generate", (int v) => numPrograms = v },
+                { "parallelism=", "Number of cores to use, or -1 to use all cores available. Default value is 1.", (int? p) => parallelism = p },
+                { "num-programs=|n=", "Number of programs to generate. Mutually exclusive with seconds-to-run.", (int v) => numPrograms = v },
+                { "seconds-to-run=", "Seconds to run Fuzzlyn for. Mutually exclusive with num-programs.", (int v) => timeToRun = new TimeSpan(0, 0, v) },
                 {
                     "options=",
                     "Path to options.json. Command-line options will override options from this file.",
                     s => options = JsonConvert.DeserializeObject<FuzzlynOptions>(File.ReadAllText(s))
                 },
+                {
+                    "output-examples-summary-to=",
+                    "File to output a summary of examples found to. " +
+                    "When a new example is found a line will be output " +
+                    "corresponding to a JSON object describing the test " +
+                    "case (seed, type, crash info)",
+                    v => outputExamplesSummaryTo = v },
+                { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
                 { "dump-options", "Dump options to stdout and do nothing else", v => dumpOptions = v != null },
                 { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
-                { "execute-programs", "Accept programs to execute on stdin and report back differences", v => executePrograms = v != null },
-                { "execute-input=", "Instead of stdin, read programs to execute from this file", v => executeInput = v },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
                 { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
                 { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
-                { "reduce-use-child-processes", "Check reduced example candidates in child processes", v => reduceInChildProcesses = v != null },
                 { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
                 { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
                 { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
@@ -79,6 +81,11 @@ namespace Fuzzlyn
                 error = ex.Message;
             }
 
+            if (timeToRun.HasValue && numPrograms.HasValue)
+            {
+                error = "--num-programs and --seconds-to-run are mutually exclusive";
+            }
+
             if (error != null)
             {
                 Console.WriteLine("Fuzzlyn: {0}", error);
@@ -93,12 +100,6 @@ namespace Fuzzlyn
                 return;
             }
 
-            if (executePrograms.HasValue && executePrograms.Value)
-            {
-                ProgramExecutor.Run(executeInput);
-                return;
-            }
-
             if (options == null)
                 options = new FuzzlynOptions();
 
@@ -106,6 +107,12 @@ namespace Fuzzlyn
                 options.Seed = seed.Value;
             if (numPrograms.HasValue)
                 options.NumPrograms = numPrograms.Value;
+            if (timeToRun.HasValue)
+                options.TimeToRun = timeToRun;
+            if (outputExamplesSummaryTo != null)
+                options.OutputExamplesSummaryTo = outputExamplesSummaryTo;
+            if (host != null)
+                options.Host = host;
             if (parallelism.HasValue)
                 options.Parallelism = parallelism.Value;
             if (output.HasValue)
@@ -114,8 +121,6 @@ namespace Fuzzlyn
                 options.EnableChecksumming = enableChecksumming.Value;
             if (reduce.HasValue)
                 options.Reduce = reduce.Value;
-            if (reduceInChildProcesses.HasValue)
-                options.ReduceWithChildProcesses = reduceInChildProcesses.Value;
             if (stats.HasValue)
                 options.Stats = stats.Value;
 
@@ -137,104 +142,126 @@ namespace Fuzzlyn
                 return;
             }
 
-            string val = Environment.GetEnvironmentVariable("COMPlus_TieredCompilation");
-            if (val != "0")
+            if (removeFixed != null)
             {
-                Console.WriteLine(
-                    "Please set the COMPlus_TieredCompilation environment variable " +
-                    "to \"0\" before starting Fuzzlyn.");
-                Console.WriteLine("For cmd use \"set COMPlus_TieredCompilation=0\".");
-                Console.WriteLine("For powershell use \"$env:COMPlus_TieredCompilation='0'\"");
-                Console.WriteLine("For bash use \"export COMPlus_TieredCompilation=0\"");
-                Console.WriteLine("For Visual Studio, check the debug tab");
-            }
-            else if (removeFixed != null)
+                if (!CreateExecutionServerPool(options))
+                    return;
+
                 RemoveFixedPrograms(options, removeFixed);
+            }
             else if (options.Reduce)
+            {
+                if (!CreateExecutionServerPool(options))
+                    return;
+
                 ReduceProgram(options, outputPath, reduceDebugGitDir);
+            }
             else if (options.Stats)
+            {
                 GenerateProgramsAndGetStats(options);
+            }
             else if (options.Output)
+            {
                 GenerateProgramsAndOutput(options);
+            }
             else
+            {
+                if (!CreateExecutionServerPool(options))
+                    return;
+
                 GenerateProgramsAndCheck(options);
+            }
+        }
+
+        private static ExecutionServerPool s_executionServerPool;
+
+        private static bool CreateExecutionServerPool(FuzzlynOptions options)
+        {
+            if (!File.Exists(options.Host))
+            {
+                Console.WriteLine("Error: invalid host specified");
+                return false;
+            }
+
+            s_executionServerPool = new ExecutionServerPool(options.Host);
+            return true;
         }
 
         private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
         {
-            const string rereduceFile = "Rereduce_required.txt";
-            string[] files = Directory.GetFiles(dir, "*.cs").OrderBy(p => p.ToLowerInvariant()).ToArray();
-            for (int i = 0; i < files.Length; i++)
-            {
-                Console.Write("Processing {0}/{1}", i + 1, files.Length);
+            //const string rereduceFile = "Rereduce_required.txt";
+            //string[] files = Directory.GetFiles(dir, "*.cs").OrderBy(p => p.ToLowerInvariant()).ToArray();
+            //for (int i = 0; i < files.Length; i++)
+            //{
+            //    Console.Write("Processing {0}/{1}", i + 1, files.Length);
 
-                string contents = File.ReadAllText(files[i]);
-                MatchCollection matches = Regex.Matches(contents, "// Seed: ([0-9]+)");
-                if (matches.Count != 1)
-                {
-                    Console.WriteLine();
-                    continue;
-                }
+            //    string contents = File.ReadAllText(files[i]);
+            //    MatchCollection matches = Regex.Matches(contents, "// Seed: ([0-9]+)");
+            //    if (matches.Count != 1)
+            //    {
+            //        Console.WriteLine();
+            //        continue;
+            //    }
 
-                ulong seed = ulong.Parse(matches[0].Groups[1].Value);
-                Console.Write(" (seed {0}): ", seed);
+            //    ulong seed = ulong.Parse(matches[0].Groups[1].Value);
+            //    Console.Write(" (seed {0}): ", seed);
 
-                options.Seed = seed;
-                var cg = new CodeGenerator(options);
-                CompilationUnitSyntax original = cg.GenerateProgram();
+            //    options.Seed = seed;
+            //    var cg = new CodeGenerator(options);
+            //    CompilationUnitSyntax original = cg.GenerateProgram();
 
-                CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
-                CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
+            //    CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
+            //    CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
 
-                if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
-                {
-                    Console.WriteLine("Compiler error");
-                    continue;
-                }
+            //    if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
+            //    {
+            //        Console.WriteLine("Compiler error");
+            //        continue;
+            //    }
 
-                if (debug.RoslynException != null || release.RoslynException != null)
-                {
-                    Console.WriteLine("Compiler exception");
-                    continue;
-                }
+            //    if (debug.RoslynException != null || release.RoslynException != null)
+            //    {
+            //        Console.WriteLine("Compiler exception");
+            //        continue;
+            //    }
 
-                RunSeparatelyResults runResults = ProgramExecutor.RunSeparately(
-                    new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) },
-                    60000);
+            //    RunSeparatelyResults runResults = RunningExecutionServer.RunSeparately(
+            //        new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) },
+            //        60000);
 
-                if (runResults.Kind != RunSeparatelyResultsKind.Success)
-                {
-                    Console.WriteLine("Got {0} from sub-process, still interesting", runResults.Kind);
-                    continue;
-                }
+            //    if (runResults.Kind != RunSeparatelyResultsKind.Success)
+            //    {
+            //        Console.WriteLine("Got {0} from sub-process, still interesting", runResults.Kind);
+            //        continue;
+            //    }
 
-                ProgramPairResults execResults = runResults.Results[0];
+            //    ProgramPairResults execResults = runResults.Results[0];
 
-                if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
-                    execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
-                {
-                    // Execute the reduced form to see if we get interesting behavior.
-                    // Otherwise we may need to rereduce it.
-                    // HACK: Currently IsReducedVersionInteresting runs the programs
-                    // in our own process, so we are conservative and do not run programs
-                    // that may crash us (it is possible that the unreduced example does not
-                    // crash, but that the reduced does.
-                    if (contents.Contains("Crashes the runtime") || IsReducedVersionInteresting(execResults, contents))
-                    {
-                        Console.WriteLine("Still interesting");
-                    }
-                    else
-                    {
-                        File.AppendAllText(rereduceFile, seed + Environment.NewLine);
-                        Console.WriteLine("Marked for rereduction");
-                    }
+            //    if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
+            //        execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
+            //    {
+            //        // Execute the reduced form to see if we get interesting behavior.
+            //        // Otherwise we may need to rereduce it.
+            //        // HACK: Currently IsReducedVersionInteresting runs the programs
+            //        // in our own process, so we are conservative and do not run programs
+            //        // that may crash us (it is possible that the unreduced example does not
+            //        // crash, but that the reduced does.
+            //        if (contents.Contains("Crashes the runtime") || IsReducedVersionInteresting(execResults, contents))
+            //        {
+            //            Console.WriteLine("Still interesting");
+            //        }
+            //        else
+            //        {
+            //            File.AppendAllText(rereduceFile, seed + Environment.NewLine);
+            //            Console.WriteLine("Marked for rereduction");
+            //        }
 
-                    continue;
-                }
+            //        continue;
+            //    }
 
-                Console.WriteLine("Deleted, no longer interesting");
-                File.Delete(files[i]);
-            }
+            //    Console.WriteLine("Deleted, no longer interesting");
+            //    File.Delete(files[i]);
+            //}
         }
 
         /// <summary>
@@ -303,7 +330,7 @@ namespace Fuzzlyn
             var cg = new CodeGenerator(options);
             CompilationUnitSyntax original = cg.GenerateProgram();
 
-            Reducer reducer = new(original, options.Seed.Value, options.ReduceWithChildProcesses, reduceDebugGitDir);
+            Reducer reducer = new(s_executionServerPool, original, options.Seed.Value, reduceDebugGitDir);
             CompilationUnitSyntax reduced = reducer.Reduce();
             string source = reduced.NormalizeWhitespace().ToFullString();
             if (outputPath != null)
@@ -359,52 +386,92 @@ namespace Fuzzlyn
 
         private static void GenerateProgramsAndCheck(FuzzlynOptions options)
         {
-            GeneratePrograms(options, Compile);
-            ExecuteQueue(1);
+            GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed));
         }
 
         private static void GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
         {
-            ParallelOptions po = new()
-            {
-                MaxDegreeOfParallelism = options.Parallelism
-            };
+            ParallelOptions po = new();
+            if (options.Parallelism != -1)
+                po.MaxDegreeOfParallelism = options.Parallelism;
+            else
+                po.MaxDegreeOfParallelism = Environment.ProcessorCount;
 
-            int numGenerated = 0;
-            Parallel.For(0, options.NumPrograms, po, i =>
+            Stopwatch timer = Stopwatch.StartNew();
+            int numProgramsGenerated = 0;
+
+            if (po.MaxDegreeOfParallelism == 1)
             {
-                CodeGenerator gen = new(options);
-                CompilationUnitSyntax unit = gen.GenerateProgram();
-                action(unit, gen.Random.Seed);
-                int numGen = Interlocked.Increment(ref numGenerated);
-                if (numGen % 100 == 0)
+                RunWorker();
+            }
+            else
+            {
+                Task[] tasks =
+                    Enumerable
+                    .Range(0, po.MaxDegreeOfParallelism)
+                    .Select(_ => Task.Factory.StartNew(RunWorker, TaskCreationOptions.LongRunning))
+                    .ToArray();
+
+                Task.WaitAll(tasks);
+            }
+
+            void RunWorker()
+            {
+                while (true)
                 {
-                    Console.WriteLine($"{numGen}/{options.NumPrograms} programs generated, {s_numDeviating} examples found, {s_numFalseTimeouts} false timeouts");
+                    int programIndex = Interlocked.Increment(ref numProgramsGenerated);
+
+                    if (options.TimeToRun.HasValue)
+                    {
+                        if (timer.Elapsed > options.TimeToRun)
+                            return;
+                    }
+                    else
+                    {
+                        if (programIndex > options.NumPrograms)
+                        {
+                            return;
+                        }
+                    }
+
+                    CodeGenerator gen = new(options);
+                    CompilationUnitSyntax unit = gen.GenerateProgram();
+                    action(unit, gen.Random.Seed);
+                    if (programIndex % 100 == 0)
+                    {
+                        string elapsedOutOf = options.TimeToRun.HasValue ? $"/{options.TimeToRun.Value:c}" : "";
+                        string numProgramsOutOf = options.TimeToRun.HasValue ? "" : $"/{options.NumPrograms}";
+                        TimeSpan elapsedWithoutMs = new TimeSpan(0, 0, (int)timer.Elapsed.TotalSeconds);
+                        Console.WriteLine($"{elapsedWithoutMs:c}{elapsedOutOf} elapsed, {programIndex}{numProgramsOutOf} programs generated, {s_numDeviating} examples found");
+                    }
                 }
-            });
+            }
         }
 
         private static readonly object s_fileLock = new();
-        private static readonly List<(ulong, byte[], byte[])> s_programQueue = new();
-        private static void Compile(CompilationUnitSyntax program, ulong seed)
+        private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, ulong seed)
         {
-            byte[] debug = DoCompilation(Compiler.DebugOptions);
-            byte[] release = DoCompilation(Compiler.ReleaseOptions);
+            byte[] debug = Compile(Compiler.DebugOptions);
+            byte[] release = Compile(Compiler.ReleaseOptions);
 
-            if (debug != null && release != null)
+            if (debug == null || release == null)
             {
-                bool execute = false;
-                lock (s_programQueue)
-                {
-                    s_programQueue.Add((seed, debug, release));
-                    execute = s_programQueue.Count >= 100;
-                }
-
-                if (execute)
-                    ExecuteQueue(100);
+                return;
             }
 
-            byte[] DoCompilation(CSharpCompilationOptions opts)
+            RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, debug, release), TimeSpan.FromSeconds(20));
+
+            switch (results.Kind)
+            {
+                case RunSeparatelyResultsKind.Crash:
+                    AddExample(new Example(seed, ExampleKind.Crash, results.CrashError));
+                    break;
+                case RunSeparatelyResultsKind.Success:
+                    CheckExample(seed, results.Results);
+                    break;
+            }
+
+            byte[] Compile(CSharpCompilationOptions opts)
             {
                 CompileResult comp = Compiler.Compile(program, opts);
                 if (comp.RoslynException != null)
@@ -429,60 +496,6 @@ namespace Fuzzlyn
 
                 return comp.Assembly;
             }
-        }
-
-        private static int s_numDeviating;
-        private static int s_numFalseTimeouts;
-        private static void ExecuteQueue(int numMinPrograms = 1)
-        {
-            List<(ulong, byte[], byte[])> progs;
-            lock (s_programQueue)
-            {
-                if (s_programQueue.Count < numMinPrograms)
-                    return;
-
-                progs = new List<(ulong, byte[], byte[])>(s_programQueue);
-                s_programQueue.Clear();
-            }
-
-            Stopwatch timer = Stopwatch.StartNew();
-            RunSeparatelyResults results =
-                ProgramExecutor.RunSeparately(progs.Select(t => new ProgramPair(false, t.Item2, t.Item3)).ToList(), 100000);
-            timer.Stop();
-            Console.WriteLine("Programs executed with {0} in {1:F1}s", results.Kind, timer.Elapsed.TotalSeconds);
-
-            if (results.Kind != RunSeparatelyResultsKind.Success)
-            {
-                bool any = false;
-                // Did not finish run, go linearly
-                foreach (var (seed, debug, release) in progs)
-                {
-                    results =
-                        ProgramExecutor.RunSeparately(
-                            new List<ProgramPair> { new ProgramPair(false, debug, release) }, 20000);
-
-                    // Skip time outs as we currently can produce some very long running programs.
-                    if (results.Kind == RunSeparatelyResultsKind.Timeout)
-                    {
-                        any = true;
-                        continue;
-                    }
-
-                    if (results.Kind == RunSeparatelyResultsKind.Crash)
-                        AddExample(seed, results.Kind);
-                    else
-                        CheckExample(seed, results.Results[0]);
-                }
-
-                if (!any)
-                    Interlocked.Increment(ref s_numFalseTimeouts);
-            }
-            else
-            {
-                Trace.Assert(progs.Count == results.Results.Count, "Returned results count is wrong");
-                for (int i = 0; i < results.Results.Count; i++)
-                    CheckExample(progs[i].Item1, results.Results[i]);
-            }
 
             void CheckExample(ulong seed, ProgramPairResults result)
             {
@@ -490,21 +503,41 @@ namespace Fuzzlyn
                 bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                    AddExample(seed, RunSeparatelyResultsKind.Success);
+                    AddExample(new Example(seed, ExampleKind.BadResult, null));
             }
 
-            void AddExample(ulong seed, RunSeparatelyResultsKind kind)
+            void AddExample(Example example)
             {
-                string line = "Seed: " + seed;
-                if (kind != RunSeparatelyResultsKind.Success)
-                    line += $" ({kind})";
-                line += Environment.NewLine;
+                switch (example)
+                {
+                    case { Seed: ulong seed, Kind: ExampleKind.Crash, CrashError: string crashErr }:
+                        Console.WriteLine("Found example with seed {0} that crashes the process with error{1}{2}", seed, Environment.NewLine, crashErr);
+                        break;
+                    case { Seed: ulong seed, Kind: ExampleKind.BadResult }:
+                        Console.WriteLine("Found example with seed {0}", seed);
+                        break;
+                }
 
-                lock (s_fileLock)
-                    File.AppendAllText("Execution_Mismatch.txt", line);
+                if (options.OutputExamplesSummaryTo != null)
+                {
+                    string line = JsonConvert.SerializeObject(example) + Environment.NewLine;
+                    lock (s_fileLock)
+                        File.AppendAllText(options.OutputExamplesSummaryTo, line);
+                }
 
                 Interlocked.Increment(ref s_numDeviating);
             }
         }
+
+        private static int s_numDeviating;
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        private enum ExampleKind
+        {
+            Crash,
+            BadResult,
+        }
+
+        private record class Example(ulong Seed, ExampleKind Kind, string CrashError);
     }
 }

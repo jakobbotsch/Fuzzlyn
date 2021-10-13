@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Fuzzlyn.Execution
+namespace Fuzzlyn.ExecutionServer
 {
     public class ChecksumSite : IEquatable<ChecksumSite>
     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Fuzzlyn.ExecutionServer;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
@@ -7,6 +8,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn
@@ -16,7 +18,7 @@ namespace Fuzzlyn
         private static readonly MetadataReference[] s_references =
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location),
+            MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
             // These two are needed to properly pick up System.Object when using methods on System.Console.
             // See here: https://github.com/dotnet/corefx/issues/11601
@@ -32,10 +34,12 @@ namespace Fuzzlyn
         public static readonly CSharpCompilationOptions ReleaseOptions =
             new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release);
 
+        private static int _compiles;
         public static CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
         {
+            int compileID = Interlocked.Increment(ref _compiles);
             SyntaxTree[] trees = { SyntaxTree(program, s_parseOptions) };
-            CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram", trees, s_references, opts);
+            CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, s_references, opts);
 
             using (var ms = new MemoryStream())
             {

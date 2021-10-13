@@ -1,4 +1,4 @@
-﻿namespace Fuzzlyn.Execution
+﻿namespace Fuzzlyn.ExecutionServer
 {
     public interface IRuntime
     {

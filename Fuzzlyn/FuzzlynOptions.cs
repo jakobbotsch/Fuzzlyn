@@ -11,11 +11,13 @@ namespace Fuzzlyn
     {
         public ulong? Seed { get; set; }
         public int NumPrograms { get; set; } = 1;
+        public TimeSpan? TimeToRun { get; set; }
+        public string OutputExamplesSummaryTo { get; set; }
+        public string Host { get; set; }
         public int Parallelism { get; set; } = 1;
         public bool Output { get; set; } = false;
         public bool EnableChecksumming { get; set; } = true;
         public bool Reduce { get; set; } = false;
-        public bool ReduceWithChildProcesses { get; set; } = false;
         public bool Stats { get; set; } = false;
         // Probability that we pick a class when generating a new type. Otherwise we make a struct.
         public double MakeClassProb { get; set; } = 0.5;

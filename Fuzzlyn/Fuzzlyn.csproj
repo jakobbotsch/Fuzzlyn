@@ -9,15 +9,11 @@
     <LangVersion>preview</LangVersion>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>TRACE;DEBUG;NETCOREAPP2_0</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,8 +22,8 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0-preview.4.21253.7" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="REM xcopy $(TargetPath) $(ProjectDir)publish\windows-x64 /Y" />
-  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\Fuzzlyn.ExecutionServer\Fuzzlyn.ExecutionServer.csproj" />
+  </ItemGroup>
 
 </Project>

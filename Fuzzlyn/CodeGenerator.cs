@@ -74,7 +74,7 @@ namespace Fuzzlyn
                 yield return
                     FieldDeclaration(
                         VariableDeclaration(
-                            ParseTypeName("Fuzzlyn.Execution.IRuntime"),
+                            ParseTypeName("Fuzzlyn.ExecutionServer.IRuntime"),
                             SingletonSeparatedList(
                                 VariableDeclarator("s_rt"))))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)));
@@ -91,7 +91,7 @@ namespace Fuzzlyn
                     ParameterList(
                         SingletonSeparatedList(
                             Parameter(Identifier("rt"))
-                            .WithType(ParseTypeName("Fuzzlyn.Execution.IRuntime"))));
+                            .WithType(ParseTypeName("Fuzzlyn.ExecutionServer.IRuntime"))));
             }
 
             yield return

@@ -1,35 +1,31 @@
-﻿using Fuzzlyn.Execution;
+﻿using Fuzzlyn.ExecutionServer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editing;
-using Microsoft.CodeAnalysis.Emit;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction
 {
     internal class Reducer
     {
+        private readonly ExecutionServerPool _pool;
         private readonly Rng _rng;
         private int _varCounter;
-        private bool _reduceWithChildProcesses;
         private readonly string _reduceDebugGitDir;
         private readonly Stopwatch _timer = new();
         private TimeSpan _nextUpdate;
 
-        public Reducer(CompilationUnitSyntax original, ulong reducerSeed, bool reduceWithChildProcesses, string reduceDebugGitDir)
+        public Reducer(ExecutionServerPool pool, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
         {
+            _pool = pool;
             Original = original;
             _rng = Rng.FromSplitMix64Seed(reducerSeed);
-            _reduceWithChildProcesses = reduceWithChildProcesses;
             _reduceDebugGitDir = reduceDebugGitDir;
         }
 
@@ -65,8 +61,7 @@ namespace Fuzzlyn.Reduction
             {
 
                 var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
-                RunSeparatelyResults origRunResults =
-                    ProgramExecutor.RunSeparately(new List<ProgramPair> { origPair }, 20000);
+                RunSeparatelyResults origRunResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20));
 
                 if (origRunResults.Kind == RunSeparatelyResultsKind.Timeout)
                 {
@@ -80,14 +75,9 @@ namespace Fuzzlyn.Reduction
                 RunSeparatelyResultsKind interestingResult = origRunResults.Kind;
 
                 ProgramPairResults origResults = null;
-                if (origRunResults.Kind != RunSeparatelyResultsKind.Success)
+                if (origRunResults.Kind == RunSeparatelyResultsKind.Success)
                 {
-                    // Of course if we get a crash immediately we can just start out with it
-                    _reduceWithChildProcesses = true;
-                }
-                else
-                {
-                    origResults = origRunResults.Results[0];
+                    origResults = origRunResults.Results;
                     if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
                         origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
                     {
@@ -97,7 +87,7 @@ namespace Fuzzlyn.Reduction
 
                 isInteresting = prog =>
                 {
-                    RunSeparatelyResults results = CompileAndRun(prog, false, 20000);
+                    RunSeparatelyResults results = CompileAndRun(prog, false);
                     if (results == null || results.Kind == RunSeparatelyResultsKind.Timeout)
                         return false;
 
@@ -113,7 +103,7 @@ namespace Fuzzlyn.Reduction
                         return true;
                     }
 
-                    ProgramPairResults pairResult = results.Results[0];
+                    ProgramPairResults pairResult = results.Results;
                     // Do exceptions first because they will almost always change checksum
                     if (origResults.DebugResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
                     {
@@ -151,6 +141,7 @@ namespace Fuzzlyn.Reduction
                         break;
                     any = true;
                 }
+                FinishConsoleUpdates();
 
                 while (true)
                 {
@@ -158,6 +149,7 @@ namespace Fuzzlyn.Reduction
                         break;
                     any = true;
                 }
+                FinishConsoleUpdates();
 
                 while (true)
                 {
@@ -168,14 +160,20 @@ namespace Fuzzlyn.Reduction
                         break;
                     any = true;
                 }
+                FinishConsoleUpdates();
 
                 first = false;
 
                 bool SimplifyFromList(string simplifyType, List<SyntaxNode> list)
                 {
+                    void Update(int index, bool force)
+                    {
+                        WriteUpdateToConsole($"\rSimplifying {simplifyType}. Total elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {index}/{list.Count}", force);
+                    }
+
                     for (int i = 0; i < list.Count; i++)
                     {
-                        WriteUpdateToConsole($"\rSimplifying {simplifyType}. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {i}/{list.Count}");
+                        Update(i + 1, false);
 
                         // Fisher-Yates shuffle.
                         int nodeIndex = _rng.Next(i, list.Count);
@@ -229,11 +227,10 @@ namespace Fuzzlyn.Reduction
                         }
                     }
 
+                    Update(list.Count, true);
                     return false;
                 }
             }
-
-            FinishConsoleUpdates();
 
             List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
 
@@ -251,9 +248,10 @@ namespace Fuzzlyn.Reduction
             return Reduced;
         }
 
-        private void WriteUpdateToConsole(string text)
+        private bool _wroteUpdate;
+        private void WriteUpdateToConsole(string text, bool force)
         {
-            if (_timer.Elapsed < _nextUpdate)
+            if (_timer.Elapsed < _nextUpdate && !force)
                 return;
 
             _nextUpdate = _timer.Elapsed + TimeSpan.FromMilliseconds(500);
@@ -262,15 +260,18 @@ namespace Fuzzlyn.Reduction
                 return;
 
             Console.Write("\r" + text.PadRight(Console.BufferWidth));
+            _wroteUpdate = true;
         }
 
         private void FinishConsoleUpdates()
         {
-            if (!Console.IsOutputRedirected)
+            if (!Console.IsOutputRedirected && _wroteUpdate)
                 Console.WriteLine();
+
+            _wroteUpdate = false;
         }
 
-        private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, int timeout)
+        private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput)
         {
             CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
             CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
@@ -279,16 +280,7 @@ namespace Fuzzlyn.Reduction
                 return null;
 
             ProgramPair pair = new(trackOutput, progDebug.Assembly, progRelease.Assembly);
-            RunSeparatelyResults results;
-            if (_reduceWithChildProcesses)
-            {
-                results = ProgramExecutor.RunSeparately(new List<ProgramPair> { pair }, timeout);
-            }
-            else
-            {
-                results = new RunSeparatelyResults(RunSeparatelyResultsKind.Success, new List<ProgramPairResults> { ProgramExecutor.RunPair(pair) }, null);
-            }
-
+            RunSeparatelyResults results = _pool.RunPairOnPool(pair, TimeSpan.FromSeconds(20));
             return results;
         }
 
@@ -400,17 +392,22 @@ namespace Fuzzlyn.Reduction
                 .Select(m => (((TypeDeclarationSyntax)m.Parent).Identifier.Text, m.Identifier.Text))
                 .ToList();
 
+            void Update(int index, bool force)
+            {
+                WriteUpdateToConsole($"Simplifying Coarsely. Total elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Method {index}/{names.Count}.", force);
+            }
+
             for (int i = 0; i < names.Count; i++)
             {
-                WriteUpdateToConsole($"Simplifying coarsely. Elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Method {i + 1}/{names.Count}.");
                 bool isMethodInteresting(MethodDeclarationSyntax orig, MethodDeclarationSyntax @new)
                     => isInteresting(Reduced.ReplaceNode(orig, @new));
 
+                Update(i + 1, false);
                 var method = Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => ((TypeDeclarationSyntax)m.Parent).Identifier.Text == names[i].TypeName && m.Identifier.Text == names[i].MethodName);
                 var newMethod = (MethodDeclarationSyntax)new CoarseStatementRemover(isMethodInteresting).Visit(method);
                 UpdateReduced($"Bulk remove statements in {names[i].TypeName}.{names[i].MethodName}", Reduced.ReplaceNode(method, newMethod));
             }
-
+            Update(names.Count, true);
             FinishConsoleUpdates();
         }
 
@@ -437,7 +434,7 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            RunSeparatelyResults results = CompileAndRun(Reduced, true, 20000);
+            RunSeparatelyResults results = CompileAndRun(Reduced, true);
             if (results == null)
             {
                 yield return $"// Unexpected compiler error";
@@ -462,7 +459,7 @@ namespace Fuzzlyn.Reduction
                     yield return $"// Times out";
                     yield break;
                 case RunSeparatelyResultsKind.Success:
-                    var pairResult = results.Results[0];
+                    var pairResult = results.Results;
                     yield return $"// Debug: {FormatResult(pairResult.DebugResult, pairResult.DebugFirstUnmatch)}";
                     yield return $"// Release: {FormatResult(pairResult.ReleaseResult, pairResult.ReleaseFirstUnmatch)}";
                     break;

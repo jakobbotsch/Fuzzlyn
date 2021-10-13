@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Fuzzlyn.Execution
+namespace Fuzzlyn.ExecutionServer
 {
     internal class Runtime : IRuntime
     {
