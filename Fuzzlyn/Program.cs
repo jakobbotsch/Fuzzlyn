@@ -26,7 +26,7 @@ namespace Fuzzlyn
             ulong? seed = null;
             int? numPrograms = null;
             TimeSpan? timeToRun = null;
-            string outputExamplesSummaryTo = null;
+            string outputEventsTo = null;
             string host = null;
             int? parallelism = null;
             bool help = false;
@@ -44,12 +44,14 @@ namespace Fuzzlyn
                 { "num-programs=|n=", "Number of programs to generate. Mutually exclusive with seconds-to-run.", (int v) => numPrograms = v },
                 { "seconds-to-run=", "Seconds to run Fuzzlyn for. Mutually exclusive with num-programs.", (int v) => timeToRun = new TimeSpan(0, 0, v) },
                 {
-                    "output-examples-summary-to=",
-                    "File to output a summary of examples found to. " +
+                    "output-events-to=",
+                    "File to output events to. " +
                     "When a new example is found a line will be output " +
                     "corresponding to a JSON object describing the test " +
-                    "case (seed, type, crash info)",
-                    v => outputExamplesSummaryTo = v },
+                    "case (seed, type, crash info). Also an event will be " +
+                    "written before exiting that describes how many test " +
+                    "cases were generated and the time that was run for.",
+                    v => outputEventsTo = v },
                 { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
                 { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
                 { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
@@ -100,8 +102,8 @@ namespace Fuzzlyn
                 options.NumPrograms = numPrograms.Value;
             if (timeToRun.HasValue)
                 options.TimeToRun = timeToRun;
-            if (outputExamplesSummaryTo != null)
-                options.OutputExamplesSummaryTo = outputExamplesSummaryTo;
+            if (outputEventsTo != null)
+                options.OutputEventsTo = outputEventsTo;
             if (host != null)
                 options.Host = host;
             if (parallelism.HasValue)
@@ -371,21 +373,19 @@ namespace Fuzzlyn
 
         private static void GenerateProgramsAndCheck(FuzzlynOptions options)
         {
-            GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed));
+            GenerateProgramsResult result = GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed));
+            if (options.OutputEventsTo != null)
+                AddEvent(options.OutputEventsTo, new Event(EventKind.RunSummary, DateTimeOffset.UtcNow, null, new RunSummaryEvent(result.DegreeOfParallelism, result.TotalGenerated, result.TimeTaken)));
         }
 
-        private static void GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
+        private static GenerateProgramsResult GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
         {
-            ParallelOptions po = new();
-            if (options.Parallelism != -1)
-                po.MaxDegreeOfParallelism = options.Parallelism;
-            else
-                po.MaxDegreeOfParallelism = Environment.ProcessorCount;
+            int numThreads = options.Parallelism == -1 ? Environment.ProcessorCount : options.Parallelism;
 
             Stopwatch timer = Stopwatch.StartNew();
             int numProgramsGenerated = 0;
 
-            if (po.MaxDegreeOfParallelism == 1)
+            if (numThreads == 1)
             {
                 RunWorker();
             }
@@ -393,12 +393,14 @@ namespace Fuzzlyn
             {
                 Task[] tasks =
                     Enumerable
-                    .Range(0, po.MaxDegreeOfParallelism)
+                    .Range(0, numThreads)
                     .Select(_ => Task.Factory.StartNew(RunWorker, TaskCreationOptions.LongRunning))
                     .ToArray();
 
                 Task.WaitAll(tasks);
             }
+
+            return new GenerateProgramsResult(numThreads, numProgramsGenerated, timer.Elapsed);
 
             void RunWorker()
             {
@@ -409,12 +411,16 @@ namespace Fuzzlyn
                     if (options.TimeToRun.HasValue)
                     {
                         if (timer.Elapsed > options.TimeToRun)
+                        {
+                            Interlocked.Decrement(ref numProgramsGenerated);
                             return;
+                        }
                     }
                     else
                     {
                         if (programIndex > options.NumPrograms)
                         {
+                            Interlocked.Decrement(ref numProgramsGenerated);
                             return;
                         }
                     }
@@ -433,6 +439,8 @@ namespace Fuzzlyn
             }
         }
 
+        private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
+
         private static readonly object s_fileLock = new();
         private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, ulong seed)
         {
@@ -449,7 +457,7 @@ namespace Fuzzlyn
             switch (results.Kind)
             {
                 case RunSeparatelyResultsKind.Crash:
-                    AddExample(new Example(seed, ExampleKind.Crash, results.CrashError));
+                    AddExample(new ExampleEvent(seed, ExampleKind.Crash, results.CrashError));
                     break;
                 case RunSeparatelyResultsKind.Success:
                     CheckExample(seed, results.Results);
@@ -488,10 +496,10 @@ namespace Fuzzlyn
                 bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                    AddExample(new Example(seed, ExampleKind.BadResult, null));
+                    AddExample(new ExampleEvent(seed, ExampleKind.BadResult, null));
             }
 
-            void AddExample(Example example)
+            void AddExample(ExampleEvent example)
             {
                 switch (example)
                 {
@@ -503,26 +511,39 @@ namespace Fuzzlyn
                         break;
                 }
 
-                if (options.OutputExamplesSummaryTo != null)
-                {
-                    string line = JsonSerializer.Serialize(example) + Environment.NewLine;
-                    lock (s_fileLock)
-                        File.AppendAllText(options.OutputExamplesSummaryTo, line);
-                }
+                if (options.OutputEventsTo != null)
+                    AddEvent(options.OutputEventsTo, new Event(EventKind.ExampleFound, DateTimeOffset.UtcNow, example, null));
 
                 Interlocked.Increment(ref s_numDeviating);
             }
         }
 
+        private static void AddEvent(string file, Event evt)
+        {
+            string line = JsonSerializer.Serialize(evt) + Environment.NewLine;
+            lock (s_fileLock)
+                File.AppendAllText(file, line);
+        }
+
         private static int s_numDeviating;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        private enum EventKind
+        {
+            ExampleFound,
+            RunSummary,
+        }
+
+        private record class Event(EventKind Kind, DateTimeOffset Timestamp, ExampleEvent Example, RunSummaryEvent RunSummary);
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         private enum ExampleKind
         {
-            Crash,
             BadResult,
+            Crash,
         }
 
-        private record class Example(ulong Seed, ExampleKind Kind, string CrashError);
+        private record class ExampleEvent(ulong Seed, ExampleKind Kind, string CrashError);
+        private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, TimeSpan TotalRunTime);
     }
 }

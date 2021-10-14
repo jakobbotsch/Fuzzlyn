@@ -11,7 +11,7 @@ namespace Fuzzlyn
         public ulong? Seed { get; set; }
         public int NumPrograms { get; set; } = 1;
         public TimeSpan? TimeToRun { get; set; }
-        public string OutputExamplesSummaryTo { get; set; }
+        public string OutputEventsTo { get; set; }
         public string Host { get; set; }
         public int Parallelism { get; set; } = 1;
         public bool Output { get; set; } = false;
