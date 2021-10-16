@@ -20,8 +20,11 @@ namespace Fuzzlyn
 
         private List<RunningExecutionServer> _pool = new();
 
-        private RunningExecutionServer Get()
+        private RunningExecutionServer Get(bool keepNonEmptyEagerly)
         {
+            RunningExecutionServer bestServer = null;
+            bool startNew = false;
+
             lock (_pool)
             {
                 if (_pool.Count > 0)
@@ -33,12 +36,26 @@ namespace Fuzzlyn
                             best = i;
                     }
 
-                    RunningExecutionServer bestServer = _pool[best];
+                    bestServer = _pool[best];
                     _pool[best] = _pool[^1];
                     _pool.RemoveAt(_pool.Count - 1);
-                    return bestServer;
+                }
+
+                if (keepNonEmptyEagerly && _pool.Count == 0)
+                    startNew = true;
+            }
+
+            if (startNew)
+            {
+                RunningExecutionServer created = RunningExecutionServer.Create(Host);
+                lock (_pool)
+                {
+                    _pool.Add(created);
                 }
             }
+
+            if (bestServer != null)
+                return bestServer;
 
             return RunningExecutionServer.Create(Host);
         }
@@ -57,12 +74,12 @@ namespace Fuzzlyn
                 otherServer.Shutdown();
         }
 
-        public RunSeparatelyResults RunPairOnPool(ProgramPair pair, TimeSpan timeout)
+        public RunSeparatelyResults RunPairOnPool(ProgramPair pair, TimeSpan timeout, bool keepPoolNonEmptyEagerly)
         {
             RunningExecutionServer server = null;
             try
             {
-                server = Get();
+                server = Get(keepPoolNonEmptyEagerly);
                 RunSeparatelyResults results = server.RunPair(pair, timeout);
                 if (results.Kind != RunSeparatelyResultsKind.Success)
                 {

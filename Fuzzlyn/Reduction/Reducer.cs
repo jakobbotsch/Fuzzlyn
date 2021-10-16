@@ -61,7 +61,7 @@ namespace Fuzzlyn.Reduction
             {
 
                 var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
-                RunSeparatelyResults origRunResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20));
+                RunSeparatelyResults origRunResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
 
                 if (origRunResults.Kind == RunSeparatelyResultsKind.Timeout)
                 {
@@ -87,7 +87,7 @@ namespace Fuzzlyn.Reduction
 
                 isInteresting = prog =>
                 {
-                    RunSeparatelyResults results = CompileAndRun(prog, false);
+                    RunSeparatelyResults results = CompileAndRun(prog, trackOutput: false, keepPoolNonEmptyEagerly: interestingResult == RunSeparatelyResultsKind.Crash);
                     if (results == null || results.Kind == RunSeparatelyResultsKind.Timeout)
                         return false;
 
@@ -271,7 +271,7 @@ namespace Fuzzlyn.Reduction
             _wroteUpdate = false;
         }
 
-        private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput)
+        private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, bool keepPoolNonEmptyEagerly)
         {
             CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
             CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
@@ -280,7 +280,7 @@ namespace Fuzzlyn.Reduction
                 return null;
 
             ProgramPair pair = new(trackOutput, progDebug.Assembly, progRelease.Assembly);
-            RunSeparatelyResults results = _pool.RunPairOnPool(pair, TimeSpan.FromSeconds(20));
+            RunSeparatelyResults results = _pool.RunPairOnPool(pair, TimeSpan.FromSeconds(20), keepPoolNonEmptyEagerly);
             return results;
         }
 
@@ -434,7 +434,7 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
-            RunSeparatelyResults results = CompileAndRun(Reduced, true);
+            RunSeparatelyResults results = CompileAndRun(Reduced, trackOutput: true, keepPoolNonEmptyEagerly: false);
             if (results == null)
             {
                 yield return $"// Unexpected compiler error";

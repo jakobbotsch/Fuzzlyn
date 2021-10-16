@@ -452,7 +452,7 @@ namespace Fuzzlyn
                 return;
             }
 
-            RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, debug, release), TimeSpan.FromSeconds(20));
+            RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, debug, release), TimeSpan.FromSeconds(20), false);
 
             switch (results.Kind)
             {
