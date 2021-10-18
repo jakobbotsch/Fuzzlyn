@@ -30,14 +30,29 @@ We have reported the following bugs:
 * ~~[RyuJIT: Bad codegen with multiple field assignments](https://github.com/dotnet/runtime/issues/11559)~~
 * ~~[Runtime crash during JIT register allocation in .NET 5](https://github.com/dotnet/runtime/issues/36237)~~
 * ~~[[JIT] Runtime crash in fgMakeOutgoingStructArgCopy](https://github.com/dotnet/runtime/issues/36468)~~
-* [JIT EH write thru crash](https://github.com/dotnet/runtime/issues/54100)
-* [Invalid CSE with field seqs](https://github.com/dotnet/runtime/issues/54102)
-* [Invalid hoisting with refs/array elements proven to be constant](https://github.com/dotnet/runtime/issues/54118)
-* [JIT misses a zero extension in series of casts](https://github.com/dotnet/runtime/issues/55127)
-* [Invalid assertion prop in finally](https://github.com/dotnet/runtime/issues/55131)
-* [JIT incorrectly reorders method call and static field load](https://github.com/dotnet/runtime/issues/55140)
-* [Assertion failed 'src->IsCnsIntOrI()' with contained bitcast in field store](https://github.com/dotnet/runtime/issues/55141)
-* [JIT forgets to normalize arg on load](https://github.com/dotnet/runtime/issues/55143)
+* ~~[JIT EH write thru crash](https://github.com/dotnet/runtime/issues/54100)~~
+* ~~[Invalid hoisting with refs/array elements proven to be constant](https://github.com/dotnet/runtime/issues/54118)~~
+* ~~[JIT misses a zero extension in series of casts](https://github.com/dotnet/runtime/issues/55127)~~
+* ~~[Invalid assertion prop in finally](https://github.com/dotnet/runtime/issues/55131)~~
+* ~~[JIT incorrectly reorders method call and static field load](https://github.com/dotnet/runtime/issues/55140)~~
+* ~~[Assertion failed 'src->IsCnsIntOrI()' with contained bitcast in field store](https://github.com/dotnet/runtime/issues/55141)~~
+* ~~[JIT forgets to normalize arg on load](https://github.com/dotnet/runtime/issues/55143)~~
+* ~~[JIT: flow opts does an incorrect pred list update](https://github.com/dotnet/runtime/issues/56495)~~
+* ~~[ARM64 multiplication/anding by zero seems to be discarded](https://github.com/dotnet/runtime/issues/56930)~~
+* ~~[ARM64 incorrect result when expression involves modulo by 1](https://github.com/dotnet/runtime/issues/56935)~~
+* ~~[JIT performs invalid jump threading](https://github.com/dotnet/runtime/issues/56979)~~
+* ~~[ARM32: runtime crash inside JIT](https://github.com/dotnet/runtime/issues/57061)~~
+* ~~[ARM32: Incorrect split passing of promoted structs with padding](https://github.com/dotnet/runtime/issues/57064)~~
+* ~~[ARM64: Incorrect sub expression reordering of tree containing CSE def](https://github.com/dotnet/runtime/issues/57121)~~
+* ~~[JIT: Invalid negated result](https://github.com/dotnet/runtime/issues/57640)~~
+* ~~[JIT: Assertion failed '!m_VariableLiveRanges->back().m_EndEmitLocation.Valid()'](https://github.com/dotnet/runtime/issues/57752)~~
+* ~~[JIT: Assertion failed 'offset != BAD_STK_OFFS'](https://github.com/dotnet/runtime/issues/57767)~~
+* ~~[JIT: Assertion failed 'm_compGenTreeID == m_compiler->compGenTreeID'](https://github.com/dotnet/runtime/issues/57775)~~
+* ~~[ARM64: Assertion failed 'interval->isWriteThru'/runtime crash in release](https://github.com/dotnet/runtime/issues/58083)~~
+* ~~[ARM32: Runtime crash with interfaces](https://github.com/dotnet/runtime/issues/58293)~~
+* ~~[JIT still seems to be hoisting some modified indirs](https://github.com/dotnet/runtime/issues/58877)~~
+* ~~[RyuJIT: Invalidly optimized negated division](https://github.com/dotnet/runtime/issues/60297)~~
+
 
 Fuzzlyn has found many thousands of programs producing deviating behavior. Some of the first examples we found can be seen in the [examples folder in the v1.0 tag](https://github.com/jakobbotsch/Fuzzlyn/tree/v1.0/examples) (most of these have since been fixed). To take a couple of them, Fuzzlyn automatically found and produced the following programs:
 
