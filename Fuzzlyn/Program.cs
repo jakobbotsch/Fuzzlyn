@@ -492,19 +492,30 @@ namespace Fuzzlyn
 
             void CheckExample(ulong seed, ProgramPairResults result)
             {
-                bool checksumMismatch = result.DebugResult.Checksum != result.ReleaseResult.Checksum;
-                bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
+                if (result.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+                {
+                    AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, result.DebugResult.JitAssertError));
+                }
+                else if (result.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
+                {
+                    AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, result.ReleaseResult.JitAssertError));
+                }
+                else
+                {
+                    bool checksumMismatch = result.DebugResult.Checksum != result.ReleaseResult.Checksum;
+                    bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
-                if (checksumMismatch || exceptionMismatch)
-                    AddExample(new ExampleEvent(seed, ExampleKind.BadResult, null));
+                    if (checksumMismatch || exceptionMismatch)
+                        AddExample(new ExampleEvent(seed, ExampleKind.BadResult, null));
+                }
             }
 
             void AddExample(ExampleEvent example)
             {
                 switch (example)
                 {
-                    case { Seed: ulong seed, Kind: ExampleKind.Crash, CrashError: string crashErr }:
-                        Console.WriteLine("Found example with seed {0} that crashes the process with error{1}{2}", seed, Environment.NewLine, crashErr);
+                    case { Seed: ulong seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
+                        Console.WriteLine("Found example with seed {0} that hits error{1}{2}", seed, Environment.NewLine, error);
                         break;
                     case { Seed: ulong seed, Kind: ExampleKind.BadResult }:
                         Console.WriteLine("Found example with seed {0}", seed);
@@ -540,10 +551,11 @@ namespace Fuzzlyn
         private enum ExampleKind
         {
             BadResult,
+            HitsJitAssert,
             Crash,
         }
 
-        private record class ExampleEvent(ulong Seed, ExampleKind Kind, string CrashError);
+        private record class ExampleEvent(ulong Seed, ExampleKind Kind, string Message);
         private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, TimeSpan TotalRunTime);
     }
 }

@@ -108,6 +108,7 @@ namespace Fuzzlyn
 
             // Disable tiering as even release builds will run in minopts otherwise.
             info.EnvironmentVariables["COMPlus_TieredCompilation"] = "0";
+            info.EnvironmentVariables["COMPlus_JitThrowOnAssertionFailure"] = "1";
 
             Process proc = Process.Start(info);
             return new RunningExecutionServer(proc);

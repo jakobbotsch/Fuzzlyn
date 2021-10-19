@@ -61,24 +61,21 @@ namespace Fuzzlyn.Reduction
             {
 
                 var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
-                RunSeparatelyResults origRunResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
+                RunSeparatelyResults targetResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
 
-                if (origRunResults.Kind == RunSeparatelyResultsKind.Timeout)
+                if (targetResults.Kind == RunSeparatelyResultsKind.Timeout)
                 {
                     // Currently some programs take so long that we cannot really differentiate between "hang" and "still executing".
                     // So we do not allow to reduce programs that time out.
                     throw new InvalidOperationException("Program times out");
                 }
 
-                // This variable is kind of a hack to allow the reducer to reduce programs that crash the runtime during reduction.
-                // We switch to keeping this behavior if that happens.
-                RunSeparatelyResultsKind interestingResult = origRunResults.Kind;
-
-                ProgramPairResults origResults = null;
-                if (origRunResults.Kind == RunSeparatelyResultsKind.Success)
+                if (targetResults.Kind == RunSeparatelyResultsKind.Success)
                 {
-                    origResults = origRunResults.Results;
-                    if (origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
+                    ProgramPairResults origResults = targetResults.Results;
+                    if (origResults.DebugResult.Kind != ProgramResultKind.HitsJitAssert &&
+                        origResults.ReleaseResult.Kind != ProgramResultKind.HitsJitAssert &&
+                        origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
                         origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
                     {
                         throw new InvalidOperationException("Program has no errors");
@@ -87,40 +84,45 @@ namespace Fuzzlyn.Reduction
 
                 isInteresting = prog =>
                 {
-                    RunSeparatelyResults results = CompileAndRun(prog, trackOutput: false, keepPoolNonEmptyEagerly: interestingResult == RunSeparatelyResultsKind.Crash);
+                    RunSeparatelyResults results = CompileAndRun(prog, trackOutput: false, keepPoolNonEmptyEagerly: targetResults.Kind == RunSeparatelyResultsKind.Crash);
                     if (results == null || results.Kind == RunSeparatelyResultsKind.Timeout)
                         return false;
 
-                    if (interestingResult != RunSeparatelyResultsKind.Success)
+                    if (targetResults.Kind == RunSeparatelyResultsKind.Crash)
                     {
                         // If we are looking for crash, then we can return a result immediately
-                        return results.Kind == interestingResult;
+                        return results.Kind == RunSeparatelyResultsKind.Crash;
                     }
+
+                    Debug.Assert(targetResults.Kind == RunSeparatelyResultsKind.Success);
 
                     if (results.Kind != RunSeparatelyResultsKind.Success)
                     {
-                        interestingResult = results.Kind;
-                        return true;
+                        return false;
                     }
 
-                    ProgramPairResults pairResult = results.Results;
-                    // Do exceptions first because they will almost always change checksum
-                    if (origResults.DebugResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
+                    // If we are looking for a JIT assert, then ensure we got a JIT assert.
+                    if (targetResults.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
                     {
-                        // Must throw same exceptions in debug and release to be bad.
-                        return pairResult.DebugResult.ExceptionType == origResults.DebugResult.ExceptionType &&
-                               pairResult.ReleaseResult.ExceptionType == origResults.ReleaseResult.ExceptionType;
-                    }
-                    else
-                    {
-                        if (pairResult.DebugResult.ExceptionType != origResults.DebugResult.ExceptionType ||
-                            pairResult.ReleaseResult.ExceptionType != origResults.ReleaseResult.ExceptionType)
-                        {
-                            return false;
-                        }
+                        return results.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert;
                     }
 
-                    return pairResult.DebugResult.Checksum != pairResult.ReleaseResult.Checksum;
+                    if (targetResults.Results.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+                    {
+                        return results.Results.DebugResult.Kind == ProgramResultKind.HitsJitAssert;
+                    }
+
+                    if (targetResults.Results.DebugResult.ExceptionType != targetResults.Results.ReleaseResult.ExceptionType)
+                    {
+                        // Original example throws different exceptions in debug and release, ensure new one does as well.
+                        bool throwsSameExceptions =
+                            results.Results.DebugResult.ExceptionType == targetResults.Results.DebugResult.ExceptionType &&
+                            results.Results.ReleaseResult.ExceptionType == targetResults.Results.ReleaseResult.ExceptionType;
+                        return throwsSameExceptions;
+                    }
+
+                    // Original example throws same exception in debug and release, so it is the checksum that differs.
+                    return results.Results.DebugResult.Checksum != results.Results.ReleaseResult.Checksum;
                 };
             }
 
@@ -441,13 +443,15 @@ namespace Fuzzlyn.Reduction
                 yield break;
             }
 
+            IEnumerable<string> Lines(string message) => message.Replace("\r", "").Split('\n');
+
             switch (results.Kind)
             {
                 case RunSeparatelyResultsKind.Crash:
                     if (!string.IsNullOrWhiteSpace(results.CrashError))
                     {
                         yield return $"// Exits with error:";
-                        foreach (string line in results.CrashError.Replace("\r", "").Split('\n'))
+                        foreach (string line in Lines(results.CrashError))
                             yield return $"// {line}";
 
                         yield break;
@@ -459,7 +463,25 @@ namespace Fuzzlyn.Reduction
                     yield return $"// Times out";
                     yield break;
                 case RunSeparatelyResultsKind.Success:
-                    var pairResult = results.Results;
+                    ProgramPairResults pairResult = results.Results;
+                    if (pairResult.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
+                    {
+                        yield return $"// Hits JIT assert in Release:";
+                        foreach (string line in Lines(pairResult.ReleaseResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
+                            yield return $"// {line}";
+
+                        yield break;
+                    }
+
+                    if (pairResult.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+                    {
+                        yield return $"// Hits JIT assert in Debug:";
+                        foreach (string line in Lines(pairResult.DebugResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
+                            yield return $"// {line}";
+
+                        yield break;
+                    }
+
                     yield return $"// Debug: {FormatResult(pairResult.DebugResult, pairResult.DebugFirstUnmatch)}";
                     yield return $"// Release: {FormatResult(pairResult.ReleaseResult, pairResult.ReleaseFirstUnmatch)}";
                     break;

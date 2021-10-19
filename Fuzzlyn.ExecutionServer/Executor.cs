@@ -41,23 +41,51 @@ namespace Fuzzlyn.ExecutionServer
                 MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
                 Action<IRuntime> entryPoint = (Action<IRuntime>)Delegate.CreateDelegate(typeof(Action<IRuntime>), mainMethodInfo);
                 var runtime = new Runtime();
+
+                List<ChecksumSite> TakeChecksumSites()
+                {
+                    // A reference to the runtime stays in the loaded assembly and there may be a lot of checksum sites
+                    // so during reduction this can use a lot of memory.
+                    List<ChecksumSite> checksumSites = runtime.ChecksumSites;
+                    runtime.ChecksumSites = null;
+                    return checksumSites;
+                }
+
                 if (pair.TrackOutput)
                     runtime.ChecksumSites = new List<ChecksumSite>();
-                Exception ex = null;
                 try
                 {
                     entryPoint(runtime);
                 }
-                catch (Exception caughtEx)
+                catch (InvalidProgramException ex) when (ex.Message.Contains("JIT assert failed"))
                 {
-                    ex = caughtEx;
+                    return new ProgramResult
+                    {
+                        Kind = ProgramResultKind.HitsJitAssert,
+                        Checksum = runtime.FinishHashCode(),
+                        ChecksumSites = TakeChecksumSites(),
+                        JitAssertError = ex.Message,
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new ProgramResult
+                    {
+                        Kind = ProgramResultKind.ThrowsException,
+                        Checksum = runtime.FinishHashCode(),
+                        ChecksumSites = TakeChecksumSites(),
+                        ExceptionType = ex.GetType().FullName,
+                        ExceptionStackTrace = ex.StackTrace,
+                        ExceptionText = ex.ToString(),
+                    };
                 }
 
-                // A reference to the runtime stays in the loaded assembly and there may be a lot of checksum sites
-                // so during reduction this can use a lot of memory.
-                List<ChecksumSite> checksumSites = runtime.ChecksumSites;
-                runtime.ChecksumSites = null;
-                return new ProgramResult(runtime.FinishHashCode(), ex?.GetType().FullName, ex?.ToString(), ex?.StackTrace, checksumSites);
+                return new ProgramResult
+                {
+                    Kind = ProgramResultKind.RunsSuccessfully,
+                    Checksum = runtime.FinishHashCode(),
+                    ChecksumSites = TakeChecksumSites(),
+                };
             }
         }
     }

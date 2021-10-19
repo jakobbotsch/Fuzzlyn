@@ -5,25 +5,24 @@ namespace Fuzzlyn.ExecutionServer
 {
     public class ProgramResult
     {
-        public ProgramResult(
-            string checksum,
-            string exceptionType,
-            string exceptionText,
-            string exceptionStackTrace,
-            List<ChecksumSite> checksumSites)
-        {
-            Checksum = checksum;
-            ExceptionType = exceptionType;
-            ExceptionText = exceptionText;
-            ExceptionStackTrace = exceptionStackTrace;
-            ChecksumSites = checksumSites;
-        }
-
-        public string Checksum { get; }
-        public string ExceptionType { get; }
-        public string ExceptionText { get; }
-        public string ExceptionStackTrace { get; }
+        public ProgramResultKind Kind { get; init; }
+        // Always valid
+        public string Checksum { get; init; }
         [JsonIgnore]
-        public List<ChecksumSite> ChecksumSites { get; }
+        public List<ChecksumSite> ChecksumSites { get; init; }
+        // Next fields are valid for ThrowsException
+        public string ExceptionType { get; init; }
+        public string ExceptionText { get; init; }
+        public string ExceptionStackTrace { get; init; }
+        // Valid for HitsJitAssert
+        public string JitAssertError { get; init; }
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum ProgramResultKind
+    {
+        RunsSuccessfully,
+        ThrowsException,
+        HitsJitAssert,
     }
 }
