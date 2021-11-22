@@ -114,11 +114,19 @@ namespace Fuzzlyn.Reduction
 
                     if (targetResults.Results.DebugResult.ExceptionType != targetResults.Results.ReleaseResult.ExceptionType)
                     {
-                        // Original example throws different exceptions in debug and release, ensure new one does as well.
+                        // Original example throws different exceptions in debug and release.
+                        // Make sure that 1) the new results throws/runs successfully in the same situations
+                        // (e.g. we do not want to suddenly find an assert here) and 2) that the same or no
+                        // exception is thrown.
+                        bool hasSameResultKinds =
+                            results.Results.DebugResult.Kind == targetResults.Results.DebugResult.Kind &&
+                            results.Results.ReleaseResult.Kind == targetResults.Results.ReleaseResult.Kind;
+
                         bool throwsSameExceptions =
                             results.Results.DebugResult.ExceptionType == targetResults.Results.DebugResult.ExceptionType &&
                             results.Results.ReleaseResult.ExceptionType == targetResults.Results.ReleaseResult.ExceptionType;
-                        return throwsSameExceptions;
+
+                        return hasSameResultKinds && throwsSameExceptions;
                     }
 
                     // Original example throws same exception in debug and release, so it is the checksum that differs.
