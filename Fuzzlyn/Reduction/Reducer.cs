@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction
@@ -29,7 +31,6 @@ namespace Fuzzlyn.Reduction
             _reduceDebugGitDir = reduceDebugGitDir;
         }
 
-        public FuzzlynOptions Options { get; }
         public CompilationUnitSyntax Original { get; }
         public CompilationUnitSyntax Reduced { get; private set; }
 
@@ -244,7 +245,7 @@ namespace Fuzzlyn.Reduction
 
             List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
 
-            SimplifyRuntime();
+            MakeStandalone();
             double oldSizeKiB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
             double newSizeKiB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
             string sizeComment =
@@ -516,6 +517,354 @@ namespace Fuzzlyn.Reduction
             }
         }
 
+        private void MakeStandalone()
+        {
+            // At this point we have a program like the following:
+            // public class Program
+            // {
+            //     public static Fuzzlyn.ExecutionServer.IRuntime s_rt;
+            //     public static bool s_2;
+            //     public static S0 s_4;
+            //     public static uint[] s_5;
+            //     public static byte s_6;
+            //     public static S0[] s_10;
+            //     public static S0[, ] s_20 = new S0[, ]{{new S0()}};
+            //     public static void Main(Fuzzlyn.ExecutionServer.IRuntime rt)
+            //     {
+            //         s_rt = rt;
+            //         S0 vr2 = default(S0);
+            //         new S0().M4(vr2.F2, vr2.M6(ref s_4.F2, s_2, ref s_20[0, 0], ref s_4.F3));
+            //     }
+            // 
+            //     public static void M8(S0 arg0, long arg1)
+            //     {
+            //         Program.s_rt.Checksum("c_45", arg1);
+            //     }
+            // 
+            //     public static void M7(S0 argThis, uint[] arg0, ref byte arg1, ref S0[] arg2, int arg3)
+            //     {
+            //     }
+            // }
+            //
+            // we want to create a standalone example that reproduces the issue. We will start out
+            // with an example that most matches how Fuzzlyn works by creating a matching interface
+            // and adding a wrapper Main function that calls the program in a collectible ALC.
+
+            CompilationUnitSyntax prog = Reduced;
+
+            prog = prog.AddMembers(
+                ParseMemberDeclaration(@"
+public interface IRuntime
+{
+    void WriteLine<T>(string site, T value);
+}"),
+                ParseMemberDeclaration(@"
+public class Runtime : IRuntime
+{
+    public void WriteLine<T>(string site, T value) => System.Console.WriteLine(value);
+}"),
+
+                ParseMemberDeclaration(@"
+public class CollectibleALC : System.Runtime.Loader.AssemblyLoadContext
+{
+    public CollectibleALC() : base(true) { }
+}"));
+
+            // Add the new main method
+            MemberDeclarationSyntax newMainMethod =
+                ParseMemberDeclaration(@"
+public static void Main()
+{
+    CollectibleALC alc = new CollectibleALC();
+    System.Reflection.Assembly asm = alc.LoadFromAssemblyPath(System.Reflection.Assembly.GetExecutingAssembly().Location);
+    System.Reflection.MethodInfo mi = asm.GetType(typeof(Program).FullName).GetMethod(nameof(MainInner));
+    System.Type runtimeTy = asm.GetType(typeof(Runtime).FullName);
+    mi.Invoke(null, new object[] { System.Activator.CreateInstance(runtimeTy) });
+}");
+
+            MethodDeclarationSyntax oldMainMethod =
+                prog.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "Main");
+
+            // Change the arg from Fuzzlyn.ExecutionServer.IRuntime rt => IRuntime rt
+            MethodDeclarationSyntax newInnerMainMethod =
+                oldMainMethod
+                .WithIdentifier(Identifier("MainInner"))
+                .WithParameterList(ParseParameterList("(IRuntime rt)"));
+
+            prog = prog.ReplaceNode(oldMainMethod, new[] { newMainMethod, newInnerMainMethod });
+
+            // Now change references of Checksum -> WriteLine and Fuzzlyn.ExecutionServer.IRuntime => IRuntime
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new();
+            foreach (SyntaxNode node in prog.DescendantNodes())
+            {
+                // Change type of s_rt field
+                if (node is FieldDeclarationSyntax field && field.Declaration.Variables.Count == 1 &&
+                    field.Declaration.Variables[0].Identifier.Text == "s_rt")
+                {
+                    replacements.Add(node, ParseMemberDeclaration("public static IRuntime s_rt;"));
+                    continue;
+                }
+
+                // Convert s_rt.Checksum calls to s_rt.WriteLine
+                if (node is ExpressionStatementSyntax expStmt &&
+                    expStmt.Expression is InvocationExpressionSyntax invoc &&
+                    invoc.Expression is MemberAccessExpressionSyntax mem &&
+                    mem.Name.Identifier.Text == "Checksum")
+                {
+                    replacements.Add(mem.Name, IdentifierName("WriteLine"));
+                }
+            }
+
+            prog = prog.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+
+            UpdateReduced("Make standalone", prog);
+
+            if (!IsStandaloneProgramInteresting(prog))
+                return;
+
+            bool TryReplacement(string update, Func<CompilationUnitSyntax, CompilationUnitSyntax> reducer)
+            {
+                CompilationUnitSyntax newNode = reducer(Reduced);
+                if (IsStandaloneProgramInteresting(newNode))
+                {
+                    UpdateReduced(update, newNode);
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (TryReplacement("Remove ALC", RemoveALC))
+            {
+                TryReplacement("Inline runtime creation and merge mains", InlineRuntimeCreationAndMergeMains);
+
+                if (TryReplacement("Remove call site args from WriteLine calls", RemoveCallSiteArgs))
+                {
+                    TryReplacement("Inline WriteLine calls", InlineWriteLineCalls);
+                }
+            }
+        }
+
+        private bool IsStandaloneProgramInteresting(CompilationUnitSyntax prog)
+        {
+            string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
+            try
+            {
+                (string debugStdout, string debugStderr) = ExecuteInSubProcess(prog, Compiler.DebugOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
+                (string releaseStdout, string releaseStderr) = ExecuteInSubProcess(prog, Compiler.ReleaseOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
+                if (debugStderr.Contains("Assert failure") || debugStderr.Contains("JIT assert failed"))
+                    return true;
+
+                if (releaseStderr.Contains("Assert failure") || releaseStderr.Contains("JIT assert failed"))
+                    return true;
+
+                string[] debugStderrLines = debugStderr.ReplaceLineEndings().Split(Environment.NewLine);
+                string[] releaseStderrLines = releaseStderr.ReplaceLineEndings().Split(Environment.NewLine);
+
+                // Look for exception type
+                string debugExceptionLine = debugStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
+                string releaseExceptionLine = releaseStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
+                if (debugExceptionLine != releaseExceptionLine)
+                    return true;
+
+                return debugStdout != releaseStdout;
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(tempAsmPath);
+                }
+                catch
+                {
+                }
+            }
+
+            (string stdout, string stderr) ExecuteInSubProcess(CompilationUnitSyntax node, CSharpCompilationOptions opts, string tempAsmPath)
+            {
+                CompileResult result = Compiler.Compile(node, opts);
+                if (result.Assembly == null)
+                {
+                    throw new Exception(
+                        "Got compiler errors when creating standalone repro:"
+                        + Environment.NewLine
+                        + string.Join(Environment.NewLine, result.CompileErrors));
+                }
+
+                File.WriteAllBytes(tempAsmPath, result.Assembly);
+
+                ProcessStartInfo info = new()
+                {
+                    FileName = _pool.Host,
+                    WorkingDirectory = Environment.CurrentDirectory,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
+
+                info.ArgumentList.Add(tempAsmPath);
+
+                Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
+
+                // WER mode is inherited by child, so if this is a crash we can
+                // make sure no WER dialog opens by disabling it for our own
+                // process.
+                using (new DisableWERModal())
+                {
+                    Process p = Process.Start(info);
+                    StringBuilder stdout = new();
+                    StringBuilder stderr = new();
+                    p.OutputDataReceived += (sender, args) => stdout.AppendLine(args.Data);
+                    p.ErrorDataReceived += (sender, args) => stderr.AppendLine(args.Data);
+                    p.BeginOutputReadLine();
+                    p.BeginErrorReadLine();
+                    p.WaitForExit();
+
+                    return (stdout.ToString(), stderr.ToString());
+                }
+            }
+        }
+
+        private CompilationUnitSyntax RemoveALC(CompilationUnitSyntax program)
+        {
+            MethodDeclarationSyntax mainMethod =
+                program.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "Main");
+
+            MemberDeclarationSyntax newMain =
+                ParseMemberDeclaration(@"public static void Main() => MainInner(new Runtime());");
+
+            CompilationUnitSyntax withNewMain = program.ReplaceNode(mainMethod, newMain);
+            MemberDeclarationSyntax alcType =
+                withNewMain.DescendantNodes()
+                          .OfType<ClassDeclarationSyntax>()
+                          .Single(m => m.Identifier.Text == "CollectibleALC");
+
+            return withNewMain.ReplaceNode(alcType, (SyntaxNode)null);
+        }
+
+        private CompilationUnitSyntax InlineRuntimeCreationAndMergeMains(CompilationUnitSyntax program)
+        {
+            // Remove old Main method
+            MethodDeclarationSyntax mainMethod =
+                program.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "Main");
+            program = program.ReplaceNode(mainMethod, (SyntaxNode)null);
+
+            // Remove arg from MainInner and rename
+            MethodDeclarationSyntax mainInnerMethod =
+                program.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "MainInner");
+
+            MethodDeclarationSyntax newMain = mainInnerMethod.WithIdentifier(Identifier("Main"));
+            newMain = newMain.WithParameterList(ParameterList());
+
+            foreach (SyntaxNode node in newMain.DescendantNodes())
+            {
+                if (node is ExpressionStatementSyntax expStmt &&
+                    expStmt.Expression is AssignmentExpressionSyntax asgn &&
+                    asgn.Left is IdentifierNameSyntax id &&
+                    id.Identifier.Text == "s_rt")
+                {
+                    newMain = newMain.ReplaceNode(expStmt.Expression, ParseExpression("s_rt = new Runtime()"));
+                    break;
+                }
+            }
+
+            return program.ReplaceNode(mainInnerMethod, newMain);
+        }
+
+        private CompilationUnitSyntax RemoveCallSiteArgs(CompilationUnitSyntax program)
+        {
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new();
+            foreach (SyntaxNode node in program.DescendantNodes())
+            {
+                if (node is ExpressionStatementSyntax expStmt &&
+                    expStmt.Expression is InvocationExpressionSyntax invoc &&
+                    invoc.Expression is MemberAccessExpressionSyntax mem &&
+                    mem.Name.Identifier.Text == "WriteLine")
+                {
+                    replacements.Add(invoc, invoc.WithArgumentList(invoc.ArgumentList.WithArguments(invoc.ArgumentList.Arguments.RemoveAt(0))));
+                }
+            }
+
+            MemberDeclarationSyntax oldIRuntime =
+                program.DescendantNodes().OfType<InterfaceDeclarationSyntax>().Single(m => m.Identifier.Text == "IRuntime");
+
+            MemberDeclarationSyntax oldRuntime =
+                program.DescendantNodes().OfType<ClassDeclarationSyntax>().Single(m => m.Identifier.Text == "Runtime");
+
+            replacements[oldIRuntime] = ParseMemberDeclaration(@"
+public interface IRuntime
+{
+    void WriteLine<T>(T value);
+}");
+
+            replacements[oldRuntime] = ParseMemberDeclaration(@"
+public class Runtime : IRuntime
+{
+    public void WriteLine<T>(T value) => System.Console.WriteLine(value);
+}");
+
+            return program.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
+        }
+
+        private CompilationUnitSyntax InlineWriteLineCalls(CompilationUnitSyntax program)
+        {
+            Dictionary<SyntaxNode, SyntaxNode> replacements = new();
+            foreach (SyntaxNode node in program.DescendantNodes())
+            {
+                TryRewriteWriteLine(node);
+                TryDeleteRuntimeTypes(node);
+                TryDeleteRuntimeField(node);
+                TryDeleteRuntimeAssignment(node);
+            }
+
+            return program.ReplaceNodes(replacements.Keys, (old, _) => replacements[old]);
+
+            void TryRewriteWriteLine(SyntaxNode node)
+            {
+                if (node is ExpressionStatementSyntax expStmt &&
+                    expStmt.Expression is InvocationExpressionSyntax invoc &&
+                    invoc.Expression is MemberAccessExpressionSyntax mem &&
+                    mem.Name.Identifier.Text == "WriteLine")
+                {
+                    ArgumentSyntax arg = invoc.ArgumentList.Arguments[^1];
+                    InvocationExpressionSyntax newCall =
+                        InvocationExpression(
+                            ParseExpression("System.Console.WriteLine"),
+                            ArgumentList(
+                                SingletonSeparatedList(arg)));
+                    replacements.Add(invoc, newCall);
+                }
+            }
+
+            void TryDeleteRuntimeTypes(SyntaxNode node)
+            {
+                if (node is TypeDeclarationSyntax typeDecl &&
+                    typeDecl.Identifier.Text is "Runtime" or "IRuntime")
+                {
+                    replacements.Add(node, null);
+                }
+            }
+
+            void TryDeleteRuntimeField(SyntaxNode node)
+            {
+                if (node is FieldDeclarationSyntax field && field.Declaration.Variables.Count == 1 &&
+                    field.Declaration.Variables[0].Identifier.Text == "s_rt")
+                {
+                    replacements.Add(node, null);
+                }
+            }
+
+            void TryDeleteRuntimeAssignment(SyntaxNode node)
+            {
+                if (node is ExpressionStatementSyntax expStmt &&
+                    expStmt.Expression is AssignmentExpressionSyntax asgn &&
+                    asgn.Left is IdentifierNameSyntax id &&
+                    id.Identifier.Text == "s_rt")
+                {
+                    replacements.Add(node, null);
+                }
+            }
+        }
+
         /// <summary>
         /// Simplifies everything related to the runtime; removes the s_rt field,
         /// and associated assignments, and converts checksum calls into Console.WriteLine.
@@ -551,22 +900,52 @@ namespace Fuzzlyn.Reduction
                     continue;
                 }
 
-                // Convert s_rt.Checksum() calls to System.Console.WriteLine
-                if (expStmt.Expression is InvocationExpressionSyntax invoc && IsChecksumCall(invoc))
+                // Convert s_rt.Checksum calls to s_rt.WriteLine
+                if (expStmt.Expression is InvocationExpressionSyntax invoc && invoc.Expression is MemberAccessExpressionSyntax mem && mem.Name.Identifier.Text == "Checksum")
                 {
-                    ArgumentSyntax arg = invoc.ArgumentList.Arguments[1];
-                    ExpressionStatementSyntax newCall =
-                        ExpressionStatement(
-                            InvocationExpression(
-                                ParseExpression("System.Console.WriteLine"),
-                                ArgumentList(
-                                    SingletonSeparatedList(arg))));
-
-                    replacements.Add(node, newCall);
+                    replacements.Add(mem.Name, IdentifierName("WriteLine"));
                 }
             }
 
             UpdateReduced("Remove runtime code", withArgRemoved.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]));
+        }
+
+        private struct DisableWERModal : IDisposable
+        {
+            public DisableWERModal()
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // Prevent post-mortem debuggers from launching here. We get
+                    // runtime crashes sometimes and the parent Fuzzlyn process will
+                    // handle it.
+                    SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+                }
+            }
+
+            public void Dispose()
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // Prevent post-mortem debuggers from launching here. We get
+                    // runtime crashes sometimes and the parent Fuzzlyn process will
+                    // handle it.
+                    SetErrorMode(ErrorModes.SYSTEM_DEFAULT);
+                }
+            }
+
+            [Flags]
+            private enum ErrorModes
+            {
+                SYSTEM_DEFAULT = 0x0,
+                SEM_FAILCRITICALERRORS = 0x0001,
+                SEM_NOALIGNMENTFAULTEXCEPT = 0x0004,
+                SEM_NOGPFAULTERRORBOX = 0x0002,
+                SEM_NOOPENFILEERRORBOX = 0x8000
+            }
+
+            [DllImport("kernel32.dll")]
+            private static extern ErrorModes SetErrorMode(ErrorModes uMode);
         }
 
         private bool IsChecksumCall(InvocationExpressionSyntax invoc)

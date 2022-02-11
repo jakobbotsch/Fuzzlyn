@@ -1,6 +1,5 @@
 ﻿using Fuzzlyn.ExecutionServer;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -106,10 +105,7 @@ namespace Fuzzlyn
 
             info.ArgumentList.Add(executorPath);
 
-            // Disable tiering as even release builds will run in minopts otherwise.
-            info.EnvironmentVariables["COMPlus_TieredCompilation"] = "0";
-            info.EnvironmentVariables["COMPlus_JitThrowOnAssertionFailure"] = "1";
-
+            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
             Process proc = Process.Start(info);
             return new RunningExecutionServer(proc);
         }

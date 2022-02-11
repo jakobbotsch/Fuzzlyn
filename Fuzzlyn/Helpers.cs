@@ -3,6 +3,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Text;
 
 namespace Fuzzlyn
@@ -50,6 +52,12 @@ namespace Fuzzlyn
             }
 
             return true;
+        }
+
+        public static void SetExecutionEnvironmentVariables(StringDictionary envVars)
+        {
+            envVars["COMPlus_TieredCompilation"] = "0";
+            envVars["COMPlus_JitThrowOnAssertionFailure"] = "1";
         }
     }
 }
