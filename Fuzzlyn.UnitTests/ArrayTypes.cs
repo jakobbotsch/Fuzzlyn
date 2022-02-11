@@ -1,6 +1,5 @@
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis.CSharp;
-using System;
 using Xunit;
 
 namespace Fuzzlyn.UnitTests

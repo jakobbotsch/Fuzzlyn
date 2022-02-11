@@ -1,5 +1,4 @@
 ﻿using Fuzzlyn.Types;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Fuzzlyn

@@ -128,10 +128,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -143,9 +141,10 @@ using System.Linq;
 using NDesk.Options;
 #endif
 
-namespace NDesk.Options {
+namespace NDesk.Options
+{
 
-	public class OptionValueCollection : IList, IList<string> {
+    public class OptionValueCollection : IList, IList<string> {
 
 		List<string> values = new();
 		OptionContext c;
