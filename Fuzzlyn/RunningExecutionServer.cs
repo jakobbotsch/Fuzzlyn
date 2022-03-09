@@ -43,6 +43,19 @@ namespace Fuzzlyn
                 return new ReceiveResult { Ended = true, Stderr = stderr };
             }
 
+            Response resp;
+            try
+            {
+                resp = JsonSerializer.Deserialize<Response>(line);
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine("Received malformed JSON response");
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine(line);
+                return new ReceiveResult { Ended = true, Stderr = "Malformed result" };
+            }
+
             return new ReceiveResult { Response = JsonSerializer.Deserialize<Response>(line) };
         }
 
