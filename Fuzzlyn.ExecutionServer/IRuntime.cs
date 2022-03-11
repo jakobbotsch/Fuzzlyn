@@ -1,7 +1,6 @@
-﻿namespace Fuzzlyn.ExecutionServer
+﻿namespace Fuzzlyn.ExecutionServer;
+
+public interface IRuntime
 {
-    public interface IRuntime
-    {
-        void Checksum<T>(string id, T val);
-    }
+    void Checksum<T>(string id, T val);
 }

@@ -1,19 +1,18 @@
-﻿namespace Fuzzlyn.ExecutionServer
+﻿namespace Fuzzlyn.ExecutionServer;
+
+public enum RequestKind
 {
-    public enum RequestKind
-    {
-        RunPair,
-        Shutdown,
-    }
+    RunPair,
+    Shutdown,
+}
 
-    public class Request
-    {
-        public RequestKind Kind { get; set; }
-        public ProgramPair Pair { get; set; }
-    }
+public class Request
+{
+    public RequestKind Kind { get; set; }
+    public ProgramPair Pair { get; set; }
+}
 
-    public class Response
-    {
-        public ProgramPairResults RunPairResult { get; set; }
-    }
+public class Response
+{
+    public ProgramPairResults RunPairResult { get; set; }
 }

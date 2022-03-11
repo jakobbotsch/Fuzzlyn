@@ -3,95 +3,94 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fuzzlyn
+namespace Fuzzlyn;
+
+internal class ExecutionServerPool
 {
-    internal class ExecutionServerPool
+    // Stop a server once it has not been used for this duration
+    private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
+
+    public ExecutionServerPool(string host)
     {
-        // Stop a server once it has not been used for this duration
-        private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
+        Host = host;
+    }
 
-        public ExecutionServerPool(string host)
+    public string Host { get; }
+
+    private List<RunningExecutionServer> _pool = new();
+
+    private RunningExecutionServer Get(bool keepNonEmptyEagerly)
+    {
+        RunningExecutionServer bestServer = null;
+        bool startNew = false;
+
+        lock (_pool)
         {
-            Host = host;
+            if (_pool.Count > 0)
+            {
+                int best = 0;
+                for (int i = 1; i < _pool.Count; i++)
+                {
+                    if (_pool[i].LastUseTimer.Elapsed < _pool[best].LastUseTimer.Elapsed)
+                        best = i;
+                }
+
+                bestServer = _pool[best];
+                _pool[best] = _pool[^1];
+                _pool.RemoveAt(_pool.Count - 1);
+            }
+
+            if (keepNonEmptyEagerly && _pool.Count == 0)
+                startNew = true;
         }
 
-        public string Host { get; }
-
-        private List<RunningExecutionServer> _pool = new();
-
-        private RunningExecutionServer Get(bool keepNonEmptyEagerly)
+        if (startNew)
         {
-            RunningExecutionServer bestServer = null;
-            bool startNew = false;
-
+            RunningExecutionServer created = RunningExecutionServer.Create(Host);
             lock (_pool)
             {
-                if (_pool.Count > 0)
-                {
-                    int best = 0;
-                    for (int i = 1; i < _pool.Count; i++)
-                    {
-                        if (_pool[i].LastUseTimer.Elapsed < _pool[best].LastUseTimer.Elapsed)
-                            best = i;
-                    }
-
-                    bestServer = _pool[best];
-                    _pool[best] = _pool[^1];
-                    _pool.RemoveAt(_pool.Count - 1);
-                }
-
-                if (keepNonEmptyEagerly && _pool.Count == 0)
-                    startNew = true;
+                _pool.Add(created);
             }
-
-            if (startNew)
-            {
-                RunningExecutionServer created = RunningExecutionServer.Create(Host);
-                lock (_pool)
-                {
-                    _pool.Add(created);
-                }
-            }
-
-            if (bestServer != null)
-                return bestServer;
-
-            return RunningExecutionServer.Create(Host);
         }
 
-        private void Return(RunningExecutionServer server)
-        {
-            List<RunningExecutionServer> toStop;
-            lock (_pool)
-            {
-                toStop = _pool.Where(s => s.LastUseTimer.Elapsed > s_inactivityPeriod).ToList();
-                _pool.RemoveAll(toStop.Contains);
-                _pool.Add(server);
-            }
+        if (bestServer != null)
+            return bestServer;
 
-            foreach (var otherServer in toStop)
-                otherServer.Shutdown();
+        return RunningExecutionServer.Create(Host);
+    }
+
+    private void Return(RunningExecutionServer server)
+    {
+        List<RunningExecutionServer> toStop;
+        lock (_pool)
+        {
+            toStop = _pool.Where(s => s.LastUseTimer.Elapsed > s_inactivityPeriod).ToList();
+            _pool.RemoveAll(toStop.Contains);
+            _pool.Add(server);
         }
 
-        public RunSeparatelyResults RunPairOnPool(ProgramPair pair, TimeSpan timeout, bool keepPoolNonEmptyEagerly)
-        {
-            RunningExecutionServer server = null;
-            try
-            {
-                server = Get(keepPoolNonEmptyEagerly);
-                RunSeparatelyResults results = server.RunPair(pair, timeout);
-                if (results.Kind != RunSeparatelyResultsKind.Success)
-                {
-                    server = null; // Do not return, create a new one. The process has already been killed by RunPair.
-                }
+        foreach (var otherServer in toStop)
+            otherServer.Shutdown();
+    }
 
-                return results;
-            }
-            finally
+    public RunSeparatelyResults RunPairOnPool(ProgramPair pair, TimeSpan timeout, bool keepPoolNonEmptyEagerly)
+    {
+        RunningExecutionServer server = null;
+        try
+        {
+            server = Get(keepPoolNonEmptyEagerly);
+            RunSeparatelyResults results = server.RunPair(pair, timeout);
+            if (results.Kind != RunSeparatelyResultsKind.Success)
             {
-                if (server != null)
-                    Return(server);
+                server = null; // Do not return, create a new one. The process has already been killed by RunPair.
             }
+
+            return results;
+        }
+        finally
+        {
+            if (server != null)
+                Return(server);
         }
     }
 }

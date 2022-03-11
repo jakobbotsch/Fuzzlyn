@@ -5,66 +5,65 @@ using System.Collections.Generic;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace Fuzzlyn.Types
+namespace Fuzzlyn.Types;
+
+public class ArrayType : FuzzType, IEquatable<ArrayType>
 {
-    public class ArrayType : FuzzType, IEquatable<ArrayType>
+    public ArrayType(FuzzType elementType, int rank = 1)
     {
-        public ArrayType(FuzzType elementType, int rank = 1)
-        {
-            if (rank < 1)
-                throw new ArgumentException("Invalid rank " + rank, nameof(rank));
+        if (rank < 1)
+            throw new ArgumentException("Invalid rank " + rank, nameof(rank));
 
-            ElementType = elementType;
-            Rank = rank;
-        }
+        ElementType = elementType;
+        Rank = rank;
+    }
 
-        public FuzzType ElementType { get; }
-        public int Rank { get; }
+    public FuzzType ElementType { get; }
+    public int Rank { get; }
 
-        public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
+    public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
 
-        public override TypeSyntax GenReferenceTo() => GenReferenceToArrayType();
+    public override TypeSyntax GenReferenceTo() => GenReferenceToArrayType();
 
-        private ArrayTypeSyntax _type;
-        public ArrayTypeSyntax GenReferenceToArrayType()
-        {
-            if (_type != null)
-                return _type;
-
-            List<int> ranks = new() { Rank };
-            // int[][] => ArrayType(ArrayType(Int, 1), 1)
-            // int[][,] => ArrayType(ArrayType(Int, 2), 1)
-            FuzzType innerElem = ElementType;
-            while (innerElem is ArrayType at)
-            {
-                ranks.Add(at.Rank);
-                innerElem = at.ElementType;
-            }
-
-            _type = ArrayType(
-                innerElem.GenReferenceTo(),
-                ranks.Select(
-                    r =>
-                    ArrayRankSpecifier(
-                        SeparatedList(
-                            Enumerable.Repeat((ExpressionSyntax)OmittedArraySizeExpression(), r)))).ToSyntaxList());
-
+    private ArrayTypeSyntax _type;
+    public ArrayTypeSyntax GenReferenceToArrayType()
+    {
+        if (_type != null)
             return _type;
+
+        List<int> ranks = new() { Rank };
+        // int[][] => ArrayType(ArrayType(Int, 1), 1)
+        // int[][,] => ArrayType(ArrayType(Int, 2), 1)
+        FuzzType innerElem = ElementType;
+        while (innerElem is ArrayType at)
+        {
+            ranks.Add(at.Rank);
+            innerElem = at.ElementType;
         }
 
-        public bool Equals(ArrayType other)
-        {
-            return other != null && ElementType == other.ElementType && Rank == other.Rank;
-        }
+        _type = ArrayType(
+            innerElem.GenReferenceTo(),
+            ranks.Select(
+                r =>
+                ArrayRankSpecifier(
+                    SeparatedList(
+                        Enumerable.Repeat((ExpressionSyntax)OmittedArraySizeExpression(), r)))).ToSyntaxList());
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as ArrayType);
-        }
+        return _type;
+    }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(1, ElementType, Rank);
-        }
+    public bool Equals(ArrayType other)
+    {
+        return other != null && ElementType == other.ElementType && Rank == other.Rank;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as ArrayType);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(1, ElementType, Rank);
     }
 }

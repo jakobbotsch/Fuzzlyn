@@ -6,132 +6,131 @@ using System.Collections.Generic;
 using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace Fuzzlyn.Reduction
+namespace Fuzzlyn.Reduction;
+
+internal class CoarseStatementRemover : CSharpSyntaxRewriter
 {
-    internal class CoarseStatementRemover : CSharpSyntaxRewriter
+    public CoarseStatementRemover(Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> isInteresting)
     {
-        public CoarseStatementRemover(Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> isInteresting)
+        IsInteresting = isInteresting;
+    }
+
+    public Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> IsInteresting { get; }
+
+    public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax orig)
+    {
+        // Annotate all nodes
+        var annotated = (MethodDeclarationSyntax)new IdAnnotator().Visit(orig);
+
+        // First try out if we can quickly remove a bunch of statements.
+        MethodDeclarationSyntax withRemovedQuick;
+        if (orig.ReturnType is RefTypeSyntax)
         {
-            IsInteresting = isInteresting;
+            // Remove everything except locals and returns. We cannot create our own return.
+            withRemovedQuick = Remove(annotated, GetRemovableNodes(annotated));
+        }
+        else
+        {
+            // Remove everything but insert an insert statement.
+            List<StatementSyntax> stmts = new();
+            if (!(orig.ReturnType is PredefinedTypeSyntax preType && preType.Keyword.IsKind(SyntaxKind.VoidKeyword)))
+                stmts.Add(ReturnStatement(DefaultExpression(orig.ReturnType)));
+
+            withRemovedQuick = orig.WithBody(Block(stmts));
         }
 
-        public Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> IsInteresting { get; }
+        if (IsInteresting(orig, withRemovedQuick))
+            return withRemovedQuick;
 
-        public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax orig)
+        MethodDeclarationSyntax candidate = BinarySearch(orig, annotated, true);
+        candidate = BinarySearch(orig, candidate, false);
+
+        return candidate;
+    }
+
+    private MethodDeclarationSyntax Remove(MethodDeclarationSyntax method, IEnumerable<SyntaxNode> nodes)
+    {
+        IEnumerable<string> ids = nodes.Select(n => n.GetAnnotations("id").Single().Data);
+        return (MethodDeclarationSyntax)new RemoveIdsRewriter(new HashSet<string>(ids)).Visit(method);
+    }
+
+    private MethodDeclarationSyntax BinarySearch(MethodDeclarationSyntax orig, MethodDeclarationSyntax current, bool forEnd)
+    {
+        List<StatementSyntax> removableNodes = GetRemovableNodes(current);
+
+        int min = 0;
+        int max = removableNodes.Count;
+
+        MethodDeclarationSyntax best = current;
+        while (min + 1 < max)
         {
-            // Annotate all nodes
-            var annotated = (MethodDeclarationSyntax)new IdAnnotator().Visit(orig);
+            int mid = min + (max - min) / 2;
 
-            // First try out if we can quickly remove a bunch of statements.
-            MethodDeclarationSyntax withRemovedQuick;
-            if (orig.ReturnType is RefTypeSyntax)
+            int start = forEnd ? mid : 0;
+            int end = forEnd ? removableNodes.Count : mid;
+
+            MethodDeclarationSyntax newCandidate =
+                Remove(current, removableNodes.Skip(start).Take(end - start));
+
+            if (IsInteresting(orig, newCandidate))
             {
-                // Remove everything except locals and returns. We cannot create our own return.
-                withRemovedQuick = Remove(annotated, GetRemovableNodes(annotated));
+                best = newCandidate;
+
+                if (forEnd)
+                    max = mid;
+                else
+                    min = mid;
             }
             else
             {
-                // Remove everything but insert an insert statement.
-                List<StatementSyntax> stmts = new();
-                if (!(orig.ReturnType is PredefinedTypeSyntax preType && preType.Keyword.IsKind(SyntaxKind.VoidKeyword)))
-                    stmts.Add(ReturnStatement(DefaultExpression(orig.ReturnType)));
-
-                withRemovedQuick = orig.WithBody(Block(stmts));
-            }
-
-            if (IsInteresting(orig, withRemovedQuick))
-                return withRemovedQuick;
-
-            MethodDeclarationSyntax candidate = BinarySearch(orig, annotated, true);
-            candidate = BinarySearch(orig, candidate, false);
-
-            return candidate;
-        }
-
-        private MethodDeclarationSyntax Remove(MethodDeclarationSyntax method, IEnumerable<SyntaxNode> nodes)
-        {
-            IEnumerable<string> ids = nodes.Select(n => n.GetAnnotations("id").Single().Data);
-            return (MethodDeclarationSyntax)new RemoveIdsRewriter(new HashSet<string>(ids)).Visit(method);
-        }
-
-        private MethodDeclarationSyntax BinarySearch(MethodDeclarationSyntax orig, MethodDeclarationSyntax current, bool forEnd)
-        {
-            List<StatementSyntax> removableNodes = GetRemovableNodes(current);
-
-            int min = 0;
-            int max = removableNodes.Count;
-
-            MethodDeclarationSyntax best = current;
-            while (min + 1 < max)
-            {
-                int mid = min + (max - min) / 2;
-
-                int start = forEnd ? mid : 0;
-                int end = forEnd ? removableNodes.Count : mid;
-
-                MethodDeclarationSyntax newCandidate =
-                    Remove(current, removableNodes.Skip(start).Take(end - start));
-
-                if (IsInteresting(orig, newCandidate))
-                {
-                    best = newCandidate;
-
-                    if (forEnd)
-                        max = mid;
-                    else
-                        min = mid;
-                }
+                if (forEnd)
+                    min = mid;
                 else
-                {
-                    if (forEnd)
-                        min = mid;
-                    else
-                        max = mid;
-                }
-            }
-
-            return best;
-        }
-
-        private List<StatementSyntax> GetRemovableNodes(MethodDeclarationSyntax method)
-        {
-            return
-                method
-                .DescendantNodes()
-                .OfType<StatementSyntax>()
-                .Where(s => !(s is LocalDeclarationStatementSyntax || s is ReturnStatementSyntax) && s.Parent is BlockSyntax)
-                .ToList();
-        }
-
-        private class IdAnnotator : CSharpSyntaxRewriter
-        {
-            private int _id;
-            public override SyntaxNode Visit(SyntaxNode node)
-            {
-                node = base.Visit(node);
-                if (node == null)
-                    return null;
-
-                return node.WithAdditionalAnnotations(new SyntaxAnnotation("id", (_id++).ToString()));
+                    max = mid;
             }
         }
 
-        private class RemoveIdsRewriter : CSharpSyntaxRewriter
+        return best;
+    }
+
+    private List<StatementSyntax> GetRemovableNodes(MethodDeclarationSyntax method)
+    {
+        return
+            method
+            .DescendantNodes()
+            .OfType<StatementSyntax>()
+            .Where(s => !(s is LocalDeclarationStatementSyntax || s is ReturnStatementSyntax) && s.Parent is BlockSyntax)
+            .ToList();
+    }
+
+    private class IdAnnotator : CSharpSyntaxRewriter
+    {
+        private int _id;
+        public override SyntaxNode Visit(SyntaxNode node)
         {
-            private readonly HashSet<string> _ids;
-            public RemoveIdsRewriter(HashSet<string> ids)
-            {
-                _ids = ids;
-            }
+            node = base.Visit(node);
+            if (node == null)
+                return null;
 
-            public override SyntaxNode Visit(SyntaxNode node)
-            {
-                string id = node?.GetAnnotations("id")?.FirstOrDefault()?.Data;
-                if (id != null && _ids.Contains(id))
-                    return null;
+            return node.WithAdditionalAnnotations(new SyntaxAnnotation("id", (_id++).ToString()));
+        }
+    }
 
-                return base.Visit(node);
-            }
+    private class RemoveIdsRewriter : CSharpSyntaxRewriter
+    {
+        private readonly HashSet<string> _ids;
+        public RemoveIdsRewriter(HashSet<string> ids)
+        {
+            _ids = ids;
+        }
+
+        public override SyntaxNode Visit(SyntaxNode node)
+        {
+            string id = node?.GetAnnotations("id")?.FirstOrDefault()?.Data;
+            if (id != null && _ids.Contains(id))
+                return null;
+
+            return base.Visit(node);
         }
     }
 }

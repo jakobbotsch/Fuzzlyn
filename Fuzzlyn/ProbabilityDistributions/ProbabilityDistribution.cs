@@ -1,7 +1,6 @@
-﻿namespace Fuzzlyn.ProbabilityDistributions
+﻿namespace Fuzzlyn.ProbabilityDistributions;
+
+internal abstract class ProbabilityDistribution
 {
-    internal abstract class ProbabilityDistribution
-    {
-        internal abstract int Sample(Rng rng);
-    }
+    internal abstract int Sample(Rng rng);
 }

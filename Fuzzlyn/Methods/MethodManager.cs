@@ -5,44 +5,43 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fuzzlyn.Methods
+namespace Fuzzlyn.Methods;
+
+internal class MethodManager
 {
-    internal class MethodManager
+    private readonly List<FuncGenerator> _funcs = new();
+
+    public MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
     {
-        private readonly List<FuncGenerator> _funcs = new();
+        Random = random;
+        Types = types;
+        Statics = statics;
+    }
 
-        public MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
+    public Randomizer Random { get; }
+    public TypeManager Types { get; }
+    public StaticsManager Statics { get; }
+
+    internal void GenerateMethods(Func<string> genChecksumSiteId)
+    {
+        FuncGenerator gen = new(_funcs, Random, Types, Statics, genChecksumSiteId);
+        gen.Generate(null, false);
+    }
+
+    internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<FuzzType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()
+    {
+        var staticFuncs = new List<MethodDeclarationSyntax>();
+        var typeMethods = new Dictionary<FuzzType, List<MethodDeclarationSyntax>>();
+        foreach (FuzzType type in ((IEnumerable<FuzzType>)Types.AggregateTypes).Concat(Types.InterfaceTypes))
         {
-            Random = random;
-            Types = types;
-            Statics = statics;
+            typeMethods.Add(type, new List<MethodDeclarationSyntax>());
         }
 
-        public Randomizer Random { get; }
-        public TypeManager Types { get; }
-        public StaticsManager Statics { get; }
-
-        internal void GenerateMethods(Func<string> genChecksumSiteId)
+        foreach (FuncGenerator func in _funcs)
         {
-            FuncGenerator gen = new(_funcs, Random, Types, Statics, genChecksumSiteId);
-            gen.Generate(null, false);
+            func.Output(staticFuncs, typeMethods);
         }
 
-        internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<FuzzType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()
-        {
-            var staticFuncs = new List<MethodDeclarationSyntax>();
-            var typeMethods = new Dictionary<FuzzType, List<MethodDeclarationSyntax>>();
-            foreach (FuzzType type in ((IEnumerable<FuzzType>)Types.AggregateTypes).Concat(Types.InterfaceTypes))
-            {
-                typeMethods.Add(type, new List<MethodDeclarationSyntax>());
-            }
-
-            foreach (FuncGenerator func in _funcs)
-            {
-                func.Output(staticFuncs, typeMethods);
-            }
-
-            return (staticFuncs, typeMethods);
-        }
+        return (staticFuncs, typeMethods);
     }
 }

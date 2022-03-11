@@ -6,149 +6,148 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 
-namespace Fuzzlyn
+namespace Fuzzlyn;
+
+internal class RunningExecutionServer
 {
-    internal class RunningExecutionServer
+    private Process _process;
+
+    private RunningExecutionServer(Process process)
     {
-        private Process _process;
+        _process = process;
+    }
 
-        private RunningExecutionServer(Process process)
+    public Stopwatch LastUseTimer { get; } = new Stopwatch();
+
+    private ReceiveResult RequestAndReceive(Request req, TimeSpan timeout)
+    {
+        _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
+        bool killed = false;
+        string line;
         {
-            _process = process;
+            using var cts = new CancellationTokenSource(timeout);
+            using var reg = cts.Token.Register(() => { killed = true; Kill(); });
+            line = _process.StandardOutput.ReadLine();
         }
 
-        public Stopwatch LastUseTimer { get; } = new Stopwatch();
+        LastUseTimer.Restart();
 
-        private ReceiveResult RequestAndReceive(Request req, TimeSpan timeout)
+        if (killed)
         {
-            _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
-            bool killed = false;
-            string line;
-            {
-                using var cts = new CancellationTokenSource(timeout);
-                using var reg = cts.Token.Register(() => { killed = true; Kill(); });
-                line = _process.StandardOutput.ReadLine();
-            }
-
-            LastUseTimer.Restart();
-
-            if (killed)
-            {
-                return new ReceiveResult { Timeout = true };
-            }
-
-            if (line == null)
-            {
-                string stderr = _process.StandardError.ReadToEnd();
-                return new ReceiveResult { Ended = true, Stderr = stderr };
-            }
-
-            Response resp;
-            try
-            {
-                resp = JsonSerializer.Deserialize<Response>(line);
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine("Received malformed JSON response");
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine(line);
-                return new ReceiveResult { Ended = true, Stderr = "Malformed result" };
-            }
-
-            return new ReceiveResult { Response = JsonSerializer.Deserialize<Response>(line) };
+            return new ReceiveResult { Timeout = true };
         }
 
-        public RunSeparatelyResults RunPair(ProgramPair pair, TimeSpan timeout)
+        if (line == null)
         {
-            ReceiveResult result =
-                RequestAndReceive(new Request
-                {
-                    Kind = RequestKind.RunPair,
-                    Pair = pair,
-                }, timeout);
-
-            if (result.Ended)
-            {
-                return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null, result.Stderr);
-            }
-
-            if (result.Timeout)
-            {
-                return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null, null);
-            }
-
-            return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, result.Response.RunPairResult, null);
+            string stderr = _process.StandardError.ReadToEnd();
+            return new ReceiveResult { Ended = true, Stderr = stderr };
         }
 
-        public void Shutdown()
+        Response resp;
+        try
         {
-            ReceiveResult result = RequestAndReceive(new Request { Kind = RequestKind.Shutdown }, TimeSpan.FromSeconds(1));
-            if (result.Timeout)
-                Kill();
-            _process.Dispose();
+            resp = JsonSerializer.Deserialize<Response>(line);
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine("Received malformed JSON response");
+            Console.WriteLine(ex.ToString());
+            Console.WriteLine(line);
+            return new ReceiveResult { Ended = true, Stderr = "Malformed result" };
         }
 
-        public void Kill()
-        {
-            try
-            {
-                _process.Kill();
-            }
-            catch
-            {
+        return new ReceiveResult { Response = JsonSerializer.Deserialize<Response>(line) };
+    }
 
-            }
+    public RunSeparatelyResults RunPair(ProgramPair pair, TimeSpan timeout)
+    {
+        ReceiveResult result =
+            RequestAndReceive(new Request
+            {
+                Kind = RequestKind.RunPair,
+                Pair = pair,
+            }, timeout);
+
+        if (result.Ended)
+        {
+            return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null, result.Stderr);
         }
 
-        public static RunningExecutionServer Create(string host)
+        if (result.Timeout)
         {
-            string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
-            ProcessStartInfo info = new()
-            {
-                FileName = host,
-                WorkingDirectory = Environment.CurrentDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                UseShellExecute = false,
-            };
-
-            info.ArgumentList.Add(executorPath);
-
-            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
-            Process proc = Process.Start(info);
-            return new RunningExecutionServer(proc);
+            return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null, null);
         }
 
-        private struct ReceiveResult
+        return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, result.Response.RunPairResult, null);
+    }
+
+    public void Shutdown()
+    {
+        ReceiveResult result = RequestAndReceive(new Request { Kind = RequestKind.Shutdown }, TimeSpan.FromSeconds(1));
+        if (result.Timeout)
+            Kill();
+        _process.Dispose();
+    }
+
+    public void Kill()
+    {
+        try
         {
-            public bool Timeout { get; init; }
-            public bool Ended { get; init; }
-            public string Stderr { get; init; }
-            public Response Response { get; init; }
+            _process.Kill();
+        }
+        catch
+        {
+
         }
     }
 
-    internal enum RunSeparatelyResultsKind
+    public static RunningExecutionServer Create(string host)
     {
-        Crash,
-        Timeout,
-        Success
-    }
-
-    internal class RunSeparatelyResults
-    {
-        public RunSeparatelyResults(RunSeparatelyResultsKind kind, ProgramPairResults results, string crashError)
+        string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
+        ProcessStartInfo info = new()
         {
-            Kind = kind;
-            Results = results;
-            CrashError = crashError;
-        }
+            FileName = host,
+            WorkingDirectory = Environment.CurrentDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+            UseShellExecute = false,
+        };
 
-        public RunSeparatelyResultsKind Kind { get; }
-        public ProgramPairResults Results { get; }
-        public int ExitCode { get; }
-        public string CrashError { get; }
+        info.ArgumentList.Add(executorPath);
+
+        Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
+        Process proc = Process.Start(info);
+        return new RunningExecutionServer(proc);
     }
+
+    private struct ReceiveResult
+    {
+        public bool Timeout { get; init; }
+        public bool Ended { get; init; }
+        public string Stderr { get; init; }
+        public Response Response { get; init; }
+    }
+}
+
+internal enum RunSeparatelyResultsKind
+{
+    Crash,
+    Timeout,
+    Success
+}
+
+internal class RunSeparatelyResults
+{
+    public RunSeparatelyResults(RunSeparatelyResultsKind kind, ProgramPairResults results, string crashError)
+    {
+        Kind = kind;
+        Results = results;
+        CrashError = crashError;
+    }
+
+    public RunSeparatelyResultsKind Kind { get; }
+    public ProgramPairResults Results { get; }
+    public int ExitCode { get; }
+    public string CrashError { get; }
 }

@@ -9,5 +9,8 @@ indent_size = 4
 indent_style = space
 trim_trailing_whitespace = true
 
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+
 [*.csproj]
 indent_size = 2

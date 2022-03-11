@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Fuzzlyn.Methods
+namespace Fuzzlyn.Methods;
+
+internal class ScopeFrame
 {
-    internal class ScopeFrame
-    {
-        public List<ScopeValue> Values { get; } = new List<ScopeValue>();
-    }
+    public List<ScopeValue> Values { get; } = new List<ScopeValue>();
 }
