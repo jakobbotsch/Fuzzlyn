@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Specialized;
 using System.Text;
@@ -38,13 +39,30 @@ namespace Fuzzlyn
                 expr is LiteralExpressionSyntax ||
                 expr is MemberAccessExpressionSyntax ||
                 expr is PostfixUnaryExpressionSyntax ||
-                expr is PrefixUnaryExpressionSyntax ||
                 expr is ElementAccessExpressionSyntax ||
                 expr is InvocationExpressionSyntax ||
                 expr is CastExpressionSyntax ||
                 expr is ParenthesizedExpressionSyntax)
             {
                 return false;
+            }
+
+            if (expr is PrefixUnaryExpressionSyntax)
+            {
+                // Some prefix unary operators conflict as tokens if they are
+                // repeated, e.g. -(-a) needs parentheses to not be confused
+                // with --a. So we only permit omitting parentheses for the
+                // following cases.
+                switch (expr.Kind())
+                {
+                    case SyntaxKind.BitwiseNotExpression:
+                    case SyntaxKind.LogicalNotExpression:
+                    case SyntaxKind.PreIncrementExpression:
+                    case SyntaxKind.PreDecrementExpression:
+                    case SyntaxKind.PointerIndirectionExpression:
+                    case SyntaxKind.IndexExpression:
+                        return false;
+                }
             }
 
             return true;
