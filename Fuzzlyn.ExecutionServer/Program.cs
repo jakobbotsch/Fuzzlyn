@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Tracing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Fuzzlyn.ExecutionServer
 {
@@ -16,64 +14,71 @@ namespace Fuzzlyn.ExecutionServer
     {
         public static void Main(string[] args)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            const int stackSize = 64 * 1024 * 1024;
+            Thread thread = new(() =>
             {
-                // Prevent post-mortem debuggers from launching here. We get
-                // runtime crashes sometimes and the parent Fuzzlyn process will
-                // handle it.
-                SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
-            }
-
-            Func<string> readLine;
-            if (args.Length > 0)
-            {
-                string[] lines = File.ReadAllLines(args[0]);
-                int index = 0;
-                readLine = () => index >= lines.Length ? null : lines[index++];
-            }
-            else
-            {
-                readLine = Console.ReadLine;
-            }
-
-            AssemblyLoadContext currentAlc = new ServerAssemblyLoadContext();
-            int currentRunsInAlc = 0;
-            while (true)
-            {
-                string line = readLine();
-                if (line == null)
-                    return;
-
-                Request req = JsonSerializer.Deserialize<Request>(line);
-                Response resp;
-                switch (req.Kind)
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    case RequestKind.RunPair:
-                        ProgramPairResults results = RunPairAsync(currentAlc, req.Pair);
-                        currentRunsInAlc++;
-                        resp = new Response
-                        {
-                            RunPairResult = results
-                        };
-                        break;
-                    case RequestKind.Shutdown:
-                        resp = new Response();
-                        break;
-                    default:
+                    // Prevent post-mortem debuggers from launching here. We get
+                    // runtime crashes sometimes and the parent Fuzzlyn process will
+                    // handle it.
+                    SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+                }
+
+                Func<string> readLine;
+                if (args.Length > 0)
+                {
+                    string[] lines = File.ReadAllLines(args[0]);
+                    int index = 0;
+                    readLine = () => index >= lines.Length ? null : lines[index++];
+                }
+                else
+                {
+                    readLine = Console.ReadLine;
+                }
+
+                AssemblyLoadContext currentAlc = new ServerAssemblyLoadContext();
+                int currentRunsInAlc = 0;
+                while (true)
+                {
+                    string line = readLine();
+                    if (line == null)
                         return;
-                }
 
-                Console.WriteLine(JsonSerializer.Serialize(resp));
-                if (req.Kind == RequestKind.Shutdown)
-                    return;
+                    Request req = JsonSerializer.Deserialize<Request>(line);
+                    Response resp;
+                    switch (req.Kind)
+                    {
+                        case RequestKind.RunPair:
+                            ProgramPairResults results = RunPairAsync(currentAlc, req.Pair);
+                            currentRunsInAlc++;
+                            resp = new Response
+                            {
+                                RunPairResult = results
+                            };
+                            break;
+                        case RequestKind.Shutdown:
+                            resp = new Response();
+                            break;
+                        default:
+                            return;
+                    }
 
-                if (currentRunsInAlc > 100)
-                {
-                    currentAlc.Unload();
-                    currentAlc = new ServerAssemblyLoadContext();
-                    currentRunsInAlc = 0;
+                    Console.WriteLine(JsonSerializer.Serialize(resp));
+                    if (req.Kind == RequestKind.Shutdown)
+                        return;
+
+                    if (currentRunsInAlc > 100)
+                    {
+                        currentAlc.Unload();
+                        currentAlc = new ServerAssemblyLoadContext();
+                        currentRunsInAlc = 0;
+                    }
                 }
-            }
+            }, stackSize);
+
+            thread.Start();
+            thread.Join();
         }
 
         private static ProgramPairResults RunPairAsync(AssemblyLoadContext alc, ProgramPair pair)
