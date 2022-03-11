@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Tracing;
 using System.IO;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Text.Json;
@@ -12,9 +14,8 @@ namespace Fuzzlyn.ExecutionServer
 {
     public static class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            using var exceptionListener = new ExceptionListener();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Prevent post-mortem debuggers from launching here. We get
@@ -31,7 +32,9 @@ namespace Fuzzlyn.ExecutionServer
                 readLine = () => index >= lines.Length ? null : lines[index++];
             }
             else
+            {
                 readLine = Console.ReadLine;
+            }
 
             AssemblyLoadContext currentAlc = new ServerAssemblyLoadContext();
             int currentRunsInAlc = 0;
@@ -46,7 +49,7 @@ namespace Fuzzlyn.ExecutionServer
                 switch (req.Kind)
                 {
                     case RequestKind.RunPair:
-                        ProgramPairResults results = await RunPairAsync(currentAlc, exceptionListener, req.Pair);
+                        ProgramPairResults results = RunPairAsync(currentAlc, req.Pair);
                         currentRunsInAlc++;
                         resp = new Response
                         {
@@ -73,10 +76,10 @@ namespace Fuzzlyn.ExecutionServer
             }
         }
 
-        private static async Task<ProgramPairResults> RunPairAsync(AssemblyLoadContext alc, ExceptionListener exceptionListener, ProgramPair pair)
+        private static ProgramPairResults RunPairAsync(AssemblyLoadContext alc, ProgramPair pair)
         {
-            ProgramResult debugResult = await RunAndGetResultAsync(pair.Debug);
-            ProgramResult releaseResult = await RunAndGetResultAsync(pair.Release);
+            ProgramResult debugResult = RunAndGetResultAsync(pair.Debug);
+            ProgramResult releaseResult = RunAndGetResultAsync(pair.Release);
             ChecksumSite unmatch1 = null;
             ChecksumSite unmatch2 = null;
 
@@ -100,7 +103,7 @@ namespace Fuzzlyn.ExecutionServer
 
             return new ProgramPairResults(debugResult, releaseResult, unmatch1, unmatch2);
 
-            async Task<ProgramResult> RunAndGetResultAsync(byte[] bytes)
+            ProgramResult RunAndGetResultAsync(byte[] bytes)
             {
                 Assembly asm = alc.LoadFromStream(new MemoryStream(bytes));
                 MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
@@ -119,12 +122,22 @@ namespace Fuzzlyn.ExecutionServer
                 if (pair.TrackOutput)
                     runtime.ChecksumSites = new List<ChecksumSite>();
 
-                exceptionListener.Start();
+                int threadID = Environment.CurrentManagedThreadId;
+                List<Exception> exceptions = null;
+                void FirstChanceExceptionHandler(object sender, FirstChanceExceptionEventArgs args)
+                {
+                    if (Environment.CurrentManagedThreadId == threadID)
+                    {
+                        (exceptions ??= new List<Exception>()).Add(args.Exception);
+                    }
+                }
+
+                AppDomain.CurrentDomain.FirstChanceException += FirstChanceExceptionHandler;
                 try
                 {
                     entryPoint(runtime);
                 }
-                catch (Exception ex)
+                catch
                 {
                     // We consider the innermost exception the root cause and only report it.
                     // Otherwise we may be confusing the viewer about what the problem is.
@@ -141,29 +154,16 @@ namespace Fuzzlyn.ExecutionServer
                     // }
                     // We are interested in the JIT assert that was hit, and not the OverflowException
                     // thrown because value = 1 did not get to run.
-                    SourceException sourceEx = await exceptionListener.GetSourceExceptionAsync(ex);
-                    SourceException sourceOrEx = sourceEx ?? new SourceException(ex.GetType().FullName, ex.Message);
+                    Exception ex = exceptions[0];
 
-                    if (sourceOrEx.ExceptionType == "System.InvalidProgramException" && sourceOrEx.ExceptionMessage.Contains("JIT assert failed"))
+                    if (ex is InvalidProgramException && ex.Message.Contains("JIT assert failed"))
                     {
                         return new ProgramResult
                         {
                             Kind = ProgramResultKind.HitsJitAssert,
                             Checksum = runtime.FinishHashCode(),
                             ChecksumSites = TakeChecksumSites(),
-                            JitAssertError = sourceOrEx.ExceptionMessage,
-                        };
-                    }
-
-                    if (sourceEx != null)
-                    {
-                        return new ProgramResult
-                        {
-                            Kind = ProgramResultKind.ThrowsException,
-                            Checksum = runtime.FinishHashCode(),
-                            ChecksumSites = TakeChecksumSites(),
-                            ExceptionType = sourceEx.ExceptionType,
-                            ExceptionText = sourceEx.ExceptionMessage,
+                            JitAssertError = ex.Message,
                         };
                     }
 
@@ -179,7 +179,7 @@ namespace Fuzzlyn.ExecutionServer
                 }
                 finally
                 {
-                    exceptionListener.Stop();
+                    AppDomain.CurrentDomain.FirstChanceException -= FirstChanceExceptionHandler;
                 }
 
                 return new ProgramResult
@@ -210,137 +210,5 @@ namespace Fuzzlyn.ExecutionServer
             {
             }
         }
-
-        // We are interested in the _first_ exception that happens in the child program,
-        // not subsequent exceptions that might be thrown because a finally saw an invalid
-        // state due to the first exception. Unfortunately getting it is not too simple,
-        // but ETW events provide a way.
-        private class ExceptionListener : EventListener
-        {
-            private bool _capture;
-            private List<ThrownExceptionInfo> _thrownExceptions;
-            private List<ThrownExceptionInfo> ThrownExceptions => _thrownExceptions ??= new();
-            private TaskCompletionSource<int> _currentTcs;
-            private (string TypeName, string Message) _currentWaitingFor;
-
-            protected override void OnEventSourceCreated(EventSource eventSource)
-            {
-                if (eventSource.Name == "Microsoft-Windows-DotNETRuntime")
-                {
-                    EventKeywords evt = (EventKeywords)0x8000; // Exception
-                    EnableEvents(eventSource, EventLevel.Verbose, evt);
-                }
-            }
-
-            protected override void OnEventWritten(EventWrittenEventArgs eventData)
-            {
-                object GetPayload(string name)
-                    => eventData.Payload[eventData.PayloadNames.IndexOf(name)];
-
-                if (eventData.EventName == "ExceptionThrown_V1")
-                {
-                    string type = (string)GetPayload("ExceptionType");
-                    string message = (string)GetPayload("ExceptionMessage");
-                    uint flags = (ushort)GetPayload("ExceptionFlags");
-                    const uint isNestedFlag = 0x2;
-                    var inf = new ThrownExceptionInfo(type, message, (flags & isNestedFlag) != 0);
-                    TaskCompletionSource<int> tcs = null;
-                    int tcsIndex = -1;
-                    lock (this)
-                    {
-                        if (!_capture)
-                            return;
-
-                        List<ThrownExceptionInfo> exceptions = ThrownExceptions;
-                        exceptions.Add(inf);
-                        if (_currentTcs != null && _currentWaitingFor.TypeName == type && _currentWaitingFor.Message == message)
-                        {
-                            tcs = _currentTcs;
-                            tcsIndex = exceptions.Count - 1;
-                            _currentTcs = null;
-                        }
-                    }
-
-                    if (tcs != null)
-                        tcs.SetResult(tcsIndex);
-                }
-            }
-
-            public async Task<SourceException> GetSourceExceptionAsync(Exception ex)
-            {
-                string type = ex.GetType().FullName;
-                string message = ex.Message;
-                TaskCompletionSource<int> tcs;
-                lock (this)
-                {
-                    List<ThrownExceptionInfo> exceptions = ThrownExceptions;
-                    SourceException found = Find(exceptions, exceptions.Count - 1);
-                    if (found != null)
-                        return found;
-
-                    // Set up TCS
-                    _currentTcs = tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-                    _currentWaitingFor = (type, message);
-                }
-
-                int startIndex = await tcs.Task;
-                return Find(ThrownExceptions, startIndex);
-
-                SourceException Find(List<ThrownExceptionInfo> exceptions, int startIndex)
-                {
-                    int index;
-                    for (index = startIndex; index >= 0; index--)
-                    {
-                        ThrownExceptionInfo thrownEx = exceptions[index];
-                        if (thrownEx.ExceptionType == type && thrownEx.ExceptionMessage == message)
-                        {
-                            if (!thrownEx.IsNested)
-                                return null;
-
-                            break;
-                        }
-                    }
-
-                    if (index >= 0)
-                    {
-                        index--;
-                        // Go backwards until we find first exception that is not nested.
-                        // That should be the source exception.
-                        while (index >= 0)
-                        {
-                            if (!exceptions[index].IsNested)
-                            {
-                                ThrownExceptionInfo thrownEx = exceptions[index];
-                                return new SourceException(thrownEx.ExceptionType, thrownEx.ExceptionMessage);
-                            }
-                        }
-
-                        return null;
-                    }
-
-                    return null;
-                }
-            }
-
-            public void Start()
-            {
-                lock (this)
-                {
-                    _capture = true;
-                }
-            }
-
-            public void Stop()
-            {
-                lock (this)
-                {
-                    ThrownExceptions.Clear();
-                    _capture = false;
-                }
-            }
-        }
-
-        private record class ThrownExceptionInfo(string ExceptionType, string ExceptionMessage, bool IsNested);
-        private record class SourceException(string ExceptionType, string ExceptionMessage);
     }
 }
