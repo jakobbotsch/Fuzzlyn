@@ -150,6 +150,8 @@ For silent bad codegen examples, it usually does not take longer than a few minu
 However, if the example crashes the runtime then reduction can take several magnitudes longer than that since a new process needs to be launched for every execution.
 
 The output of this command will be a small C# program that includes information about its seed, size and runtime behavior.
+Note that tiered compilation often needs to be turned off to replicate the issue in these small C# programs.
+To turn tiered compilation off, [follow the instructions here](https://docs.microsoft.com/en-us/dotnet/core/runtime-config/compilation).
 
 ## Reproducing errors in reduced programs
 
