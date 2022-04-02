@@ -130,12 +130,22 @@ internal class Program
             return;
         }
 
+        if (!options.EnableChecksumming && !options.Output)
+        {
+            Console.WriteLine("Error: Disabling checksumming is only supported when outputting the example");
+            return;
+        }
+
         if (removeFixed != null)
         {
             if (!CreateExecutionServerPool(options))
                 return;
 
             RemoveFixedPrograms(options, removeFixed);
+        }
+        else if (options.Output)
+        {
+            GenerateProgramsAndOutput(options);
         }
         else if (options.Reduce)
         {
@@ -147,10 +157,6 @@ internal class Program
         else if (options.Stats)
         {
             GenerateProgramsAndGetStats(options);
-        }
-        else if (options.Output)
-        {
-            GenerateProgramsAndOutput(options);
         }
         else
         {
