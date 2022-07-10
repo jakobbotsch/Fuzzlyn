@@ -47,6 +47,41 @@ Here is a non-exhaustive list of bugs that were found by Fuzzlyn:
 * ~~[ARM32: Runtime crash with interfaces](https://github.com/dotnet/runtime/issues/58293)~~
 * ~~[JIT still seems to be hoisting some modified indirs](https://github.com/dotnet/runtime/issues/58877)~~
 * ~~[RyuJIT: Invalidly optimized negated division](https://github.com/dotnet/runtime/issues/60297)~~
+* ~~[JIT: Discarded cast on RHS of assignment leads to missing sign extension](https://github.com/dotnet/runtime/issues/60597)~~
+* ~~[JIT ARM32: Assertion failed 'size == EA_4BYTE' during 'Generate code'](https://github.com/dotnet/runtime/issues/60827)~~
+* ~~[Assertion failed '!parentStruct->lvUndoneStructPromotion' during 'Mark local vars'](https://github.com/dotnet/runtime/issues/61074)~~
+* ~~[JIT: Invalid optimization of (-1 * -A) + A](https://github.com/dotnet/runtime/issues/61077)~~
+* ~~[ARM32 JIT: Assertion failed '!"NYI: odd sized struct in fgMorphMultiregStructArg"' during 'Morph - Global'](https://github.com/dotnet/runtime/issues/61168)~~
+* ~~[JIT: Incorrectly optimized double-negation in face of inlining](https://github.com/dotnet/runtime/issues/61908)~~
+* ~~[Assertion failed 'compiler->opts.IsOSR() || ((genInitStkLclCnt > 0) == hasUntrLcl)'](https://github.com/dotnet/runtime/issues/64808)~~
+* ~~[Assertion failed '!"Write to unaliased local overlaps outstanding read"' during 'Rationalize IR'](https://github.com/dotnet/runtime/issues/64883)~~
+* ~~[JIT: Incorrect results for programs in win-x86 release](https://github.com/dotnet/runtime/issues/64904)~~
+* ~~[JIT: Incorrect result computed with forward sub](https://github.com/dotnet/runtime/issues/65104)~~
+* ~~[Assertion failed '!"Write to unaliased local overlaps outstanding read"' during 'Lowering nodeinfo' (IL size 7) ](https://github.com/dotnet/runtime/issues/65307)~~
+* [Assertion failed '(emitThisGCrefRegs & regMask) == 0' during 'Emit code' (IL size 129)](https://github.com/dotnet/runtime/issues/65311)
+* ~~[JIT: Invalid result on x86 with forward sub](https://github.com/dotnet/runtime/issues/66242)~~
+* ~~[JIT: Assertion failed 'type == genActualType(type)' during 'Morph - Global'](https://github.com/dotnet/runtime/issues/66269)~~
+* ~~[JIT: Illegal reordering of field read and call on implicit byref](https://github.com/dotnet/runtime/issues/66414)~~
+* [Assertion failed 'interval->isSpilled' during 'LSRA allocate'](https://github.com/dotnet/runtime/issues/66578)
+* [Assertion failed 'inVarToRegMap[varIndex] == REG_STK' during 'LSRA allocate' ](https://github.com/dotnet/runtime/issues/66579)
+* [Assertion failed '!foundMismatch' during 'LSRA allocate'](https://github.com/dotnet/runtime/issues/66580)
+* ~~[ushort argument mysteriously mutated](https://github.com/dotnet/runtime/issues/66624)~~
+* ~~[JIT: Incorrect optimization of x & -x on x86](https://github.com/dotnet/runtime/issues/66709)~~
+* ~~[JIT: Writes to small args on macOS can (still) overwrite adjacent args](https://github.com/dotnet/runtime/issues/67331)~~
+* ~~[JIT: Too narrow store for argument passed on stack on macOS ARM64](https://github.com/dotnet/runtime/issues/67344)~~
+* ~~[Assertion failed 'lclNode->GetSsaNum() == SsaConfig::FIRST_SSA_NUM' during 'VN based copy prop'](https://github.com/dotnet/runtime/issues/67346)~~
+* ~~[JIT: Wrong result computed with forward sub enabled on x64 Windows/Linux](https://github.com/dotnet/runtime/issues/68049)~~
+* ~~[Assertion failed 'divMod->OperGet() != GT_UMOD' during 'Lowering nodeinfo'](https://github.com/dotnet/runtime/issues/68136)~~
+* ~~[Assertion failed '!"Shouldn't see an integer typed GT_MOD node in ARM64"' during 'Linear scan register alloc'](https://github.com/dotnet/runtime/issues/68470)~~
+* ~~[Assertion failed '!foundDiff' during 'Linear scan register alloc'](https://github.com/dotnet/runtime/issues/69659)~~
+* ~~[JIT: Invalid results/assertion errors with modulo ops](https://github.com/dotnet/runtime/issues/70333)~~
+* ~~[JIT: Assertion failed '(tree->AsCast()->gtCastType == m_tailcall->gtReturnType) && "Expected cast after tailcall to be no-op"'](https://github.com/dotnet/runtime/issues/70334)~~
+* [x86: Assertion failed '!"Too many unreachable block removal loops"' during 'Global local var liveness'](https://github.com/dotnet/runtime/issues/70786)
+* ~~[JIT: BBF_HAS_NULLCHECK is not set on BB but is required](https://github.com/dotnet/runtime/issues/71193)~~
+* ~~[Assert failure: heapSize >= initialRequestSize with collectible assemblies on linux-x64](https://github.com/dotnet/runtime/issues/71200)~~
+* [JIT ARM32: Assertion failed 'varDsc->lvRefCnt() == 0' during 'Generate code'](https://github.com/dotnet/runtime/issues/71543)
+* [Assertion failed 'i < BitSetTraits::GetSize(env)' in during 'Redundant branch opts'](https://github.com/dotnet/runtime/issues/71599)
+* ~~[JIT: Invalid result computed with modulo operation](https://github.com/dotnet/runtime/issues/71600)~~
 
 Fuzzlyn is actively used to test the .NET JIT compiler and runs automatically [every week in dotnet/runtime's CI](https://dnceng.visualstudio.com/public/_build?definitionId=1054&_a=summary).
 For a more exhaustive list of issues see [this search](https://github.com/dotnet/runtime/issues?q=is%3Aissue+Fuzzlyn).
