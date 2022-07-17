@@ -34,7 +34,6 @@ internal class Program
         bool? enableChecksumming = null;
         bool? reduce = null;
         string reduceDebugGitDir = null;
-        string removeFixed = null;
         string outputPath = null;
         bool? stats = null;
         OptionSet optionSet = new()
@@ -59,7 +58,6 @@ internal class Program
             { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
             { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
             { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
-            { "remove-fixed=", "Remove fixed programs in directory", v => removeFixed = v },
             { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
             { "help|h", v => help = v != null }
         };
@@ -136,14 +134,7 @@ internal class Program
             return;
         }
 
-        if (removeFixed != null)
-        {
-            if (!CreateExecutionServerPool(options))
-                return;
-
-            RemoveFixedPrograms(options, removeFixed);
-        }
-        else if (options.Output)
+        if (options.Output)
         {
             GenerateProgramsAndOutput(options);
         }
@@ -179,83 +170,6 @@ internal class Program
 
         s_executionServerPool = new ExecutionServerPool(options.Host);
         return true;
-    }
-
-    private static void RemoveFixedPrograms(FuzzlynOptions options, string dir)
-    {
-        //const string rereduceFile = "Rereduce_required.txt";
-        //string[] files = Directory.GetFiles(dir, "*.cs").OrderBy(p => p.ToLowerInvariant()).ToArray();
-        //for (int i = 0; i < files.Length; i++)
-        //{
-        //    Console.Write("Processing {0}/{1}", i + 1, files.Length);
-
-        //    string contents = File.ReadAllText(files[i]);
-        //    MatchCollection matches = Regex.Matches(contents, "// Seed: ([0-9]+)");
-        //    if (matches.Count != 1)
-        //    {
-        //        Console.WriteLine();
-        //        continue;
-        //    }
-
-        //    ulong seed = ulong.Parse(matches[0].Groups[1].Value);
-        //    Console.Write(" (seed {0}): ", seed);
-
-        //    options.Seed = seed;
-        //    var cg = new CodeGenerator(options);
-        //    CompilationUnitSyntax original = cg.GenerateProgram();
-
-        //    CompileResult debug = Compiler.Compile(original, Compiler.DebugOptions);
-        //    CompileResult release = Compiler.Compile(original, Compiler.ReleaseOptions);
-
-        //    if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
-        //    {
-        //        Console.WriteLine("Compiler error");
-        //        continue;
-        //    }
-
-        //    if (debug.RoslynException != null || release.RoslynException != null)
-        //    {
-        //        Console.WriteLine("Compiler exception");
-        //        continue;
-        //    }
-
-        //    RunSeparatelyResults runResults = RunningExecutionServer.RunSeparately(
-        //        new List<ProgramPair> { new ProgramPair(false, debug.Assembly, release.Assembly) },
-        //        60000);
-
-        //    if (runResults.Kind != RunSeparatelyResultsKind.Success)
-        //    {
-        //        Console.WriteLine("Got {0} from sub-process, still interesting", runResults.Kind);
-        //        continue;
-        //    }
-
-        //    ProgramPairResults execResults = runResults.Results[0];
-
-        //    if (execResults.DebugResult.Checksum != execResults.ReleaseResult.Checksum ||
-        //        execResults.DebugResult.ExceptionType != execResults.ReleaseResult.ExceptionType)
-        //    {
-        //        // Execute the reduced form to see if we get interesting behavior.
-        //        // Otherwise we may need to rereduce it.
-        //        // HACK: Currently IsReducedVersionInteresting runs the programs
-        //        // in our own process, so we are conservative and do not run programs
-        //        // that may crash us (it is possible that the unreduced example does not
-        //        // crash, but that the reduced does.
-        //        if (contents.Contains("Crashes the runtime") || IsReducedVersionInteresting(execResults, contents))
-        //        {
-        //            Console.WriteLine("Still interesting");
-        //        }
-        //        else
-        //        {
-        //            File.AppendAllText(rereduceFile, seed + Environment.NewLine);
-        //            Console.WriteLine("Marked for rereduction");
-        //        }
-
-        //        continue;
-        //    }
-
-        //    Console.WriteLine("Deleted, no longer interesting");
-        //    File.Delete(files[i]);
-        //}
     }
 
     /// <summary>
