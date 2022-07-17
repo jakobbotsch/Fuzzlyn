@@ -19,10 +19,10 @@ public static class Program
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                    // Prevent post-mortem debuggers from launching here. We get
-                    // runtime crashes sometimes and the parent Fuzzlyn process will
-                    // handle it.
-                    SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
+                // Prevent post-mortem debuggers from launching here. We get
+                // runtime crashes sometimes and the parent Fuzzlyn process will
+                // handle it.
+                SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
             }
 
             Func<string> readLine;
