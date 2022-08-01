@@ -10,6 +10,7 @@ public class ProgramResult
     public string Checksum { get; init; }
     [JsonIgnore]
     public List<ChecksumSite> ChecksumSites { get; init; }
+    public long NumChecksumCalls { get; init; }
     // Next fields are valid for ThrowsException
     public string ExceptionType { get; init; }
     public string ExceptionText { get; init; }

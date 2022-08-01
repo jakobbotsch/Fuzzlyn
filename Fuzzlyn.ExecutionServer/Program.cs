@@ -106,7 +106,7 @@ public static class Program
                 unmatch2 = releaseResult.ChecksumSites[index];
         }
 
-        return new ProgramPairResults(debugResult, releaseResult, unmatch1, unmatch2);
+        return new ProgramPairResults(debugResult, releaseResult, debugResult.NumChecksumCalls, releaseResult.NumChecksumCalls, unmatch1, unmatch2);
 
         ProgramResult RunAndGetResultAsync(byte[] bytes)
         {
@@ -168,6 +168,7 @@ public static class Program
                         Kind = ProgramResultKind.HitsJitAssert,
                         Checksum = runtime.FinishHashCode(),
                         ChecksumSites = TakeChecksumSites(),
+                        NumChecksumCalls = runtime.NumChecksumCalls,
                         JitAssertError = ex.Message,
                     };
                 }
@@ -177,6 +178,7 @@ public static class Program
                     Kind = ProgramResultKind.ThrowsException,
                     Checksum = runtime.FinishHashCode(),
                     ChecksumSites = TakeChecksumSites(),
+                    NumChecksumCalls = runtime.NumChecksumCalls,
                     ExceptionType = ex.GetType().FullName,
                     ExceptionText = ex.ToString(),
                     ExceptionStackTrace = ex.StackTrace,
@@ -192,6 +194,7 @@ public static class Program
                 Kind = ProgramResultKind.RunsSuccessfully,
                 Checksum = runtime.FinishHashCode(),
                 ChecksumSites = TakeChecksumSites(),
+                NumChecksumCalls = runtime.NumChecksumCalls,
             };
         }
     }

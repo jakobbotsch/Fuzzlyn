@@ -7,6 +7,7 @@ namespace Fuzzlyn.ExecutionServer;
 internal class Runtime : IRuntime
 {
     public List<ChecksumSite> ChecksumSites { get; set; }
+    public long NumChecksumCalls { get; set; }
 
     public string FinishHashCode()
     {
@@ -16,6 +17,8 @@ internal class Runtime : IRuntime
     private ulong _state = 14695981039346656037;
     public void Checksum<T>(string id, T val)
     {
+        NumChecksumCalls++;
+
         if (ChecksumSites != null)
             ChecksumSites.Add(new ChecksumSite(id, val.ToString()));
 

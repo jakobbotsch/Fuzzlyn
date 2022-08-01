@@ -91,8 +91,8 @@ internal class Reducer
 
                 if (targetResults.Kind == RunSeparatelyResultsKind.Crash)
                 {
-                        // If we are looking for crash, then we can return a result immediately
-                        return results.Kind == RunSeparatelyResultsKind.Crash;
+                    // If we are looking for crash, then we can return a result immediately
+                    return results.Kind == RunSeparatelyResultsKind.Crash;
                 }
 
                 Debug.Assert(targetResults.Kind == RunSeparatelyResultsKind.Success);
@@ -102,8 +102,8 @@ internal class Reducer
                     return false;
                 }
 
-                    // If we are looking for a JIT assert, then ensure we got a JIT assert.
-                    if (targetResults.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
+                // If we are looking for a JIT assert, then ensure we got a JIT assert.
+                if (targetResults.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
                     return results.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert;
                 }
@@ -115,11 +115,11 @@ internal class Reducer
 
                 if (targetResults.Results.DebugResult.ExceptionType != targetResults.Results.ReleaseResult.ExceptionType)
                 {
-                        // Original example throws different exceptions in debug and release.
-                        // Make sure that 1) the new results throws/runs successfully in the same situations
-                        // (e.g. we do not want to suddenly find an assert here) and 2) that the same or no
-                        // exception is thrown.
-                        bool hasSameResultKinds =
+                    // Original example throws different exceptions in debug and release.
+                    // Make sure that 1) the new results throws/runs successfully in the same situations
+                    // (e.g. we do not want to suddenly find an assert here) and 2) that the same or no
+                    // exception is thrown.
+                    bool hasSameResultKinds =
                         results.Results.DebugResult.Kind == targetResults.Results.DebugResult.Kind &&
                         results.Results.ReleaseResult.Kind == targetResults.Results.ReleaseResult.Kind;
 
@@ -130,8 +130,8 @@ internal class Reducer
                     return hasSameResultKinds && throwsSameExceptions;
                 }
 
-                    // Original example throws same exception in debug and release, so it is the checksum that differs.
-                    return results.Results.DebugResult.Checksum != results.Results.ReleaseResult.Checksum;
+                // Original example throws same exception in debug and release, so it is the checksum that differs.
+                return results.Results.DebugResult.Checksum != results.Results.ReleaseResult.Checksum;
             };
         }
 
@@ -497,8 +497,7 @@ internal class Reducer
 
                 string FormatResult(ProgramResult result, ChecksumSite unmatch)
                 {
-                    if (pairResult.DebugResult?.ExceptionType != null ||
-                        pairResult.ReleaseResult?.ExceptionType != null)
+                    if (pairResult.DebugResult.ExceptionType != pairResult.ReleaseResult.ExceptionType)
                     {
                         if (result.ExceptionType != null)
                             return $"Throws '{result.ExceptionType}'";
@@ -506,8 +505,8 @@ internal class Reducer
                         return "Runs successfully";
                     }
 
-                    if (pairResult.DebugResult?.ChecksumSites?.Count != pairResult.ReleaseResult?.ChecksumSites?.Count)
-                        return $"Prints {result.ChecksumSites.Count} line(s)";
+                    if (pairResult.DebugResult.NumChecksumCalls != pairResult.ReleaseResult.NumChecksumCalls)
+                        return $"Prints {result.NumChecksumCalls} line(s)";
 
                     if (unmatch != null)
                         return $"Outputs {unmatch.Value}";
