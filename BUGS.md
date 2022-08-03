@@ -80,7 +80,7 @@ Here is a non-exhaustive list of bugs that were found by Fuzzlyn:
 * ~~[JIT: BBF_HAS_NULLCHECK is not set on BB but is required](https://github.com/dotnet/runtime/issues/71193)~~
 * ~~[Assert failure: heapSize >= initialRequestSize with collectible assemblies on linux-x64](https://github.com/dotnet/runtime/issues/71200)~~
 * [JIT ARM32: Assertion failed 'varDsc->lvRefCnt() == 0' during 'Generate code'](https://github.com/dotnet/runtime/issues/71543)
-* [Assertion failed 'i < BitSetTraits::GetSize(env)' in during 'Redundant branch opts'](https://github.com/dotnet/runtime/issues/71599)
+* ~~[Assertion failed 'i < BitSetTraits::GetSize(env)' in during 'Redundant branch opts'](https://github.com/dotnet/runtime/issues/71599)~~
 * ~~[JIT: Invalid result computed with modulo operation](https://github.com/dotnet/runtime/issues/71600)~~
 
 Fuzzlyn is actively used to test the .NET JIT compiler and runs automatically [every week in dotnet/runtime's CI](https://dnceng.visualstudio.com/public/_build?definitionId=1054&_a=summary).
