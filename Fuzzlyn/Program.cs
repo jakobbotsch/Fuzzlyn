@@ -202,67 +202,6 @@ internal class Program
         return true;
     }
 
-    /// <summary>
-    /// Checks if a reduced version (on disk) is interesting by running it and checking for exceptions
-    /// and output. Output is captured by redirecting stdout during executiong.
-    private static bool IsReducedVersionInteresting(ProgramPairResults fullResults, string code)
-    {
-        CompilationUnitSyntax comp = ParseCompilationUnit(code, options: new CSharpParseOptions(LanguageVersion.Latest));
-
-        var debug = Execute(Compiler.DebugOptions);
-        var release = Execute(Compiler.ReleaseOptions);
-
-        if (debug.stdout == null || release.stdout == null)
-            return true;
-
-        if (fullResults.DebugResult.ExceptionType != fullResults.ReleaseResult.ExceptionType)
-        {
-            return debug.exceptionType == fullResults.DebugResult.ExceptionType &&
-                   release.exceptionType == fullResults.ReleaseResult.ExceptionType;
-        }
-
-        return debug.stdout != release.stdout;
-
-        (string stdout, string exceptionType) Execute(CSharpCompilationOptions opts)
-        {
-            CompileResult result = Compiler.Compile(comp, opts);
-            if (result.Assembly == null)
-            {
-                Console.WriteLine("Got compiler errors:");
-                Console.WriteLine(string.Join(Environment.NewLine, result.CompileErrors));
-                return (null, null);
-            }
-
-            Assembly asm = Assembly.Load(result.Assembly);
-            MethodInfo mainMethodInfo = asm.GetType("Program").GetMethod("Main");
-            Action entryPoint = (Action)Delegate.CreateDelegate(typeof(Action), mainMethodInfo);
-
-            Exception ex = null;
-            TextWriter origOut = Console.Out;
-
-            MemoryStream ms = new();
-            StreamWriter sw = new(ms, Encoding.UTF8);
-
-            try
-            {
-                Console.SetOut(sw);
-                entryPoint();
-            }
-            catch (Exception caughtEx)
-            {
-                ex = caughtEx;
-            }
-            finally
-            {
-                Console.SetOut(origOut);
-                sw.Close();
-            }
-
-            string stdout = Encoding.UTF8.GetString(ms.ToArray());
-            return (stdout, ex?.GetType().FullName);
-        }
-    }
-
     private static void ReduceProgram(FuzzlynOptions options, string outputPath, string reduceDebugGitDir)
     {
         var cg = new CodeGenerator(options);
