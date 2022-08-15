@@ -5,7 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Version>1.5</Version>
     <TieredCompilation>false</TieredCompilation>
-    <RuntimeIdentifiers>win-x64;win-x86;linux-arm64;linux-arm</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;win-x86;linux-arm64;linux-arm;osx-arm64</RuntimeIdentifiers>
     <LangVersion>preview</LangVersion>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
