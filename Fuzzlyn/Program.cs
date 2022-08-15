@@ -36,6 +36,7 @@ internal class Program
         string reduceDebugGitDir = null;
         string outputPath = null;
         bool? stats = null;
+        string knownErrors = null;
         OptionSet optionSet = new()
         {
             { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
@@ -59,6 +60,7 @@ internal class Program
             { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
             { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
             { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
+            { "known-errors=", "A JSON file of known error strings that will be ignored, or the string \"dotnet/runtime\" to use a built-in list for the tip of dotnet/runtime.", v => knownErrors = v },
             { "help|h", v => help = v != null }
         };
 
@@ -154,6 +156,9 @@ internal class Program
             if (!CreateExecutionServerPool(options))
                 return;
 
+            if (!LoadKnownErrors(options, knownErrors))
+                return;
+
             GenerateProgramsAndCheck(options);
         }
     }
@@ -169,6 +174,31 @@ internal class Program
         }
 
         s_executionServerPool = new ExecutionServerPool(options.Host);
+        return true;
+    }
+
+    private static bool LoadKnownErrors(FuzzlynOptions options, string knownErrors)
+    {
+        if (knownErrors == null)
+        {
+            options.KnownErrors = new KnownErrors(new string[0]);
+            return true;
+        }
+
+        if (knownErrors == "dotnet/runtime")
+        {
+            options.KnownErrors = KnownErrors.DotnetRuntime;
+        }
+        else if (File.Exists(knownErrors))
+        {
+            options.KnownErrors = new KnownErrors(JsonSerializer.Deserialize<List<string>>(File.ReadAllText(knownErrors)));
+        }
+        else
+        {
+            Console.WriteLine("Error: unable to read known errors list.");
+            return false;
+        }
+
         return true;
     }
 
@@ -294,9 +324,10 @@ internal class Program
 
     private static void GenerateProgramsAndCheck(FuzzlynOptions options)
     {
-        GenerateProgramsResult result = GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed));
+        int numProgramsWithKnownErrors = 0;
+        GenerateProgramsResult result = GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed, ref numProgramsWithKnownErrors));
         if (options.OutputEventsTo != null)
-            AddEvent(options.OutputEventsTo, new Event(EventKind.RunSummary, DateTimeOffset.UtcNow, null, new RunSummaryEvent(result.DegreeOfParallelism, result.TotalGenerated, result.TimeTaken)));
+            AddEvent(options.OutputEventsTo, new Event(EventKind.RunSummary, DateTimeOffset.UtcNow, null, new RunSummaryEvent(result.DegreeOfParallelism, result.TotalGenerated, numProgramsWithKnownErrors, result.TimeTaken)));
     }
 
     private static GenerateProgramsResult GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
@@ -363,7 +394,7 @@ internal class Program
     private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
 
     private static readonly object s_fileLock = new();
-    private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, ulong seed)
+    private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, ulong seed, ref int numProgramsWithKnownErrors)
     {
         byte[] debug = Compile(Compiler.DebugOptions);
         byte[] release = Compile(Compiler.ReleaseOptions);
@@ -378,10 +409,13 @@ internal class Program
         switch (results.Kind)
         {
             case RunSeparatelyResultsKind.Crash:
-                AddExample(new ExampleEvent(seed, ExampleKind.Crash, results.CrashError));
+                if (options.KnownErrors.Contains(results.CrashError))
+                    Interlocked.Increment(ref numProgramsWithKnownErrors);
+                else
+                    AddExample(new ExampleEvent(seed, ExampleKind.Crash, results.CrashError));
                 break;
             case RunSeparatelyResultsKind.Success:
-                CheckExample(seed, results.Results);
+                CheckExample(seed, results.Results, ref numProgramsWithKnownErrors);
                 break;
         }
 
@@ -411,15 +445,16 @@ internal class Program
             return comp.Assembly;
         }
 
-        void CheckExample(ulong seed, ProgramPairResults result)
+        void CheckExample(ulong seed, ProgramPairResults result, ref int numProgramsWithKnownErrors)
         {
-            if (result.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+            ProgramResult assertRes;
+            if ((assertRes = result.DebugResult).Kind == ProgramResultKind.HitsJitAssert ||
+                (assertRes = result.ReleaseResult).Kind == ProgramResultKind.HitsJitAssert)
             {
-                AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, result.DebugResult.JitAssertError));
-            }
-            else if (result.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
-            {
-                AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, result.ReleaseResult.JitAssertError));
+                if (options.KnownErrors.Contains(assertRes.JitAssertError))
+                    Interlocked.Increment(ref numProgramsWithKnownErrors);
+                else
+                    AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, assertRes.JitAssertError));
             }
             else
             {
@@ -477,5 +512,5 @@ internal class Program
     }
 
     private record class ExampleEvent(ulong Seed, ExampleKind Kind, string Message);
-    private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, TimeSpan TotalRunTime);
+    private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, int TotalProgramsWithKnownErrors, TimeSpan TotalRunTime);
 }
