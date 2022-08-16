@@ -883,15 +883,15 @@ internal class FuncBodyGenerator
     {
         SyntaxKind[] acceptedTypes =
         {
-                SyntaxKind.ULongKeyword,
-                SyntaxKind.LongKeyword,
-                SyntaxKind.UIntKeyword,
-                SyntaxKind.IntKeyword,
-                SyntaxKind.UShortKeyword,
-                SyntaxKind.ShortKeyword,
-                SyntaxKind.ByteKeyword,
-                SyntaxKind.SByteKeyword,
-            };
+            SyntaxKind.ULongKeyword,
+            SyntaxKind.LongKeyword,
+            SyntaxKind.UIntKeyword,
+            SyntaxKind.IntKeyword,
+            SyntaxKind.UShortKeyword,
+            SyntaxKind.ShortKeyword,
+            SyntaxKind.ByteKeyword,
+            SyntaxKind.SByteKeyword,
+        };
 
         if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
             return null;

@@ -17,14 +17,14 @@ internal static class Compiler
 {
     private static readonly MetadataReference[] s_references =
     {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
-            // These two are needed to properly pick up System.Object when using methods on System.Console.
-            // See here: https://github.com/dotnet/corefx/issues/11601
-            MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
-            MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
-        };
+        MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+        MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location),
+        MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+        // These two are needed to properly pick up System.Object when using methods on System.Console.
+        // See here: https://github.com/dotnet/corefx/issues/11601
+        MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
+        MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
+    };
 
     private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 

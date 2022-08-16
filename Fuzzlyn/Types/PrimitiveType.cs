@@ -51,28 +51,28 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
     {
         SyntaxKind[] intAssigns =
         {
-                SyntaxKind.AddAssignmentExpression,
-                SyntaxKind.SubtractAssignmentExpression,
-                SyntaxKind.MultiplyAssignmentExpression,
-                SyntaxKind.DivideAssignmentExpression,
-                SyntaxKind.ModuloAssignmentExpression,
-                SyntaxKind.AndAssignmentExpression,
-                SyntaxKind.ExclusiveOrAssignmentExpression,
-                SyntaxKind.OrAssignmentExpression,
-                SyntaxKind.LeftShiftAssignmentExpression,
-                SyntaxKind.RightShiftAssignmentExpression,
-                SyntaxKind.PreIncrementExpression,
-                SyntaxKind.PostIncrementExpression,
-                SyntaxKind.PreDecrementExpression,
-                SyntaxKind.PostDecrementExpression,
-            };
+            SyntaxKind.AddAssignmentExpression,
+            SyntaxKind.SubtractAssignmentExpression,
+            SyntaxKind.MultiplyAssignmentExpression,
+            SyntaxKind.DivideAssignmentExpression,
+            SyntaxKind.ModuloAssignmentExpression,
+            SyntaxKind.AndAssignmentExpression,
+            SyntaxKind.ExclusiveOrAssignmentExpression,
+            SyntaxKind.OrAssignmentExpression,
+            SyntaxKind.LeftShiftAssignmentExpression,
+            SyntaxKind.RightShiftAssignmentExpression,
+            SyntaxKind.PreIncrementExpression,
+            SyntaxKind.PostIncrementExpression,
+            SyntaxKind.PreDecrementExpression,
+            SyntaxKind.PostDecrementExpression,
+        };
 
         SyntaxKind[] boolAssigns =
         {
-                SyntaxKind.AndAssignmentExpression,
-                SyntaxKind.ExclusiveOrAssignmentExpression,
-                SyntaxKind.OrAssignmentExpression,
-            };
+            SyntaxKind.AndAssignmentExpression,
+            SyntaxKind.ExclusiveOrAssignmentExpression,
+            SyntaxKind.OrAssignmentExpression,
+        };
 
         s_infoTable = new Dictionary<SyntaxKind, PrimitiveTypeInfo>
         {

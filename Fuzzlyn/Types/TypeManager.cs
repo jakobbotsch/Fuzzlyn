@@ -89,19 +89,19 @@ internal class TypeManager
     {
         SyntaxKind[] primitiveTypes =
         {
-                SyntaxKind.BoolKeyword,
-                SyntaxKind.SByteKeyword,
-                SyntaxKind.ByteKeyword,
-                SyntaxKind.ShortKeyword,
-                SyntaxKind.UShortKeyword,
-                SyntaxKind.IntKeyword,
-                SyntaxKind.UIntKeyword,
-                SyntaxKind.LongKeyword,
-                SyntaxKind.ULongKeyword,
-                // string, floats, IntPtr/UIntPtr?
+            SyntaxKind.BoolKeyword,
+            SyntaxKind.SByteKeyword,
+            SyntaxKind.ByteKeyword,
+            SyntaxKind.ShortKeyword,
+            SyntaxKind.UShortKeyword,
+            SyntaxKind.IntKeyword,
+            SyntaxKind.UIntKeyword,
+            SyntaxKind.LongKeyword,
+            SyntaxKind.ULongKeyword,
+            // string, floats, IntPtr/UIntPtr?
 
-                // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
-            };
+            // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
+        };
 
         _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
 
