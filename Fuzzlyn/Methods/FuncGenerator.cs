@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Methods;
@@ -76,27 +78,8 @@ internal class FuncGenerator
         else
             retType = ReturnType.GenReferenceTo();
 
-        IEnumerable<ParameterSyntax> GenParameters()
-        {
-            foreach (FuncParameter pm in Parameters)
-            {
-                if (pm.Type is RefType rt)
-                {
-                    yield return
-                        Parameter(Identifier(pm.Name))
-                        .WithType(rt.InnerType.GenReferenceTo())
-                        .WithModifiers(TokenList(Token(SyntaxKind.RefKeyword)));
-                }
-                else
-                {
-                    yield return
-                        Parameter(Identifier(pm.Name))
-                        .WithType(pm.Type.GenReferenceTo());
-                }
-            }
-        }
-
-        ParameterListSyntax parameters = ParameterList(SeparatedList(GenParameters()));
+        ParameterListSyntax parameters =
+            ParameterList(SeparatedList(Parameters.Select(p => p.Type.GenParameter(p.Name))));
 
         SyntaxTokenList memberMods = TokenList();
         if (visibilityMod)
@@ -133,7 +116,7 @@ internal class FuncGenerator
             Parameters = new FuncParameter[numArgs];
             for (int i = 0; i < Parameters.Length; i++)
             {
-                FuzzType type = Types.PickType(Options.ParameterIsByRefProb);
+                FuzzType type = Types.PickType(allowRefStructs: true, Options.ParameterIsByRefProb);
                 string name = $"arg{i}";
                 Parameters[i] = new FuncParameter(type, name);
             }
@@ -141,13 +124,17 @@ internal class FuncGenerator
             foreach (FuncParameter param in Parameters)
             {
                 // A ref to a by-ref parameter can escape to at least its parent method
-                int refEscapeScope = param.Type is RefType ? 1 : 0;
-                initialVars.Add(new ScopeValue(param.Type, IdentifierName(param.Name), refEscapeScope, false));
+                int refSafeToEscapeScope = param.Type is RefType ? 1 : 0;
+                int safeToEscapeScope = param.Type.UnwrapIfRefType().IsByRefLike ? 1 : int.MaxValue;
+                initialVars.Add(new ScopeValue(param.Type, IdentifierName(param.Name), refSafeToEscapeScope, safeToEscapeScope, false));
             }
         }
         else
         {
             Parameters = Array.Empty<FuncParameter>();
+            // by-ref to ref-struct requires us to add a compatible parameter
+            // or we will not be able to create a body in many cases.
+            Debug.Assert(!(returnType is RefType rt && rt.IsByRefLike));
         }
 
         List<AggregateType> typesNeedingBodies = new();
@@ -179,7 +166,7 @@ internal class FuncGenerator
             {
                 // We cannot return refs to 'this', but we can pass them to funcs.
                 // For classes this is quite limited since 'this' is readonly.
-                initialVars.Add(new ScopeValue(type, ThisExpression(), refEscapeScope: 0, readOnly: type.IsClass));
+                initialVars.Add(new ScopeValue(type, ThisExpression(), refSafeToEscapeScope: 0, safeToEscapeScope: type.IsByRefLike ? 1 : int.MaxValue, readOnly: type.IsClass));
             }
 
             gen.Generate(initialVars);

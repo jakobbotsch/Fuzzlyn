@@ -23,6 +23,8 @@ internal class FuzzlynOptions
     public double MakeClassProb { get; set; } = 0.5;
     // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
     public double PrimitiveFieldProb { get; set; } = 0.8;
+    // Probability that a field of a struct becomes a ref field, and that the struct is thus a ref struct.
+    public double RefFieldProb { get; set; } = 0.10;
     public int ProgramMinStatements { get; set; } = 50;
     /// <summary>
     /// Max total number of calls for a single function in the program.
@@ -157,19 +159,34 @@ internal class FuzzlynOptions
     public double MemberAccessSelectLocalProb { get; set; } = 0.8;
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }
-     = new TableDistribution(new Dictionary<int, double>
-     {
-         [(int)LValueKind.Local] = 0.7,
-         [(int)LValueKind.Static] = 0.2,
-         [(int)LValueKind.RefReturningCall] = 0.1,
-     });
+         = new TableDistribution(new Dictionary<int, double>
+         {
+             [(int)LValueKind.Local] = 0.7,
+             [(int)LValueKind.Static] = 0.2,
+             [(int)LValueKind.Call] = 0.1,
+         });
+
+    public ProbabilityDistribution RefStructValueDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)RefStructValueKind.Local] = 0.59,
+            [(int)RefStructValueKind.NewObject] = 0.30,
+            [(int)RefStructValueKind.Call] = 0.11,
+        });
 }
 
 internal enum LValueKind
 {
     Local,
     Static,
-    RefReturningCall,
+    Call,
+}
+
+internal enum RefStructValueKind
+{
+    Local,
+    Call,
+    NewObject,
 }
 
 internal class HillEquationParameters

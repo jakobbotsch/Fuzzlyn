@@ -9,18 +9,21 @@ namespace Fuzzlyn.Methods;
 /// </summary>
 internal class LValueInfo
 {
-    public LValueInfo(ExpressionSyntax expression, FuzzType type, int refEscapeScope, bool readOnly)
+    public LValueInfo(ExpressionSyntax expression, FuzzType type, int refSafeToEscapeScope, int safeToEscapeScope, bool readOnly)
     {
         Expression = expression;
         Type = type;
-        RefEscapeScope = refEscapeScope;
+        RefSafeToEscapeScope = refSafeToEscapeScope;
+        SafeToEscapeScope = safeToEscapeScope;
         ReadOnly = readOnly;
     }
 
     public ExpressionSyntax Expression { get; }
     public FuzzType Type { get; }
-    /// <summary>See <see cref="ScopeValue.RefEscapeScope"/>.</summary>
-    public int RefEscapeScope { get; }
+    /// <summary>See <see cref="ScopeValue.RefSafeToEscapeScope"/>.</summary>
+    public int RefSafeToEscapeScope { get; }
+    /// <summary>See <see cref="ScopeValue.SafeToEscapeScope"/>.</summary>
+    public int SafeToEscapeScope { get; }
     public bool ReadOnly { get; }
 
     public override string ToString() => Expression.ToString();
