@@ -18,45 +18,11 @@ internal static class LiteralGenerator
             case PrimitiveType prim:
                 return GenPrimitiveLiteral(random, prim);
             case AggregateType agg:
-                ArgumentSyntax GenArg(AggregateField field)
-                {
-                    Debug.Assert(!(field.Type is RefType));
-                    if (field.Type is RefType rt)
-                    {
-                        Debug.Assert(!rt.InnerType.IsByRefLike);
-                        ExpressionSyntax literal = GenLiteral(types, random, rt.InnerType);
-                        ExpressionSyntax singleElemArr =
-                            ArrayCreationExpression(
-                                ArrayType(rt.InnerType.GenReferenceTo())
-                                .AddRankSpecifiers(
-                                    ArrayRankSpecifier(
-                                        SingletonSeparatedList<ExpressionSyntax>(
-                                            OmittedArraySizeExpression()))),
-                                InitializerExpression(
-                                    SyntaxKind.ArrayInitializerExpression,
-                                    SingletonSeparatedList(literal)));
-
-                        ExpressionSyntax firstElem =
-                            ElementAccessExpression(
-                                ParenthesizedExpression(singleElemArr),
-                                BracketedArgumentList(
-                                    SingletonSeparatedList(
-                                        Argument(
-                                            LiteralExpression(
-                                                SyntaxKind.NumericLiteralExpression,
-                                                Literal(0))))));
-
-                        return Argument(firstElem).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
-                    }
-
-                    return Argument(GenLiteral(types, random, field.Type));
-                }
-
                 return
                     ObjectCreationExpression(type.GenReferenceTo())
                     .WithArgumentList(
                         ArgumentList(
-                            SeparatedList(agg.Fields.Select(GenArg))));
+                            SeparatedList(agg.Fields.Select(af => Argument(GenLiteral(types, random, af.Type))))));
             case ArrayType arr:
                 List<int> dims = GenArrayDimensions(random, arr);
                 return GenArrayCreation(types, random, arr, dims);

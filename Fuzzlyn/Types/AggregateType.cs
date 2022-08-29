@@ -14,12 +14,11 @@ public class AggregateType : FuzzType
 {
     private readonly List<AggregateField> _fields = new();
 
-    public AggregateType(bool isClass, bool isRefStruct, string name, List<AggregateField> fields)
+    public AggregateType(bool isClass, string name, List<AggregateField> fields)
     {
         IsClass = isClass;
         Name = name;
         _fields = fields;
-        IsByRefLike = isRefStruct;
     }
 
     public string Name { get; }
@@ -28,8 +27,6 @@ public class AggregateType : FuzzType
     public HashSet<InterfaceType> ImplementedInterfaces { get; } = new();
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
-
-    public override bool IsByRefLike { get; }
 
     public override TypeSyntax GenReferenceTo()
         => IdentifierName(Name);
@@ -75,9 +72,6 @@ public class AggregateType : FuzzType
         TypeDeclarationSyntax ty = IsClass ? ClassDeclaration(Name) : StructDeclaration(Name);
 
         ty = ty.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
-        if (IsByRefLike)
-            ty = ty.AddModifiers(Token(SyntaxKind.RefKeyword));
-
         if (ImplementedInterfaces.Count > 0)
         {
             ty = ty.WithBaseList(
@@ -112,24 +106,16 @@ public class AggregateType : FuzzType
     private ConstructorDeclarationSyntax OutputCtor()
     {
         ParameterListSyntax pms = ParameterList(
-            SeparatedList(_fields.Select(f => f.Type.GenParameter(f.Name.ToLowerInvariant()))));
+            SeparatedList(_fields.Select(f => Parameter(Identifier(f.Name.ToLowerInvariant())).WithType(f.Type.GenReferenceTo()))));
 
-        static StatementSyntax AssignField(AggregateField f)
-        {
-            ExpressionSyntax rhs = IdentifierName(f.Name.ToLowerInvariant());
-            if (f.Type is RefType)
-                rhs = RefExpression(rhs);
-
-            return
+        BlockSyntax initBlock =
+            Block(_fields.Select(
+                f =>
                 ExpressionStatement(
                     AssignmentExpression(
                         SyntaxKind.SimpleAssignmentExpression,
                         IdentifierName(f.Name),
-                        rhs));
-        }
-
-        BlockSyntax initBlock =
-            Block(_fields.Select(AssignField));
+                        IdentifierName(f.Name.ToLowerInvariant())))));
 
         return
             ConstructorDeclaration(Name)

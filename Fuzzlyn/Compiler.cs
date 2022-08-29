@@ -26,7 +26,7 @@ internal static class Compiler
         MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
     };
 
-    private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Preview);
+    private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 
     public static readonly CSharpCompilationOptions DebugOptions =
         new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug);

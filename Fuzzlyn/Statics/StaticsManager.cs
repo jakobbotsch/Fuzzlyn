@@ -37,7 +37,7 @@ internal class StaticsManager
 
     public StaticField GenerateNewField(FuzzType type)
     {
-        type = type ?? Types.PickType(allowRefStructs: false);
+        type = type ?? Types.PickType();
 
         string name = "s_" + (++_counter);
         StaticField field = new(type, name, LiteralGenerator.GenLiteral(Types, Random, type));

@@ -1059,7 +1059,7 @@ public class Runtime : IRuntime
                 if (member is not MethodDeclarationSyntax meth)
                     continue;
 
-                if (meth.Modifiers.Any(mod => mod.IsKind(SyntaxKind.StaticKeyword)))
+                if (meth.Modifiers.Any(mod => mod.Kind() == SyntaxKind.StaticKeyword))
                     continue;
 
                 // Add this parameter. Currently this is never byref although we might want to do that for structs.

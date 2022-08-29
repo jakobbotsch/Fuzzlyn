@@ -124,7 +124,7 @@ internal class CodeGenerator
             if (Options.EnableChecksumming)
             {
                 IEnumerable<StatementSyntax> staticChecksums =
-                    FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, int.MaxValue, false)), GenerateChecksumSiteId);
+                    FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
 
                 foreach (StatementSyntax checksumStatement in staticChecksums)
                     yield return checksumStatement;

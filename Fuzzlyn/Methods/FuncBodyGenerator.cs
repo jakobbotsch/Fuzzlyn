@@ -177,40 +177,28 @@ internal class FuncBodyGenerator
     {
         LValueInfo lvalue = null;
         if (!_random.FlipCoin(Options.AssignToNewVarProb))
-            lvalue = GenExistingLValue(null, int.MinValue, int.MinValue);
+            lvalue = GenExistingLValue(null, int.MinValue);
 
         if (lvalue == null)
         {
-            FuzzType newType = _types.PickType(allowRefStructs: true, Options.LocalIsByRefProb);
-            // Determine if we should create a new local or static. We do this with a certain probabilty,
+            FuzzType newType = _types.PickType(Options.LocalIsByRefProb);
+            // Determine if we should create a new local. We do this with a certain probabilty,
             // or always if the new type is a by-ref type (we cannot have static by-refs).
-            if (newType.IsByRefLike || _random.FlipCoin(Options.NewVarIsLocalProb))
+            if (newType is RefType || _random.FlipCoin(Options.NewVarIsLocalProb))
             {
-                ScopeValue variable = null;
+                ScopeValue variable;
                 string varName = $"var{_varCounter++}";
-                ExpressionSyntax rhs = null;
-
+                ExpressionSyntax rhs;
                 if (newType is RefType newRt)
                 {
-                    LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue, int.MinValue);
-                    variable = new ScopeValue(newType, IdentifierName(varName), rhsLV.RefSafeToEscapeScope, rhsLV.SafeToEscapeScope, readOnly: false);
+                    LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue);
+                    variable = new ScopeValue(newType, IdentifierName(varName), rhsLV.RefEscapeScope, readOnly: false);
                     rhs = RefExpression(rhsLV.Expression);
                 }
                 else
                 {
-                    Debug.Assert(!(newType is RefType));
-
-                    if (newType is AggregateType at and { IsByRefLike: true })
-                    {
-                        RefStructValue rhsRSV = GenRefStructValue(at, int.MinValue);
-                        variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), rhsRSV.SafeToEscapeScope, readOnly: false);
-                        rhs = rhsRSV.Expression;
-                    }
-                    else
-                    {
-                        variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), int.MaxValue, readOnly: false);
-                        rhs = GenExpression(newType);
-                    }
+                    rhs = GenExpression(newType);
+                    variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), readOnly: false);
                 }
 
                 LocalDeclarationStatementSyntax decl =
@@ -222,28 +210,13 @@ internal class FuncBodyGenerator
                                 .WithInitializer(
                                     EqualsValueClause(rhs)))));
 
-                Debug.Assert(variable.SafeToEscapeScope >= variable.RefSafeToEscapeScope);
-
                 _scope.Last().Values.Add(variable);
 
                 return decl;
             }
 
             StaticField newStatic = _statics.GenerateNewField(newType);
-            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, int.MaxValue, readOnly: false);
-        }
-
-        {
-            if (lvalue.Type is AggregateType at and { IsByRefLike: true })
-            {
-                RefStructValue rhsRSV = GenRefStructValue(at, lvalue.SafeToEscapeScope);
-                return
-                    ExpressionStatement(
-                        AssignmentExpression(
-                            SyntaxKind.SimpleAssignmentExpression,
-                            lvalue.Expression,
-                            rhsRSV.Expression));
-            }
+            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false);
         }
 
         // Determine if we should generate a ref-reassignment. In that case we cannot do anything
@@ -253,7 +226,7 @@ internal class FuncBodyGenerator
         {
             if (_random.FlipCoin(Options.AssignGenRefReassignProb))
             {
-                RefExpressionSyntax refRhs = RefExpression(GenLValue(rt.InnerType, lvalue.RefSafeToEscapeScope, lvalue.SafeToEscapeScope).Expression);
+                RefExpressionSyntax refRhs = RefExpression(GenLValue(rt.InnerType, lvalue.RefEscapeScope).Expression);
                 return
                     ExpressionStatement(
                         AssignmentExpression(
@@ -313,12 +286,12 @@ internal class FuncBodyGenerator
     private StatementSyntax GenCallStatement(bool tryExisting)
     {
         // If we are supposed to try existing first, then do not allow new
-        ExpressionSyntax call = GenCall(null, allowNew: !tryExisting, int.MinValue, out _, int.MinValue, out _);
+        ExpressionSyntax call = GenCall(null, allowNew: !tryExisting);
 
         while (call == null)
         {
             // There are no existing, so allow new until we get a new one
-            call = GenCall(null, true, int.MinValue, out _, int.MinValue, out _);
+            call = GenCall(null, true);
         }
 
         return ExpressionStatement(call);
@@ -369,9 +342,7 @@ internal class FuncBodyGenerator
 
         ExpressionSyntax expr;
         if (_returnType is RefType rt)
-            expr = RefExpression(GenLValue(rt.InnerType, 1, int.MinValue).Expression);
-        else if (_returnType is AggregateType at and { IsByRefLike: true })
-            expr = GenRefStructValue(at, 1).Expression;
+            expr = RefExpression(GenLValue(rt.InnerType, 1).Expression);
         else
             expr = GenExpression(_returnType);
 
@@ -381,7 +352,7 @@ internal class FuncBodyGenerator
     private StatementSyntax GenLoop()
     {
         string varName = $"var{_varCounter++}";
-        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), int.MaxValue, true);
+        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
 
         VariableDeclarationSyntax decl =
             VariableDeclaration(
@@ -414,9 +385,9 @@ internal class FuncBodyGenerator
     private int _expressionLevel = -1;
     private ExpressionSyntax GenExpression(FuzzType type)
     {
-        Debug.Assert(!type.IsByRefLike);
         _expressionLevel++;
 
+        Debug.Assert(!(type is RefType));
         ExpressionSyntax gen = null;
         do
         {
@@ -439,7 +410,7 @@ internal class FuncBodyGenerator
                     break;
                 case ExpressionKind.Call:
                     if (AllowRecursion())
-                        gen = GenCall(type, true, int.MinValue, out _, int.MinValue, out _);
+                        gen = GenCall(type, true);
                     break;
                 case ExpressionKind.Increment:
                     if (AllowRecursion())
@@ -451,7 +422,7 @@ internal class FuncBodyGenerator
                     break;
                 case ExpressionKind.NewObject:
                     if (AllowRecursion())
-                        gen = GenNewObject(type, int.MinValue, out _);
+                        gen = GenNewObject(type);
                     break;
                 default:
                     throw new Exception("Unreachable");
@@ -467,56 +438,29 @@ internal class FuncBodyGenerator
         return gen;
     }
 
-    //private ExpressionSyntax GenExpression(FuzzType type, int minRefSafeToEscapeScope, int minSafeToEscapeScope, out int refSafeToEscapeScope, out int safeToEscapeScope)
-    //{
-    //}
-
     /// <summary>Returns an lvalue.</summary>
-    private LValueInfo GenLValue(FuzzType type, int minRefSafeToEscapeScope, int minSafeToEscapeScope)
+    private LValueInfo GenLValue(FuzzType type, int minRefEscapeScope)
     {
         Debug.Assert(type != null);
 
-        LValueInfo lv = GenExistingLValue(type, minRefSafeToEscapeScope, minSafeToEscapeScope);
+        LValueInfo lv = GenExistingLValue(type, minRefEscapeScope);
 
         if (lv == null)
         {
-            if (type.IsByRefLike)
-            {
-                Debug.Assert(minRefSafeToEscapeScope == int.MinValue);
-                ExpressionSyntax lit = GenLiteral(type);
-                string varName = $"var{_varCounter++}";
-                ExpressionSyntax pattern =
-                    ParenthesizedExpression(
-                        ConditionalExpression(
-                            IsPatternExpression(
-                                lit,
-                                DeclarationPattern(
-                                    type.GenReferenceTo(),
-                                    SingleVariableDesignation(
-                                        Identifier(varName)))),
-                            RefExpression(
-                                IdentifierName(varName)),
-                            RefExpression(
-                                IdentifierName(varName))));
-                lv = new LValueInfo(pattern, type, int.MinValue, int.MinValue, readOnly: false);
-            }
-            else
-            {
-                StaticField newStatic = _statics.GenerateNewField(type);
-                lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, int.MaxValue, readOnly: false);
-            }
+            StaticField newStatic = _statics.GenerateNewField(type);
+            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false);
         }
 
         return lv;
     }
 
-    private LValueInfo GenExistingLValue(FuzzType type, int minRefSafeToEscapeScope, int minSafeToEscapeScope)
+    private LValueInfo GenExistingLValue(FuzzType type, int minRefEscapeScope)
     {
         Debug.Assert(type == null || !(type is RefType));
 
         LValueKind kind = (LValueKind)Options.ExistingLValueDist.Sample(_random.Rng);
 
-        if (kind == LValueKind.Call)
+        if (kind == LValueKind.RefReturningCall)
         {
             List<FuncGenerator> refReturningFuncs = new();
             foreach (FuncGenerator func in _funcs.Skip(_funcIndex + 1))
@@ -534,61 +478,49 @@ internal class FuncBodyGenerator
             // or statics of type int. We would keep generating method calls in this case.
             // This is kind of a hack, although it is pretty natural to pick statics/locals for
             // lvalues, so it is not that big of a deal.
-            if (refReturningFuncs.Count <= 0)
-                return GenExistingLValue(type, minRefSafeToEscapeScope, minSafeToEscapeScope);
+            if (refReturningFuncs.Count == 0)
+                return GenExistingLValue(type, minRefEscapeScope);
 
             FuncGenerator funcToCall = _random.NextElement(refReturningFuncs);
-            ExpressionSyntax invoc = GenCallToFunc(funcToCall, minRefSafeToEscapeScope, out int callRefSafeToEscapeScope, minSafeToEscapeScope, out int callSafeToEscapeScope);
-            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, callRefSafeToEscapeScope, callSafeToEscapeScope, readOnly: false);
+
+            ExpressionSyntax invocExpr = GenInvocFuncExpr(funcToCall);
+            // When calling a func that returns a by-ref, we need to take into account that the C# compiler
+            // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
+            // allowed to pass non-local by-refs. The following example illustrates the analysis performed
+            // by the compiler:
+            // ref int M(ref int b, ref int c) {
+            //   int a = 2;
+            //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
+            //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
+            // }
+            // ref int Max(ref int a, ref int b) { ... }
+            // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
+            // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
+            // and the result of that call would not be valid to return.
+            ArgumentSyntax[] args = GenArgs(funcToCall, minRefEscapeScope, out int argsMinRefEscapeScope);
+            InvocationExpressionSyntax invoc =
+                InvocationExpression(
+                    invocExpr,
+                    ArgumentList(
+                        SeparatedList(
+                            args)));
+
+            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false);
         }
 
-        List<LValueInfo> lvalues = CollectVariablePaths(type, minRefSafeToEscapeScope, minSafeToEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, requireAssignable: true);
+        List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, requireAssignable: true);
         if (lvalues.Count == 0)
         {
             // We typically fall back to generating a static, so just try to find a static if we found no local.
             if (kind != LValueKind.Local)
                 return null;
 
-            lvalues = CollectVariablePaths(type, minRefSafeToEscapeScope, minSafeToEscapeScope, false, true, requireAssignable: true);
+            lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true, requireAssignable: true);
             if (lvalues.Count == 0)
                 return null;
         }
 
         return _random.NextElement(lvalues);
-    }
-
-    private RefStructValue GenRefStructValue(AggregateType type, int minSafeToEscapeScope)
-    {
-        Debug.Assert(type != null);
-
-        RefStructValueKind kind = (RefStructValueKind)Options.RefStructValueDist.Sample(_random.Rng);
-
-        if (kind == RefStructValueKind.Call)
-        {
-            ExpressionSyntax invoc = GenCall(type, true, int.MinValue, out _, minSafeToEscapeScope, out int safeToEscapeScope);
-            if (invoc != null)
-                return new RefStructValue(invoc, type, safeToEscapeScope);
-
-            do
-            {
-                kind = (RefStructValueKind)Options.RefStructValueDist.Sample(_random.Rng);
-            } while (kind == RefStructValueKind.Call);
-        }
-
-        if (kind == RefStructValueKind.Local)
-        {
-            List<LValueInfo> lvalues = CollectVariablePaths(type, int.MinValue, minSafeToEscapeScope, collectLocals: true, collectStatics: false, requireAssignable: true);
-            if (lvalues.Count > 0)
-            {
-                LValueInfo lvalue = _random.NextElement(lvalues);
-                return new RefStructValue(lvalue.Expression, type, lvalue.SafeToEscapeScope);
-            }
-        }
-
-        {
-            ExpressionSyntax newObj = GenNewObject(type, minSafeToEscapeScope, out int safeToEscapeScope);
-            return new RefStructValue(newObj, type, safeToEscapeScope);
-        }
     }
 
     /// <summary>
@@ -603,8 +535,8 @@ internal class FuncBodyGenerator
     {
         List<LValueInfo> paths =
             _random.FlipCoin(Options.MemberAccessSelectLocalProb)
-            ? CollectVariablePaths(ft, int.MinValue, int.MinValue, true, false, requireAssignable: false)
-            : CollectVariablePaths(ft, int.MinValue, int.MinValue, false, true, requireAssignable: false);
+            ? CollectVariablePaths(ft, int.MinValue, true, false, requireAssignable: false)
+            : CollectVariablePaths(ft, int.MinValue, false, true, requireAssignable: false);
 
         return paths.Count > 0 ? _random.NextElement(paths).Expression : null;
     }
@@ -613,12 +545,11 @@ internal class FuncBodyGenerator
     /// Collect lvalues of the specified type.
     /// </summary>
     /// <param name="type">The type, or null to collect all lvalues.</param>
-    /// <param name="minRefSafeToEscapeScope">The minimum scope that refs taken of the lvalue must be able to escape to.</param>
-    /// <param name="minSafeToEscapeScope">The minimum scope that the lvalue must be able to escape to.</param>
+    /// <param name="minRefEscapeScope">The minimum scope that refs taken of the lvalue must be able to escape to.</param>
     /// <param name="collectLocals">Whether to collect locals.</param>
     /// <param name="collectStatics">Whether to collect statics.</param>
     /// <param name="requireAssignable">Whether the collected lvalues must be able to appear as the LHS of an assignment with an RHS of type <paramref name="type"/>.</param>
-    private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefSafeToEscapeScope, int minSafeToEscapeScope, bool collectLocals, bool collectStatics, bool requireAssignable)
+    private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics, bool requireAssignable)
     {
         List<LValueInfo> paths = new();
 
@@ -637,7 +568,7 @@ internal class FuncBodyGenerator
         {
             foreach (StaticField stat in _statics.Fields)
             {
-                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, int.MaxValue, false));
+                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false));
             }
         }
 
@@ -673,7 +604,7 @@ internal class FuncBodyGenerator
             return false;
         }
 
-        paths.RemoveAll(lv => lv.RefSafeToEscapeScope < minRefSafeToEscapeScope || lv.SafeToEscapeScope < minSafeToEscapeScope || (lv.ReadOnly && requireAssignable) || !IsAllowedType(lv.Type));
+        paths.RemoveAll(lv => lv.RefEscapeScope < minRefEscapeScope || (lv.ReadOnly && requireAssignable) || !IsAllowedType(lv.Type));
         return paths;
     }
 
@@ -825,16 +756,14 @@ internal class FuncBodyGenerator
         return gen;
     }
 
-    private ExpressionSyntax GenCall(FuzzType type, bool allowNew, int minRefSafeToEscapeScope, out int refSafeToEscapeScope, int minSafeToEscapeScope, out int safeToEscapeScope)
+    private ExpressionSyntax GenCall(FuzzType type, bool allowNew)
     {
-        Debug.Assert(!(type is RefType), "Cannot GenCall to ref type");
-        refSafeToEscapeScope = int.MaxValue;
-        safeToEscapeScope = int.MaxValue;
+        Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
         FuncGenerator func;
         if (allowNew && _random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, _random.Rng))
         {
-            type ??= _types.PickType(allowRefStructs: true, Options.ReturnTypeIsByRefProb);
+            type ??= _types.PickType(Options.ReturnTypeIsByRefProb);
 
             func = new FuncGenerator(_funcs, _random, _types, _statics, _genChecksumSiteId);
             func.Generate(type, true);
@@ -846,13 +775,13 @@ internal class FuncBodyGenerator
                 .Skip(_funcIndex + 1)
                 .Where(candidate =>
                 {
-                    // Make sure we do not get too many leaf calls. Here we compute what the new transitive
-                    // number of calls would be to each function, and if it's too much, reject this candidate.
-                    // Note that we will never reject calling a leaf function directly, even if the +1 puts
-                    // us over the cap. That is intentional. We only want to limit the exponential growth
-                    // which happens when functions call functions multiple times, and those functions also
-                    // call functions multiple times.
-                    foreach (var (transFunc, transNumCall) in candidate.CallCounts)
+                        // Make sure we do not get too many leaf calls. Here we compute what the new transitive
+                        // number of calls would be to each function, and if it's too much, reject this candidate.
+                        // Note that we will never reject calling a leaf function directly, even if the +1 puts
+                        // us over the cap. That is intentional. We only want to limit the exponential growth
+                        // which happens when functions call functions multiple times, and those functions also
+                        // call functions multiple times.
+                        foreach (var (transFunc, transNumCall) in candidate.CallCounts)
                     {
                         CallCounts.TryGetValue(transFunc, out long curNumCalls);
                         if (curNumCalls + transNumCall > Options.SingleFunctionMaxTotalCalls)
@@ -873,18 +802,6 @@ internal class FuncBodyGenerator
             type ??= func.ReturnType;
         }
 
-        ExpressionSyntax invoc = GenCallToFunc(func, minRefSafeToEscapeScope, out refSafeToEscapeScope, minSafeToEscapeScope, out safeToEscapeScope);
-        if (invoc == null)
-            return null;
-
-        if (func.ReturnType == type || (func.ReturnType is AggregateType agg && type is InterfaceType it && agg.Implements(it)) || (func.ReturnType is RefType retRt && retRt.InnerType == type))
-            return invoc;
-
-        return CastExpression(type.GenReferenceTo(), invoc);
-    }
-
-    private ExpressionSyntax GenCallToFunc(FuncGenerator func, int minRefSafeToEscapeScope, out int refSafeToEscapeScope, int minSafeToEscapeScope, out int safeToEscapeScope)
-    {
         // Update transitive call counts before generating args, so we decrease chance of
         // calling the same methods in the arg expressions.
         CallCounts.TryGetValue(func.FuncIndex, out long numCalls);
@@ -896,69 +813,22 @@ internal class FuncBodyGenerator
             CallCounts[transFunc] = curNumCalls + transNumCalls;
         }
 
-        refSafeToEscapeScope = int.MaxValue;
-        safeToEscapeScope = int.MaxValue;
-
-        AdjustMinScopeRequirements(func.ReturnType, ref minSafeToEscapeScope, ref minRefSafeToEscapeScope);
-
-        ExpressionSyntax invocFuncExpr = GenInvocFuncExpr(func, ref minSafeToEscapeScope, ref safeToEscapeScope, ref minRefSafeToEscapeScope);
-
-        AdjustMinScopeRequirements(func.ReturnType, ref minSafeToEscapeScope, ref minRefSafeToEscapeScope);
-
-        // When calling a func that returns a by-ref, we need to take into account that the C# compiler
-        // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
-        // allowed to pass non-local by-refs. The following example illustrates the analysis performed
-        // by the compiler:
-        // ref int M(ref int b, ref int c) {
-        //   int a = 2;
-        //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
-        //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
-        // }
-        // ref int Max(ref int a, ref int b) { ... }
-        // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
-        // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
-        // and the result of that call would not be valid to return.
-        ArgumentSyntax[] args = GenArgs(func.Parameters.Select(p => p.Type).ToArray(), minRefSafeToEscapeScope, ref refSafeToEscapeScope, minSafeToEscapeScope, ref safeToEscapeScope);
-        if (args == null)
-            return null;
-
+        ExpressionSyntax invocFuncExpr = GenInvocFuncExpr(func);
+        ArgumentSyntax[] args = GenArgs(func, 0, out _);
         InvocationExpressionSyntax invoc =
             InvocationExpression(
                 invocFuncExpr,
                 ArgumentList(
                     SeparatedList(args)));
 
-        ApplyEscapeRulesForCallReturn(func.ReturnType, ref refSafeToEscapeScope, ref safeToEscapeScope);
+        if (func.ReturnType == type || (func.ReturnType is AggregateType agg && type is InterfaceType it && agg.Implements(it)) || (func.ReturnType is RefType retRt && retRt.InnerType == type))
+            return invoc;
 
-        if (!func.ReturnType.UnwrapIfRefType().IsByRefLike)
-            safeToEscapeScope = int.MaxValue;
-
-        Debug.Assert(refSafeToEscapeScope >= minRefSafeToEscapeScope && safeToEscapeScope >= minSafeToEscapeScope);
-        Debug.Assert(!(func.ReturnType is RefType) || (safeToEscapeScope >= refSafeToEscapeScope));
-
-
-        return invoc;
-    }
-
-    private void AdjustMinScopeRequirements(FuzzType returnType, ref int minSafeToEscapeScope, ref int minRefSafeToEscapeScope)
-    {
-        if (returnType is RefType)
-        {
-            // Function returns a byref, if we are passing ref structs then the
-            // function could return ref fields from those, so we must impose a
-            // minimum on the safe-to-escape scope.
-            minSafeToEscapeScope = Math.Max(minSafeToEscapeScope, minRefSafeToEscapeScope);
-        }
-
-        if (returnType.UnwrapIfRefType().IsByRefLike)
-        {
-            // Function returns a ref struct value, it can capture any ref.
-            minRefSafeToEscapeScope = Math.Max(minRefSafeToEscapeScope, minSafeToEscapeScope);
-        }
+        return CastExpression(type.GenReferenceTo(), invoc);
     }
 
     // Generates the expression that comes before the parentheses of the call.
-    private ExpressionSyntax GenInvocFuncExpr(FuncGenerator func, ref int minSafeToEscapeScope, ref int safeToEscapeScope, ref int minRefSafeToEscapeScope)
+    private ExpressionSyntax GenInvocFuncExpr(FuncGenerator func)
     {
         FuzzType funcThisType = (FuzzType)func.InstanceType ?? func.InterfaceType;
         if (_isInPrimaryClass && funcThisType == null)
@@ -978,19 +848,7 @@ internal class FuncBodyGenerator
         }
 
         // Instance method, generate receiver
-        ExpressionSyntax receiver;
-        if (funcThisType.IsByRefLike)
-        {
-            RefStructValue refStructVal = GenRefStructValue((AggregateType)funcThisType, minSafeToEscapeScope);
-            receiver = refStructVal.Expression;
-            safeToEscapeScope = Math.Min(safeToEscapeScope, refStructVal.SafeToEscapeScope);
-            ApplyEscapeRulesForCallArg(new RefType(funcThisType), refStructVal.SafeToEscapeScope, ref minSafeToEscapeScope, ref minRefSafeToEscapeScope);
-        }
-        else
-        {
-            receiver = GenExpression(funcThisType);
-        }
-
+        ExpressionSyntax receiver = GenExpression(funcThisType);
         return
             MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -998,34 +856,19 @@ internal class FuncBodyGenerator
                 IdentifierName(func.Name));
     }
 
-    private ArgumentSyntax[] GenArgs(FuzzType[] parameters, int minRefSafeToEscapeScope, ref int refSafeToEscapeScope, int minSafeToEscapeScope, ref int safeToEscapeScope)
+    private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope, out int argsMinRefEscapeScope)
     {
-        ArgumentSyntax[] args = new ArgumentSyntax[parameters.Length];
+        ArgumentSyntax[] args = new ArgumentSyntax[funcToCall.Parameters.Length];
+        argsMinRefEscapeScope = int.MaxValue;
 
         for (int i = 0; i < args.Length; i++)
         {
-            FuzzType paramType = parameters[i];
-
-            // refs to ref structs are not yet supported for args.
-            // Such parameters put a minimum safe-to-escape scope on all
-            // other parameters; this means that if we have multiple such
-            // parameters they must all have the same safe-to-escape scope,
-            // which is complicated to ensure (in many cases, it is impossible
-            // to find values that satisfy this condition).
-            Debug.Assert(!(paramType is RefType prt) || !prt.InnerType.IsByRefLike);
+            FuzzType paramType = funcToCall.Parameters[i].Type;
             if (paramType is RefType rt)
             {
-                LValueInfo lv = GenLValue(rt.InnerType, minRefSafeToEscapeScope, minSafeToEscapeScope);
-                safeToEscapeScope = Math.Min(safeToEscapeScope, lv.SafeToEscapeScope);
-                refSafeToEscapeScope = Math.Min(refSafeToEscapeScope, lv.RefSafeToEscapeScope);
+                LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
+                argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
                 args[i] = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
-            }
-            else if (paramType is AggregateType at && at.IsByRefLike)
-            {
-                RefStructValue rsv = GenRefStructValue(at, minSafeToEscapeScope);
-                safeToEscapeScope = Math.Min(safeToEscapeScope, rsv.SafeToEscapeScope);
-                args[i] = Argument(rsv.Expression);
-
             }
             else
             {
@@ -1034,34 +877,6 @@ internal class FuncBodyGenerator
         }
 
         return args;
-    }
-
-    private void ApplyEscapeRulesForCallReturn(FuzzType retType, ref int refSafeToEscapeScope, ref int safeToEscapeScope)
-    {
-        if (retType is RefType rt)
-        {
-            refSafeToEscapeScope = Math.Min(safeToEscapeScope, refSafeToEscapeScope);
-            retType = rt.InnerType;
-        }
-
-        if (retType.IsByRefLike)
-        {
-            safeToEscapeScope = Math.Min(safeToEscapeScope, refSafeToEscapeScope);
-        }
-    }
-
-    private void ApplyEscapeRulesForCallArg(FuzzType argType, int argSafeToEscapeScope, ref int minSafeToEscapeScope, ref int minRefSafeToEscapeScope)
-    {
-        if (argType is RefType rt && rt.InnerType.IsByRefLike)
-        {
-            // For a method invocation if there is a ref or out argument of a
-            // ref struct type (including the receiver unless the type is
-            // readonly), with safe-to-escape E1, then no argument (including
-            // the receiver) may have a narrower safe-to-escape than E1.
-            minSafeToEscapeScope = Math.Max(argSafeToEscapeScope, minSafeToEscapeScope);
-            // Also ref-safe-to-escape..?
-            minRefSafeToEscapeScope = Math.Max(argSafeToEscapeScope, minRefSafeToEscapeScope);
-        }
     }
 
     private ExpressionSyntax GenIncDec(FuzzType type, bool isIncrement)
@@ -1081,7 +896,7 @@ internal class FuncBodyGenerator
         if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
             return null;
 
-        LValueInfo subject = GenExistingLValue(type, int.MinValue, int.MinValue);
+        LValueInfo subject = GenExistingLValue(type, int.MinValue);
         if (subject == null)
             return null;
 
@@ -1092,7 +907,7 @@ internal class FuncBodyGenerator
         return gen;
     }
 
-    private ExpressionSyntax GenNewObject(FuzzType type, int minSafeToEscapeScope, out int safeToEscapeScope)
+    private ExpressionSyntax GenNewObject(FuzzType type)
     {
         if (type is not AggregateType at)
         {
@@ -1102,26 +917,16 @@ internal class FuncBodyGenerator
             }
             else
             {
-                safeToEscapeScope = int.MaxValue;
                 return null;
             }
         }
-
-        FuzzType[] parameters = at.Fields.Select(f => f.Type).ToArray();
-        int minRefSafeToEscapeScope = at.IsByRefLike ? minSafeToEscapeScope : int.MinValue;
-        int refSafeToEscapeScope = int.MaxValue;
-        safeToEscapeScope = int.MaxValue;
-        ArgumentSyntax[] args = GenArgs(parameters, minRefSafeToEscapeScope, ref refSafeToEscapeScope, minSafeToEscapeScope, ref safeToEscapeScope);
-        if (args == null)
-            return null;
-
-        ApplyEscapeRulesForCallReturn(at, ref refSafeToEscapeScope, ref safeToEscapeScope);
 
         ObjectCreationExpressionSyntax creation =
             ObjectCreationExpression(at.GenReferenceTo())
             .WithArgumentList(
                 ArgumentList(
-                    SeparatedList(args)));
+                    SeparatedList(
+                        at.Fields.Select(f => Argument(GenExpression(f.Type))))));
 
         return creation;
     }
@@ -1178,18 +983,15 @@ internal class FuncBodyGenerator
 
     private static void AppendVariablePaths(List<LValueInfo> paths, ScopeValue var)
     {
-        AddPathsRecursive(var.Expression, var.Type, var.RefSafeToEscapeScope, var.SafeToEscapeScope, var.ReadOnly);
+        AddPathsRecursive(var.Expression, var.Type, var.RefEscapeScope, var.ReadOnly);
 
-        void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefSafeToEscapeScope, int curSafeToEscapeScope, bool readOnly)
+        void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
         {
-            Debug.Assert(curSafeToEscapeScope >= curRefSafeToEscapeScope);
-            LValueInfo info = new(curAccess, curType, curRefSafeToEscapeScope, curSafeToEscapeScope, readOnly);
+            LValueInfo info = new(curAccess, curType, curRefEscapeScope, readOnly);
             paths.Add(info);
 
             if (curType is RefType rt)
                 curType = rt.InnerType;
-
-            Debug.Assert(curType.IsByRefLike || curSafeToEscapeScope == int.MaxValue);
 
             switch (curType)
             {
@@ -1203,59 +1005,20 @@ internal class FuncBodyGenerator
                                         Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))),
                                         arr.Rank)))),
                         arr.ElementType,
-                        curRefSafeToEscapeScope: int.MaxValue,
-                        curSafeToEscapeScope: int.MaxValue,
+                        curRefEscapeScope: int.MaxValue,
                         readOnly: false);
                     break;
                 case AggregateType agg:
                     foreach (AggregateField field in agg.Fields)
                     {
-                        int newRefSafeToEscapeScope;
-                        int newSafeToEscapeScope;
-                        if (field.Type is RefType frt)
-                        {
-                            // Ref fields only in ref structs, and
-                            // ref-to-ref-structs are not yet supported as
-                            // fields in C#.
-                            Debug.Assert(agg.IsByRefLike && !frt.InnerType.IsByRefLike);
-                            // 1. If F is a ref field its ref-safe-to-escape scope is the safe-to-escape scope of e.
-                            newRefSafeToEscapeScope = curSafeToEscapeScope;
-
-                            // Since ref-fields-to-ref-structs are not
-                            // supported, we always get a non-ref-struct type
-                            // here that is safe to escape anywhere.
-                            newSafeToEscapeScope = int.MaxValue;
-
-                            // Shallow.
-                            readOnly = false;
-                        }
-                        else if (agg.IsClass)
-                        {
-                            // 2. Else if e is of a reference type, it has ref-safe-to-escape of calling method
-                            newRefSafeToEscapeScope = int.MaxValue;
-                            newSafeToEscapeScope = int.MaxValue;
-
-                            // Shallow.
-                            readOnly = false;
-                        }
-                        else
-                        {
-                            // 3. Else its ref-safe-to-escape is taken from the ref-safe-to-escape of e.
-                            newRefSafeToEscapeScope = curRefSafeToEscapeScope;
-
-                            // And the same for safe-to-escape, assuming it is a ref-struct.
-                            newSafeToEscapeScope = field.Type.IsByRefLike ? curSafeToEscapeScope : int.MaxValue;
-                        }
-
                         AddPathsRecursive(
                             MemberAccessExpression(
                                 SyntaxKind.SimpleMemberAccessExpression,
                                 curAccess,
                                 IdentifierName(field.Name)),
                             field.Type,
-                            newRefSafeToEscapeScope,
-                            newSafeToEscapeScope,
-                            readOnly);
+                            curRefEscapeScope: agg.IsClass ? int.MaxValue : curRefEscapeScope,
+                            readOnly: agg.IsClass ? false : readOnly);
                     }
                     break;
             }

@@ -8,12 +8,11 @@ namespace Fuzzlyn;
 /// </summary>
 internal class ScopeValue
 {
-    public ScopeValue(FuzzType type, ExpressionSyntax expr, int refSafeToEscapeScope, int safeToEscapeScope, bool readOnly)
+    public ScopeValue(FuzzType type, ExpressionSyntax expr, int refEscapeScope, bool readOnly)
     {
         Type = type;
         Expression = expr;
-        RefSafeToEscapeScope = refSafeToEscapeScope;
-        SafeToEscapeScope = safeToEscapeScope;
+        RefEscapeScope = refEscapeScope;
         ReadOnly = readOnly;
     }
 
@@ -28,10 +27,6 @@ internal class ScopeValue
     /// * etc.
     /// For example, a positive ref escape scope indicates that a ref to that variable can be returned to the caller of a function.
     /// </summary>
-    public int RefSafeToEscapeScope { get; }
-    // For a ref struct valued local, what scope can the value escape to?
-    public int SafeToEscapeScope { get; }
+    public int RefEscapeScope { get; }
     public bool ReadOnly { get; }
-
-    public override string ToString() => Expression.ToString();
 }

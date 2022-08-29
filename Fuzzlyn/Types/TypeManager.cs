@@ -12,7 +12,6 @@ internal class TypeManager
     private readonly List<PrimitiveType> _primitiveTypes = new();
     private readonly List<InterfaceType> _interfaceTypes = new();
     private readonly List<AggregateType> _aggTypes = new();
-    private readonly List<AggregateType> _refStructs = new();
     private readonly Dictionary<InterfaceType, List<AggregateType>> _implementingTypes = new();
 
     public TypeManager(Randomizer random)
@@ -24,15 +23,7 @@ internal class TypeManager
     public FuzzlynOptions Options => Random.Options;
 
     public AggregateType PickAggregateType()
-    {
-        if (_aggTypes.Count <= 0 && _refStructs.Count <= 0)
-        {
-            return null;
-        }
-
-        int index = Random.Next(_aggTypes.Count + _refStructs.Count);
-        return index >= _aggTypes.Count ? _refStructs[index - _aggTypes.Count] : _aggTypes[index];
-    }
+        => _aggTypes.Count > 0 ? Random.NextElement(_aggTypes) : null;
 
     public InterfaceType PickInterfaceType()
         => _interfaceTypes.Count > 0 ? Random.NextElement(_interfaceTypes) : null;
@@ -48,7 +39,7 @@ internal class TypeManager
         return type;
     }
 
-    private FuzzType PickExistingNonRefStructType()
+    public FuzzType PickExistingType()
     {
         int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count + _interfaceTypes.Count);
         if (num < _primitiveTypes.Count)
@@ -62,39 +53,15 @@ internal class TypeManager
         return _interfaceTypes[num];
     }
 
-    private FuzzType PickExistingType()
+    public FuzzType PickType(double byRefProb = 0)
     {
-        int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count + _interfaceTypes.Count + _refStructs.Count);
-        if (num < _primitiveTypes.Count)
-            return _primitiveTypes[num];
+        FuzzType type = PickExistingType();
+        int count = Options.MakeArrayCountDist.Sample(Random.Rng);
+        for (int i = 0; i < count; i++)
+            type = type.MakeArrayType(Options.ArrayRankDist.Sample(Random.Rng));
 
-        num -= _primitiveTypes.Count;
-        if (num < _aggTypes.Count)
-            return _aggTypes[num];
-
-        num -= _aggTypes.Count;
-        if (num < _interfaceTypes.Count)
-            return _interfaceTypes[num];
-
-        num -= _interfaceTypes.Count;
-        return _refStructs[num];
-    }
-
-    public FuzzType PickType(bool allowRefStructs, double byRefProb = 0)
-    {
-        FuzzType type = allowRefStructs ? PickExistingType() : PickExistingNonRefStructType();
-        if (!type.IsByRefLike)
-        {
-            int count = Options.MakeArrayCountDist.Sample(Random.Rng);
-            for (int i = 0; i < count; i++)
-                type = type.MakeArrayType(Options.ArrayRankDist.Sample(Random.Rng));
-
-            // TODO: Support ref-to-byref-structs.
-            // 
-            bool byRef = byRefProb > 0 && Random.FlipCoin(byRefProb);
-            if (byRef)
-                type = new RefType(type);
-        }
+        if (Random.FlipCoin(byRefProb))
+            type = new RefType(type);
 
         return type;
     }
@@ -102,9 +69,7 @@ internal class TypeManager
     public List<AggregateType> GetImplementingTypes(InterfaceType type)
         => _implementingTypes[type];
 
-    public IEnumerable<AggregateType> NonRefAggregateTypes => _aggTypes;
-    public IEnumerable<AggregateType> RefStructs => _refStructs;
-    public IEnumerable<AggregateType> AggregateTypes => _aggTypes.Concat(_refStructs);
+    public IEnumerable<AggregateType> AggregateTypes => _aggTypes;
     public IEnumerable<InterfaceType> InterfaceTypes => _interfaceTypes;
 
     public IEnumerable<TypeDeclarationSyntax> OutputTypes(Dictionary<FuzzType, List<MethodDeclarationSyntax>> typeMethods)
@@ -114,7 +79,7 @@ internal class TypeManager
             yield return type.Output(typeMethods.GetValueOrDefault(type) ?? new List<MethodDeclarationSyntax>());
         }
 
-        foreach (AggregateType type in _aggTypes.Concat(_refStructs).OrderBy(s => int.Parse(s.Name[1..])))
+        foreach (AggregateType type in _aggTypes)
         {
             yield return type.Output(typeMethods.GetValueOrDefault(type) ?? new List<MethodDeclarationSyntax>());
         }
@@ -145,12 +110,11 @@ internal class TypeManager
         {
             bool isClass = Random.FlipCoin(Options.MakeClassProb);
             string name = isClass ? "C" : "S";
-            name += _aggTypes.Count(t => t.IsClass == isClass) + (isClass ? 0 : _refStructs.Count);
-            AggregateType aggType = GenerateAggregateType(isClass, name);
-            (aggType.IsByRefLike ? _refStructs : _aggTypes).Add(aggType);
+            name += _aggTypes.Count(t => t.IsClass == isClass);
+            _aggTypes.Add(GenerateAggregateType(isClass, name));
         }
 
-        int numInterfaces = _aggTypes.Count <= 0 ? 0 : Options.NumInterfaceTypesDist.Sample(Random.Rng);
+        int numInterfaces = numAggs <= 0 ? 0 : Options.NumInterfaceTypesDist.Sample(Random.Rng);
         for (int i = 0; i < numInterfaces; i++)
         {
             InterfaceType it = new($"I{_interfaceTypes.Count}");
@@ -159,7 +123,7 @@ internal class TypeManager
             int numImplementors = Options.NumImplementorsDist.Sample(Random.Rng);
             Debug.Assert(numImplementors > 0);
 
-            numImplementors = Math.Min(numImplementors, _aggTypes.Count);
+            numImplementors = Math.Min(numImplementors, numAggs);
 
             List<AggregateType> implementors = new(_aggTypes);
             Random.Shuffle(implementors);
@@ -175,41 +139,19 @@ internal class TypeManager
     private AggregateType GenerateAggregateType(bool isClass, string name)
     {
         int numFields = (isClass ? Options.NumClassFieldsDist : Options.NumStructFieldsDist).Sample(Random.Rng);
-        bool byRefLike = false;
-
         List<AggregateField> fields = new(numFields);
         for (int i = 0; i < numFields; i++)
         {
             FuzzType type;
-            if (!isClass && Random.FlipCoin(Options.RefFieldProb))
-            {
-                if ((_aggTypes.Count + _refStructs.Count) > 0 && !Random.FlipCoin(Options.PrimitiveFieldProb))
-                {
-                    int index = Random.Next(_aggTypes.Count + _refStructs.Count);
-                    if (index >= _aggTypes.Count)
-                        type = _refStructs[index - _aggTypes.Count];
-                    else
-                        type = new RefType(_aggTypes[index]);
-                }
-                else
-                {
-                    type = new RefType(Random.NextElement(_primitiveTypes));
-                }
-
-                byRefLike = true;
-            }
+            if (_aggTypes.Count > 0 && !Random.FlipCoin(Options.PrimitiveFieldProb))
+                type = Random.NextElement(_aggTypes);
             else
-            {
-                if (_aggTypes.Count > 0 && !Random.FlipCoin(Options.PrimitiveFieldProb))
-                    type = Random.NextElement(_aggTypes);
-                else
-                    type = Random.NextElement(_primitiveTypes);
-            }
+                type = Random.NextElement(_primitiveTypes);
 
             fields.Add(new AggregateField(type, $"F{i}"));
         }
 
-        return new AggregateType(isClass, byRefLike, name, fields);
+        return new AggregateType(isClass, name, fields);
     }
 
     internal PrimitiveType GetPrimitiveType(SyntaxKind kind) => _primitiveTypes.First(pt => pt.Keyword == kind);

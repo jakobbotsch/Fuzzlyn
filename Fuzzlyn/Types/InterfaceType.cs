@@ -24,8 +24,6 @@ public class InterfaceType : FuzzType
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
 
-    public override bool IsByRefLike => false;
-
     public override TypeSyntax GenReferenceTo()
         => IdentifierName(Name);
 
