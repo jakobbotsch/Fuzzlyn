@@ -30,5 +30,6 @@ internal class KnownErrors
             "inVarToRegMap[varIndex] == REG_STK",
             "!\"Too many unreachable block removal loops\"",
             "block->bbNatLoopNum == loopNum",
+            "vnWx != NoVN",
         });
 }
