@@ -31,6 +31,5 @@ internal class KnownErrors
             "!foundMismatch",
             "!\"Too many unreachable block removal loops\"",
             "block->bbNatLoopNum == loopNum",
-            "vnWx != NoVN",
         });
 }
