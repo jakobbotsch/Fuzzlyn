@@ -21,7 +21,14 @@ internal class RunningExecutionServer
 
     private ReceiveResult RequestAndReceive(Request req, TimeSpan timeout)
     {
-        _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
+        try
+        {
+            _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
+        }
+        catch (IOException)
+        {
+        }
+
         bool killed = false;
         string line;
         {
