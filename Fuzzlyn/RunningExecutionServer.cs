@@ -44,7 +44,7 @@ internal class RunningExecutionServer
             return new ReceiveResult { Timeout = true };
         }
 
-        if (line == null)
+        if (string.IsNullOrWhiteSpace(line))
         {
             string stderr = _process.StandardError.ReadToEnd();
             return new ReceiveResult { Ended = true, Stderr = stderr };
