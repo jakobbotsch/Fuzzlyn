@@ -122,6 +122,7 @@ internal class RunningExecutionServer
         Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
         Process proc = Process.Start(info);
         Console.WriteLine("Started process {0}", proc.Id);
+        Console.ReadLine();
         return new RunningExecutionServer(proc);
     }
 
