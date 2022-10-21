@@ -128,8 +128,6 @@ public static class Program
             if (pair.TrackOutput)
                 runtime.ChecksumSites = new List<ChecksumSite>();
 
-            FillStack(8 * 1024 * 1024);
-
             int threadID = Environment.CurrentManagedThreadId;
             List<Exception> exceptions = null;
             void FirstChanceExceptionHandler(object sender, FirstChanceExceptionEventArgs args)
