@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -127,6 +128,8 @@ public static class Program
             if (pair.TrackOutput)
                 runtime.ChecksumSites = new List<ChecksumSite>();
 
+            FillStack(8 * 1024 * 1024);
+
             int threadID = Environment.CurrentManagedThreadId;
             List<Exception> exceptions = null;
             void FirstChanceExceptionHandler(object sender, FirstChanceExceptionEventArgs args)
@@ -197,6 +200,19 @@ public static class Program
                 NumChecksumCalls = runtime.NumChecksumCalls,
             };
         }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void FillStack(int size)
+    {
+        Span<byte> data = stackalloc byte[size];
+        data.Fill(0xcd);
+        Consume(data);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void Consume(Span<byte> bytes)
+    {
     }
 
     [Flags]
