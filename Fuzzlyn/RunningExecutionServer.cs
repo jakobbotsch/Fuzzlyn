@@ -21,6 +21,8 @@ internal class RunningExecutionServer
 
     private ReceiveResult RequestAndReceive(Request req, TimeSpan timeout)
     {
+        Console.WriteLine("Writing request to {0}, HasExited: {1}", _process.Id, _process.HasExited);
+        Console.ReadLine();
         _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
 
         bool killed = false;
@@ -119,6 +121,7 @@ internal class RunningExecutionServer
 
         Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
         Process proc = Process.Start(info);
+        Console.WriteLine("Started process {0}", proc.Id);
         return new RunningExecutionServer(proc);
     }
 
