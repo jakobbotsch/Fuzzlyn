@@ -27,7 +27,31 @@ internal class RunningExecutionServer
         {
             using var cts = new CancellationTokenSource(timeout);
             using var reg = cts.Token.Register(() => { killed = true; Kill(); });
-            line = _process.StandardOutput.ReadLine();
+            bool first = true;
+            while (true)
+            {
+                line = _process.StandardOutput.ReadLine();
+
+                if (line == null)
+                {
+                    break;
+                }
+
+                if (line.StartsWith("@!EXEC_SERVER_RESPONSE!@"))
+                {
+                    line = line["@!EXEC_SERVER_RESPONSE!@".Length..];
+                    break;
+                }
+
+                if (first)
+                {
+                    Console.WriteLine("Received unexpected output from execution server:");
+                }
+
+                Console.WriteLine(line);
+
+                first = false;
+            }
         }
 
         LastUseTimer.Restart();
@@ -43,20 +67,19 @@ internal class RunningExecutionServer
             return new ReceiveResult { Ended = true, Stderr = stderr };
         }
 
-        Response resp;
         try
         {
-            resp = JsonSerializer.Deserialize<Response>(line);
+            Response resp = JsonSerializer.Deserialize<Response>(line);
+            return new ReceiveResult { Response = resp };
         }
         catch (JsonException ex)
         {
-            Console.WriteLine("Received malformed JSON response");
+            Console.WriteLine("Could not parse JSON response");
             Console.WriteLine(ex.ToString());
             Console.WriteLine(line);
             return new ReceiveResult { Ended = true, Stderr = "Malformed result" };
         }
 
-        return new ReceiveResult { Response = JsonSerializer.Deserialize<Response>(line) };
     }
 
     public RunSeparatelyResults RunPair(ProgramPair pair, TimeSpan timeout)

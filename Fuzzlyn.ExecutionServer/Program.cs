@@ -64,6 +64,9 @@ public static class Program
                         return;
                 }
 
+                // This identifier must be in sync with
+                // RunningExecutionServer.RequestAndReceive.
+                Console.Write("@!EXEC_SERVER_RESPONSE!@");
                 Console.WriteLine(JsonSerializer.Serialize(resp));
                 if (req.Kind == RequestKind.Shutdown)
                     return;
