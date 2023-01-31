@@ -31,7 +31,7 @@ internal class CoarseStatementRemover : CSharpSyntaxRewriter
         }
         else
         {
-            // Remove everything but insert an insert statement.
+            // Remove everything but insert a return statement.
             List<StatementSyntax> stmts = new();
             if (!(orig.ReturnType is PredefinedTypeSyntax preType && preType.Keyword.IsKind(SyntaxKind.VoidKeyword)))
                 stmts.Add(ReturnStatement(DefaultExpression(orig.ReturnType)));

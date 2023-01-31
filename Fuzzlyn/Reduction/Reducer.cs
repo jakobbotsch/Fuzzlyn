@@ -399,6 +399,7 @@ internal class Reducer
         List<(string TypeName, string MethodName)> names =
             Reduced.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
+            .Where(m => m.Body != null)
             .OrderByDescending(m => m.DescendantNodes().Count())
             .Select(m => (((TypeDeclarationSyntax)m.Parent).Identifier.Text, m.Identifier.Text))
             .ToList();
