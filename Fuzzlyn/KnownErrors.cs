@@ -31,5 +31,6 @@ internal class KnownErrors
             "!foundMismatch",
             "!\"Too many unreachable block removal loops\"",
             "block->bbNatLoopNum == loopNum",
+            "((tree->gtFlags & GTF_VAR_DEF) == 0) && (tree->GetLclNum() == lclNum) && tree->gtVNPair.BothDefined()",
         });
 }
