@@ -231,34 +231,31 @@ internal class Program
         List<double> sizes = new();
         void AddProgramSize(CompilationUnitSyntax unit, ulong seed)
         {
-            unit = unit.NormalizeWhitespace();
-            double size = unit.ToFullString().Length;
+            double size = unit.NormalizeWhitespace().ToFullString().Length;
             lock (sizes)
             {
                 sizes.Add(size);
-                if (sizes.Count % 500 != 0)
-                    return;
-
-                Console.WriteLine("Stats of {0} examples", sizes.Count);
-                Console.WriteLine("Average program size: {0:F2} KiB", sizes.Average() / 1024.0);
-                Console.WriteLine("Min program size: {0} B", sizes.Min());
-                Console.WriteLine("Max program size: {0} KiB", sizes.Max() / 1024.0);
-                Console.WriteLine("# programs < 2 KiB: {0}", sizes.Count(s => s < 2048));
-                Console.WriteLine("10th percentiles:");
-                List<double> sortedSizes = sizes.OrderBy(s => s).ToList();
-                int programsPerPercentile = sortedSizes.Count / 10;
-                for (int i = 0; i < 10; i++)
-                {
-                    double min = sortedSizes[i * programsPerPercentile];
-                    double max = i == 9 ? sortedSizes.Last() : sortedSizes[(i + 1) * programsPerPercentile];
-                    Console.WriteLine("{0:F2} KiB <= size <{1} {2:F2} KiB: {3} programs", min / 1024, i == 9 ? "=" : "", max / 1024, programsPerPercentile);
-                }
-
-                Console.WriteLine();
             }
         }
 
         GeneratePrograms(options, AddProgramSize);
+
+        Console.WriteLine("Stats of {0} examples", sizes.Count);
+        Console.WriteLine("Average program size: {0:F2} KiB", sizes.Average() / 1024.0);
+        Console.WriteLine("Min program size: {0} B", sizes.Min());
+        Console.WriteLine("Max program size: {0:F2} KiB", sizes.Max() / 1024.0);
+        Console.WriteLine("# programs < 2 KiB: {0}", sizes.Count(s => s < 2048));
+        Console.WriteLine("10th percentiles:");
+        List<double> sortedSizes = sizes.OrderBy(s => s).ToList();
+        int programsPerPercentile = sortedSizes.Count / 10;
+        for (int i = 0; i < 10; i++)
+        {
+            double min = sortedSizes[i * programsPerPercentile];
+            double max = i == 9 ? sortedSizes.Last() : sortedSizes[(i + 1) * programsPerPercentile];
+            Console.WriteLine("{0:F2} KiB <= size <{1} {2:F2} KiB: {3} programs", min / 1024, i == 9 ? "=" : "", max / 1024, programsPerPercentile);
+        }
+
+        Console.WriteLine();
     }
 
     private static void GenerateProgramsAndCheck(FuzzlynOptions options)
