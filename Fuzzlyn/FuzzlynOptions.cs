@@ -17,6 +17,7 @@ internal class FuzzlynOptions
     public bool Output { get; set; } = false;
     public bool EnableChecksumming { get; set; } = true;
     public bool Reduce { get; set; } = false;
+    public bool Execute { get; set; } = true;
     public bool Stats { get; set; } = false;
     public KnownErrors KnownErrors { get; set; }
     // Probability that we pick a class when generating a new type. Otherwise we make a struct.
