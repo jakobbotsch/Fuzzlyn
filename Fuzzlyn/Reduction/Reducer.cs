@@ -865,51 +865,6 @@ public class Runtime : IRuntime
         }
     }
 
-    /// <summary>
-    /// Simplifies everything related to the runtime; removes the s_rt field,
-    /// and associated assignments, and converts checksum calls into Console.WriteLine.
-    /// </summary>
-    private void SimplifyRuntime()
-    {
-        // First remove argument to Main
-        MethodDeclarationSyntax mainMethod =
-            Reduced.DescendantNodes().OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.Text == "Main");
-
-        CompilationUnitSyntax withArgRemoved =
-            Reduced.ReplaceNode(mainMethod, mainMethod.WithParameterList(ParameterList()));
-
-        Dictionary<SyntaxNode, SyntaxNode> replacements = new();
-        foreach (SyntaxNode node in withArgRemoved.DescendantNodes())
-        {
-            // Remove s_rt field
-            if (node is FieldDeclarationSyntax field && field.Declaration.Variables.Count == 1 &&
-                field.Declaration.Variables[0].Identifier.Text == "s_rt")
-            {
-                replacements.Add(node, null);
-                continue;
-            }
-
-            if (node is not ExpressionStatementSyntax expStmt)
-                continue;
-
-            // Remove s_rt = rt
-            if (expStmt.Expression is AssignmentExpressionSyntax asgn && asgn.Left is IdentifierNameSyntax id &&
-                id.Identifier.Text == "s_rt")
-            {
-                replacements.Add(node, null);
-                continue;
-            }
-
-            // Convert s_rt.Checksum calls to s_rt.WriteLine
-            if (expStmt.Expression is InvocationExpressionSyntax invoc && invoc.Expression is MemberAccessExpressionSyntax mem && mem.Name.Identifier.Text == "Checksum")
-            {
-                replacements.Add(mem.Name, IdentifierName("WriteLine"));
-            }
-        }
-
-        UpdateReduced("Remove runtime code", withArgRemoved.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]));
-    }
-
     private struct DisableWERModal : IDisposable
     {
         public DisableWERModal()
