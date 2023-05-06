@@ -26,11 +26,7 @@ internal class KnownErrors
     public static KnownErrors DotnetRuntime { get; } = new KnownErrors(
         new string[]
         {
-            "interval->isSpilled",
-            "inVarToRegMap[varIndex] == REG_STK",
-            "!foundMismatch",
             "!\"Too many unreachable block removal loops\"",
-            "block->bbNatLoopNum == loopNum",
             "((tree->gtFlags & GTF_VAR_DEF) == 0) && (tree->GetLclNum() == lclNum) && tree->gtVNPair.BothDefined()",
         });
 }
