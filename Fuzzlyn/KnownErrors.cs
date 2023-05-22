@@ -30,5 +30,6 @@ internal class KnownErrors
             "((tree->gtFlags & GTF_VAR_DEF) == 0) && (tree->GetLclNum() == lclNum) && tree->gtVNPair.BothDefined()",
             "inVarToRegMap[varIndex] == REG_STK",
             "interval->isSpilled",
+            "!foundMismatch",
         });
 }
