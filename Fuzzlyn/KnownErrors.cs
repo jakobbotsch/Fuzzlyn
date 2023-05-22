@@ -27,7 +27,6 @@ internal class KnownErrors
         new string[]
         {
             "!\"Too many unreachable block removal loops\"",
-            "((tree->gtFlags & GTF_VAR_DEF) == 0) && (tree->GetLclNum() == lclNum) && tree->gtVNPair.BothDefined()",
             "inVarToRegMap[varIndex] == REG_STK",
             "interval->isSpilled",
             "!foundMismatch",
