@@ -985,9 +985,6 @@ internal class FuncBodyGenerator
                         lvalue.Expression,
                         IdentifierName(randomField.Field.Name));
 
-                bool aligned = oat.Layout.Alignment >= alignment && (randomField.Offset % alignment) == 0;
-
-                TypeSyntax asTo = aligned ? type.GenReferenceTo() : PredefinedType(Token(SyntaxKind.ByteKeyword));
                 ExpressionSyntax reinterpretation = 
                     InvocationExpression(
                         MemberAccessExpression(
@@ -997,30 +994,27 @@ internal class FuncBodyGenerator
                                 Identifier("As"))
                             .WithTypeArgumentList(
                                 TypeArgumentList(
-                                    SeparatedList(new[] { randomField.Type.GenReferenceTo(), asTo })))))
+                                    SeparatedList(new[] { randomField.Type.GenReferenceTo(), PredefinedType(Token(SyntaxKind.ByteKeyword)) })))))
                     .WithArgumentList(
                         ArgumentList(
                             SingletonSeparatedList(
                                 Argument(fieldAccess).WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
 
-                if (!aligned)
-                {
-                    reinterpretation =
-                        InvocationExpression(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName("Unsafe"),
-                                GenericName(
-                                    Identifier("ReadUnaligned"))
-                                .WithTypeArgumentList(
-                                    TypeArgumentList(
-                                        SingletonSeparatedList(type.GenReferenceTo())))))
-                        .WithArgumentList(
-                            ArgumentList(
-                                SingletonSeparatedList(
-                                    Argument(reinterpretation)
-                                    .WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
-                }
+                reinterpretation =
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("Unsafe"),
+                            GenericName(
+                                Identifier("ReadUnaligned"))
+                            .WithTypeArgumentList(
+                                TypeArgumentList(
+                                    SingletonSeparatedList(type.GenReferenceTo())))))
+                    .WithArgumentList(
+                        ArgumentList(
+                            SingletonSeparatedList(
+                                Argument(reinterpretation)
+                                .WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
 
                 return reinterpretation;
             }

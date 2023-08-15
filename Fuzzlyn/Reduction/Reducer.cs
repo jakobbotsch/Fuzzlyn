@@ -688,7 +688,9 @@ public static void Main()
                 throw new Exception(
                     "Got compiler errors when creating standalone repro:"
                     + Environment.NewLine
-                    + string.Join(Environment.NewLine, result.CompileErrors));
+                    + string.Join(Environment.NewLine, result.CompileErrors)
+                    + Environment.NewLine + Environment.NewLine
+                    + node.NormalizeWhitespace().ToFullString());
             }
 
             File.WriteAllBytes(tempAsmPath, result.Assembly);
@@ -1376,17 +1378,17 @@ public class Runtime : IRuntime
             IEnumerable<InvocationExpressionSyntax> invocs =
                 comp.DescendantNodes().OfType<InvocationExpressionSyntax>();
 
-            static bool IsUnsafeAs(ExpressionSyntax expr)
+            static bool IsUnsafeMethod(ExpressionSyntax expr)
             {
                 return
                     expr is MemberAccessExpressionSyntax
                     {
                         Expression: IdentifierNameSyntax { Identifier.ValueText: "Unsafe" },
-                        Name: GenericNameSyntax { Identifier.ValueText: "As" }
+                        Name: GenericNameSyntax { Identifier.ValueText: "As" or "ReadUnaligned" }
                     };
             }
 
-            if (invocs.Any(invoc => IsUnsafeAs(invoc.Expression)))
+            if (invocs.Any(invoc => IsUnsafeMethod(invoc.Expression)))
             {
                 canRemove = false;
             }
