@@ -83,6 +83,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 IsUnsigned = true,
                 Type = typeof(ulong),
                 IsIntegral = true,
+                Size = sizeof(ulong),
             },
             [SyntaxKind.LongKeyword] = new PrimitiveTypeInfo
             {
@@ -90,6 +91,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((long)rng.NextUInt64())),
                 Type = typeof(long),
                 IsIntegral = true,
+                Size = sizeof(long),
             },
             [SyntaxKind.UIntKeyword] = new PrimitiveTypeInfo
             {
@@ -98,6 +100,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 IsUnsigned = true,
                 Type = typeof(uint),
                 IsIntegral = true,
+                Size = sizeof(uint),
             },
             [SyntaxKind.IntKeyword] = new PrimitiveTypeInfo
             {
@@ -105,6 +108,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((int)rng.NextUInt64())),
                 Type = typeof(int),
                 IsIntegral = true,
+                Size = sizeof(int),
             },
             [SyntaxKind.UShortKeyword] = new PrimitiveTypeInfo
             {
@@ -113,6 +117,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 IsUnsigned = true,
                 Type = typeof(ushort),
                 IsIntegral = true,
+                Size = sizeof(ushort),
             },
             [SyntaxKind.ShortKeyword] = new PrimitiveTypeInfo
             {
@@ -120,6 +125,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((short)rng.NextUInt64())),
                 Type = typeof(short),
                 IsIntegral = true,
+                Size = sizeof(short),
             },
             [SyntaxKind.ByteKeyword] = new PrimitiveTypeInfo
             {
@@ -128,6 +134,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 IsUnsigned = true,
                 Type = typeof(byte),
                 IsIntegral = true,
+                Size = sizeof(byte),
             },
             [SyntaxKind.SByteKeyword] = new PrimitiveTypeInfo
             {
@@ -135,12 +142,14 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
                 GenRandomLiteral = rng => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((sbyte)rng.NextUInt64())),
                 Type = typeof(sbyte),
                 IsIntegral = true,
+                Size = sizeof(sbyte),
             },
             [SyntaxKind.BoolKeyword] = new PrimitiveTypeInfo
             {
                 AllowedAdditionalAssignments = boolAssigns,
                 GenRandomLiteral = rng => LiteralExpression(rng.Next(2) == 0 ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression),
                 Type = typeof(bool),
+                Size = sizeof(bool),
             },
         };
     }
@@ -153,4 +162,5 @@ internal class PrimitiveTypeInfo
     public bool IsUnsigned { get; set; }
     public Type Type { get; set; }
     public bool IsIntegral { get; set; }
+    public int Size { get; set; }
 }

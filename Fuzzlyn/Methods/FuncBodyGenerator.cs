@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Methods;
@@ -423,6 +424,10 @@ internal class FuncBodyGenerator
                 case ExpressionKind.NewObject:
                     if (AllowRecursion())
                         gen = GenNewObject(type);
+                    break;
+                case ExpressionKind.Reinterpret:
+                    if (AllowRecursion())
+                        gen = GenReinterpretation(type);
                     break;
                 default:
                     throw new Exception("Unreachable");
@@ -931,6 +936,99 @@ internal class FuncBodyGenerator
         return creation;
     }
 
+    private ExpressionSyntax GenReinterpretation(FuzzType type)
+    {
+        PrimitiveType pt = type as PrimitiveType;
+        AggregateType at = type as AggregateType;
+
+        if (pt == null && (at == null || at.Layout == null))
+        {
+            return null;
+        }
+
+        List<LValueInfo> lvalues = CollectVariablePaths(null, int.MaxValue, true, false, false);
+        _random.Shuffle(lvalues);
+
+        int size = pt?.Info.Size ?? at.Layout.Size;
+        int alignment = pt?.Info.Size ?? at.Layout.Alignment;
+
+        foreach (LValueInfo lvalue in lvalues)
+        {
+            if (lvalue.Type is not AggregateType oat || oat.Layout == null || oat == type || oat.Layout.Size < size)
+            {
+                continue;
+            }
+
+            int upperIndex = oat.Layout.FirstFieldAfter(oat.Layout.Size - size);
+            Debug.Assert(upperIndex > 0);
+
+            for (int i = 0; i < 10; i++)
+            {
+                ref LayoutField randomField = ref oat.Layout.Fields[_random.Rng.Next(upperIndex)];
+                if (randomField.Type == type)
+                    continue;
+
+                if (pt != null)
+                {
+                    if (oat.FlattenedLayout.TouchesPadding(randomField.Offset, size))
+                        continue;
+                }
+                else
+                {
+                    if (at.FlattenedLayout.IsSubsetCompatible(oat.FlattenedLayout, randomField.Offset))
+                        continue;
+                }
+
+                ExpressionSyntax fieldAccess =
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        lvalue.Expression,
+                        IdentifierName(randomField.Field.Name));
+
+                bool aligned = oat.Layout.Alignment >= alignment && (randomField.Offset % alignment) == 0;
+
+                TypeSyntax asTo = aligned ? type.GenReferenceTo() : PredefinedType(Token(SyntaxKind.ByteKeyword));
+                ExpressionSyntax reinterpretation = 
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("Unsafe"),
+                            GenericName(
+                                Identifier("As"))
+                            .WithTypeArgumentList(
+                                TypeArgumentList(
+                                    SeparatedList(new[] { randomField.Type.GenReferenceTo(), asTo })))))
+                    .WithArgumentList(
+                        ArgumentList(
+                            SingletonSeparatedList(
+                                Argument(fieldAccess).WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
+
+                if (!aligned)
+                {
+                    reinterpretation =
+                        InvocationExpression(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("Unsafe"),
+                                GenericName(
+                                    Identifier("ReadUnaligned"))
+                                .WithTypeArgumentList(
+                                    TypeArgumentList(
+                                        SingletonSeparatedList(type.GenReferenceTo())))))
+                        .WithArgumentList(
+                            ArgumentList(
+                                SingletonSeparatedList(
+                                    Argument(reinterpretation)
+                                    .WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
+                }
+
+                return reinterpretation;
+            }
+        }
+
+        return null;
+    }
+
     internal static IEnumerable<StatementSyntax> GenChecksumming(bool prefixRuntimeAccess, IEnumerable<ScopeValue> variables, Func<string> siteIdGenerator)
     {
         List<LValueInfo> paths = new();
@@ -1048,4 +1146,5 @@ internal enum ExpressionKind
     Increment,
     Decrement,
     NewObject,
+    Reinterpret,
 }

@@ -61,14 +61,15 @@ internal class FuzzlynOptions
     public ProbabilityDistribution ExpressionTypeDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {
-            [(int)ExpressionKind.MemberAccess] = 0.46,
-            [(int)ExpressionKind.Literal] = 0.21,
+            [(int)ExpressionKind.MemberAccess] = 0.42,
+            [(int)ExpressionKind.Literal] = 0.19,
             [(int)ExpressionKind.Call] = 0.11,
             [(int)ExpressionKind.NewObject] = 0.02,
-            [(int)ExpressionKind.Unary] = 0.05,
-            [(int)ExpressionKind.Binary] = 0.05,
-            [(int)ExpressionKind.Increment] = 0.05,
-            [(int)ExpressionKind.Decrement] = 0.05,
+            [(int)ExpressionKind.Unary] = 0.04,
+            [(int)ExpressionKind.Binary] = 0.04,
+            [(int)ExpressionKind.Increment] = 0.04,
+            [(int)ExpressionKind.Decrement] = 0.04,
+            [(int)ExpressionKind.Reinterpret] = 0.1,
         });
 
     // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
@@ -171,6 +172,7 @@ internal enum LValueKind
     Local,
     Static,
     RefReturningCall,
+    Reinterpretation,
 }
 
 internal class HillEquationParameters

@@ -60,10 +60,23 @@ internal class CodeGenerator
 
         types = types.Concat(new[] { programClass });
 
+        unit = unit.WithUsings(OutputUsings().ToSyntaxList());
         unit = unit.WithMembers(types.ToSyntaxList());
         unit = unit.WithLeadingTrivia(OutputHeader().Select(Comment));
 
         return unit;
+    }
+
+    private IEnumerable<UsingDirectiveSyntax> OutputUsings()
+    {
+        UsingDirectiveSyntax us =
+            UsingDirective(
+                    QualifiedName(
+                        QualifiedName(
+                            IdentifierName("System"),
+                            IdentifierName("Runtime")),
+                        IdentifierName("CompilerServices")));
+        yield return us;
     }
 
     private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers(List<MethodDeclarationSyntax> methods)
