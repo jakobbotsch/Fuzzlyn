@@ -69,14 +69,14 @@ internal class CodeGenerator
 
     private IEnumerable<UsingDirectiveSyntax> OutputUsings()
     {
-        UsingDirectiveSyntax us =
+        UsingDirectiveSyntax compilerServices =
             UsingDirective(
                     QualifiedName(
                         QualifiedName(
                             IdentifierName("System"),
                             IdentifierName("Runtime")),
                         IdentifierName("CompilerServices")));
-        yield return us;
+        yield return compilerServices;
     }
 
     private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers(List<MethodDeclarationSyntax> methods)
@@ -137,7 +137,7 @@ internal class CodeGenerator
             if (Options.EnableChecksumming)
             {
                 IEnumerable<StatementSyntax> staticChecksums =
-                    FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
+                    FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false, false)), GenerateChecksumSiteId);
 
                 foreach (StatementSyntax checksumStatement in staticChecksums)
                     yield return checksumStatement;

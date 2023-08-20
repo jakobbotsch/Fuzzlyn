@@ -61,15 +61,14 @@ internal class FuzzlynOptions
     public ProbabilityDistribution ExpressionTypeDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {
-            [(int)ExpressionKind.MemberAccess] = 0.42,
-            [(int)ExpressionKind.Literal] = 0.19,
+            [(int)ExpressionKind.MemberAccess] = 0.46,
+            [(int)ExpressionKind.Literal] = 0.21,
             [(int)ExpressionKind.Call] = 0.11,
             [(int)ExpressionKind.NewObject] = 0.02,
-            [(int)ExpressionKind.Unary] = 0.04,
-            [(int)ExpressionKind.Binary] = 0.04,
-            [(int)ExpressionKind.Increment] = 0.04,
-            [(int)ExpressionKind.Decrement] = 0.04,
-            [(int)ExpressionKind.Reinterpret] = 0.1,
+            [(int)ExpressionKind.Unary] = 0.05,
+            [(int)ExpressionKind.Binary] = 0.05,
+            [(int)ExpressionKind.Increment] = 0.05,
+            [(int)ExpressionKind.Decrement] = 0.05,
         });
 
     // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
@@ -152,11 +151,17 @@ internal class FuzzlynOptions
     public double ParameterIsByRefProb { get; set; } = 0.25;
     public double LocalIsByRefProb { get; set; } = 0.10;
     public double ReturnTypeIsByRefProb { get; set; } = 0.20;
-    /// <summary>Probably to generate a ref-reassign when assigning a by-ref value.</summary>
+    /// <summary>Probability to generate a ref-reassign when assigning a by-ref value.</summary>
     public double AssignGenRefReassignProb { get; set; } = 0.25;
 
     /// <summary>Probability that we select a local over a static when generating a member access expression.</summary>
     public double MemberAccessSelectLocalProb { get; set; } = 0.8;
+
+    /// <summary>Probability to try to generate an unsafe reinterpretation when generating a struct assignment.</summary>
+    public double AssignGenUnsafeStructReinterpretation { get; set; } = 0.5;
+    /// <summary>Probability to try to generate an unsafe reinterpretation when generating a primitive assignment.</summary>
+    public double AssignGenUnsafePrimitiveReinterpretation { get; set; } = 0.1;
+
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }
      = new TableDistribution(new Dictionary<int, double>
