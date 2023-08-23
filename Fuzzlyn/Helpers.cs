@@ -70,7 +70,7 @@ internal static class Helpers
 
     public static void SetExecutionEnvironmentVariables(StringDictionary envVars)
     {
-        envVars["COMPlus_TieredCompilation"] = "0";
-        envVars["COMPlus_JitThrowOnAssertionFailure"] = "1";
+        envVars["DOTNET_TieredCompilation"] = "0";
+        envVars["DOTNET_JitThrowOnAssertionFailure"] = "1";
     }
 }

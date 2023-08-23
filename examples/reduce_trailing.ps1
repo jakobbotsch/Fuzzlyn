@@ -1,4 +1,4 @@
-$env:COMPlus_TieredCompilation='0'
+$env:DOTNET_TieredCompilation='0'
 Get-Content -Path ..\Fuzzlyn\publish\windows-x64\Execution_Mismatch.txt -Wait | % {
 	if ($_ -notmatch '^Seed: [0-9]+') {
 	    return
@@ -9,7 +9,7 @@ Get-Content -Path ..\Fuzzlyn\publish\windows-x64\Execution_Mismatch.txt -Wait | 
 		Write-Host "Skipping $seed because it is already reduced"
 		return
 	}
-	
+
 	Write-Host "Reducing $seed"
 	& ..\Fuzzlyn\publish\windows-x64\Fuzzlyn.exe --seed=$seed --reduce > "reduced\\$seed.cs"
 	if ($lastexitcode -ne 0) {
