@@ -164,6 +164,11 @@ public static class Program
                 // thrown because value = 1 did not get to run.
                 Exception ex = exceptions[0];
 
+                if (ex is TypeInitializationException && ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
+
                 if (ex is InvalidProgramException && ex.Message.Contains("JIT assert failed"))
                 {
                     return new ProgramResult
