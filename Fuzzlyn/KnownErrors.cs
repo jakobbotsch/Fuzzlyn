@@ -28,8 +28,6 @@ internal class KnownErrors
         {
             "!\"Too many unreachable block removal loops\"",
             "inVarToRegMap[varIndex] == REG_STK",
-            "interval->isSpilled",
             "!foundMismatch",
-            "!\"Bad CastToType() in gtFoldExprConst() for a cast from long\"",
         });
 }
