@@ -652,13 +652,11 @@ public static void Main()
             (string releaseStdout, string releaseStderr) = ExecuteInSubProcess(prog, Compiler.ReleaseOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
             if (debugStderr.Contains("Assert failure") || debugStderr.Contains("JIT assert failed"))
             {
-                Console.WriteLine("Standalone is interesting due to assert failure in debug:{0}{1}", Environment.NewLine, debugStderr);
                 return true;
             }
 
             if (releaseStderr.Contains("Assert failure") || releaseStderr.Contains("JIT assert failed"))
             {
-                Console.WriteLine("Standalone is interesting due to assert failure in release:{0}{1}", Environment.NewLine, releaseStderr);
                 return true;
             }
 
@@ -670,13 +668,11 @@ public static void Main()
             string releaseExceptionLine = releaseStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
             if (debugExceptionLine != releaseExceptionLine)
             {
-                Console.WriteLine("Standalone is interesting due to different unhandled exceptions:{0}{1}{0}VS{0}{2}", Environment.NewLine, debugExceptionLine, releaseExceptionLine);
                 return true;
             }
 
             if (debugStdout != releaseStdout)
             {
-                Console.WriteLine("Standalone is interesting due to different stdout:{0}{1}{0}VS{0}{2}", Environment.NewLine, debugStdout, releaseStdout);
                 return true;
             }
 
