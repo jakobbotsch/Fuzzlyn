@@ -488,21 +488,9 @@ public class OptionException : Exception
         this.option = optionName;
     }
 
-    protected OptionException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
-    {
-        this.option = info.GetString("OptionName");
-    }
-
     public string OptionName
     {
         get { return this.option; }
-    }
-
-    public override void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-        base.GetObjectData(info, context);
-        info.AddValue("OptionName", option);
     }
 }
 
