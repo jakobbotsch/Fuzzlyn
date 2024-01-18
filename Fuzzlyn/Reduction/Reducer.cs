@@ -617,11 +617,6 @@ public static void Main()
 
         prog = prog.ReplaceNodes(replacements.Keys, (orig, _) => replacements[orig]);
 
-        UpdateReduced("Make standalone", prog);
-
-        if (!IsStandaloneProgramInteresting(prog))
-            return;
-
         bool TryReplacement(string update, Func<CompilationUnitSyntax, CompilationUnitSyntax> reducer)
         {
             CompilationUnitSyntax newNode = reducer(Reduced);
@@ -633,6 +628,9 @@ public static void Main()
 
             return false;
         }
+
+        if (!TryReplacement("Make standalone", old => prog))
+            return;
 
         if (TryReplacement("Remove ALC", RemoveALC))
         {
