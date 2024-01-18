@@ -34,6 +34,7 @@ internal class Program
         bool? enableChecksumming = null;
         bool? reduce = null;
         string reduceDebugGitDir = null;
+        string collectSpmiTo = null;
         string outputPath = null;
         bool? stats = null;
         bool? execute = null;
@@ -60,6 +61,7 @@ internal class Program
             { "reduce", "Reduce program to a minimal example", v => reduce = v != null },
             { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
             { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
+            { "collect-spmi-to=", "Collect SPMI collections to specified directory", v => collectSpmiTo = v },
             { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
             { "execute", "Whether or not to execute the generated and compiled programs (enabled by default, disable with --execute-) ", v => execute = v != null },
             { "known-errors=", "A JSON file of known error strings that will be ignored, or the string \"dotnet/runtime\" to use a built-in list for the tip of dotnet/runtime.", v => knownErrors = v },
@@ -117,6 +119,8 @@ internal class Program
             options.EnableChecksumming = enableChecksumming.Value;
         if (reduce.HasValue)
             options.Reduce = reduce.Value;
+        if (collectSpmiTo != null)
+            options.CollectSpmiTo = collectSpmiTo;
         if (stats.HasValue)
             options.Stats = stats.Value;
         if (execute.HasValue)
@@ -176,11 +180,21 @@ internal class Program
     {
         if (!File.Exists(options.Host))
         {
-            Console.WriteLine("Error: invalid host specified");
+            Console.WriteLine("Error: invalid host specified ({0})", options.Host);
             return false;
         }
 
-        s_executionServerPool = new ExecutionServerPool(options.Host);
+        SpmiSetupOptions spmiOptions = null;
+        if (options.CollectSpmiTo != null)
+        {
+            spmiOptions = SpmiSetupOptions.Create(options.CollectSpmiTo, options.Host, out string error);
+            if (spmiOptions == null)
+            {
+                Console.WriteLine("Error: {0}", error);
+                return false;
+            }
+        }
+        s_executionServerPool = new ExecutionServerPool(options.Host, spmiOptions);
         return true;
     }
 

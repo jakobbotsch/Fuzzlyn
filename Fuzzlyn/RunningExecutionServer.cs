@@ -124,7 +124,7 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(string host)
+    public static RunningExecutionServer Create(string host, SpmiSetupOptions spmiOptions)
     {
         string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
         ProcessStartInfo info = new()
@@ -140,6 +140,12 @@ internal class RunningExecutionServer
         info.ArgumentList.Add(executorPath);
 
         Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
+
+        if (spmiOptions != null)
+        {
+            Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, spmiOptions);
+        }
+
         Process proc = Process.Start(info);
         return new RunningExecutionServer(proc);
     }

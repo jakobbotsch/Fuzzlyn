@@ -10,12 +10,14 @@ internal class ExecutionServerPool
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
 
-    public ExecutionServerPool(string host)
+    public ExecutionServerPool(string host, SpmiSetupOptions spmiOptions)
     {
         Host = host;
+        SpmiOptions = spmiOptions;
     }
 
     public string Host { get; }
+    public SpmiSetupOptions SpmiOptions { get; }
 
     private List<RunningExecutionServer> _pool = new();
 
@@ -46,7 +48,7 @@ internal class ExecutionServerPool
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(Host);
+            RunningExecutionServer created = RunningExecutionServer.Create(Host, SpmiOptions);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -56,7 +58,7 @@ internal class ExecutionServerPool
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(Host);
+        return RunningExecutionServer.Create(Host, SpmiOptions);
     }
 
     private void Return(RunningExecutionServer server)

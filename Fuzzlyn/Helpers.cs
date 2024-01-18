@@ -73,4 +73,11 @@ internal static class Helpers
         envVars["DOTNET_TieredCompilation"] = "0";
         envVars["DOTNET_JitThrowOnAssertionFailure"] = "1";
     }
+
+    public static void SetSpmiCollectionEnvironmentVariables(StringDictionary envVars, SpmiSetupOptions options)
+    {
+        envVars["DOTNET_JitName"] = options.ShimName;
+        envVars["SuperPMIShimLogPath"] = options.CollectionDirectory;
+        envVars["SuperPMIShimPath"] = options.JitPath;
+    }
 }
