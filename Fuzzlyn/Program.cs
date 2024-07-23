@@ -341,7 +341,7 @@ internal class Program
                 {
                     string elapsedOutOf = options.TimeToRun.HasValue ? $"/{options.TimeToRun.Value:c}" : "";
                     string numProgramsOutOf = options.TimeToRun.HasValue ? "" : $"/{options.NumPrograms}";
-                    TimeSpan elapsedWithoutMs = new TimeSpan(0, 0, (int)timer.Elapsed.TotalSeconds);
+                    TimeSpan elapsedWithoutMs = new(0, 0, (int)timer.Elapsed.TotalSeconds);
                     Console.WriteLine($"{elapsedWithoutMs:c}{elapsedOutOf} elapsed, {programIndex}{numProgramsOutOf} programs generated, {s_numDeviating} examples found");
                 }
             }

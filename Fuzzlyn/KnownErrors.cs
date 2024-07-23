@@ -5,7 +5,7 @@ namespace Fuzzlyn;
 
 internal class KnownErrors(IEnumerable<string> errors)
 {
-    private readonly HashSet<string> _errors = new HashSet<string>(errors);
+    private readonly HashSet<string> _errors = new(errors);
 
     public bool Contains(string fullError)
     {
