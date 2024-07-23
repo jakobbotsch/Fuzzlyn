@@ -275,8 +275,8 @@ internal class FuncBodyGenerator(
         ExpressionSyntax right = GenExpression(rhsType);
         // For modulo and division we don't want to throw divide-by-zero exceptions,
         // so always or right-hand-side with 1.
-        if (assignmentKind == SyntaxKind.ModuloAssignmentExpression ||
-            assignmentKind == SyntaxKind.DivideAssignmentExpression)
+        if ((assignmentKind is SyntaxKind.ModuloAssignmentExpression or SyntaxKind.DivideAssignmentExpression) &&
+            (rhsType is not PrimitiveType { Info: { IsFloat: true } }))
         {
             right =
                 CastExpression(
@@ -631,11 +631,13 @@ internal class FuncBodyGenerator(
             return PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, ParenthesizeIfNecessary(GenNonLiteralExpression(type)));
         }
 
-        // Unary minus is not valid for ulong, so there we always pick ~
-        SyntaxKind op =
-            pt.Keyword == SyntaxKind.ULongKeyword
-            ? SyntaxKind.BitwiseNotExpression
-            : (SyntaxKind)Options.UnaryIntegralDist.Sample(_random.Rng);
+        SyntaxKind op = pt.Keyword switch
+        {
+            // Unary minus is not valid for ulong, so there we always pick ~
+            SyntaxKind.ULongKeyword => SyntaxKind.BitwiseNotExpression,
+            SyntaxKind.FloatKeyword or SyntaxKind.DoubleKeyword => (SyntaxKind)Options.UnaryFloatDist.Sample(_random.Rng),
+            _ => (SyntaxKind)Options.UnaryFloatDist.Sample(_random.Rng),
+        };
 
         ExpressionSyntax expr = PrefixUnaryExpression(op, ParenthesizeIfNecessary(GenNonLiteralExpression(type)));
 
@@ -662,7 +664,7 @@ internal class FuncBodyGenerator(
         if (pt.Keyword == SyntaxKind.BoolKeyword)
             return GenBoolProducingBinary();
 
-        return GenIntegralProducingBinary(pt);
+        return GenNumericProducingBinary(pt);
     }
 
     private ExpressionSyntax GenBoolProducingBinary()
@@ -705,25 +707,40 @@ internal class FuncBodyGenerator(
         return expr;
     }
 
-    private ExpressionSyntax GenIntegralProducingBinary(PrimitiveType type)
+    private ExpressionSyntax GenNumericProducingBinary(PrimitiveType type)
     {
-        Debug.Assert(type.Info.IsIntegral);
+        Debug.Assert(type.Info.IsNumeric);
         SyntaxKind op = (SyntaxKind)Options.BinaryIntegralDist.Sample(_random.Rng);
 
+        PrimitiveType leftType;
         BinOpTable table;
-        if (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression)
+        if (op is SyntaxKind.LeftShiftExpression or SyntaxKind.RightShiftExpression)
+        {
             table = BinOpTable.Shifts;
+            leftType = _types.PickPrimitiveType(f => f.Info.IsNumeric && !f.Info.IsFloat);
+        }
+        else if (op is SyntaxKind.BitwiseAndExpression or SyntaxKind.BitwiseOrExpression or SyntaxKind.ExclusiveOrExpression)
+        {
+            table = BinOpTable.BitwiseOps;
+            leftType = _types.PickPrimitiveType(f => f.Info.IsNumeric && !f.Info.IsFloat);
+        }
         else
+        {
             table = BinOpTable.Arithmetic;
+            leftType = _types.PickPrimitiveType(f => f.Info.IsNumeric);
+        }
 
-        PrimitiveType leftType = _types.PickPrimitiveType(f => f.Keyword != SyntaxKind.BoolKeyword);
         PrimitiveType rightType =
             _types.PickPrimitiveType(f => table.GetResultType(leftType.Keyword, f.Keyword).HasValue);
 
         var (left, right) = GenLeftRightForBinary(leftType, rightType);
 
-        if (op == SyntaxKind.ModuloExpression || op == SyntaxKind.DivideExpression)
+        var resultType = table.GetResultType(leftType.Keyword, rightType.Keyword).Value;
+
+        if ((op is SyntaxKind.ModuloExpression or SyntaxKind.DivideExpression) &&
+            (resultType is not SyntaxKind.FloatKeyword and not SyntaxKind.DoubleKeyword))
         {
+            // Integer division can throw -- or by 1 to make sure this doesn't happen.
             right = CastExpression(
                 rightType.GenReferenceTo(),
                 ParenthesizedExpression(

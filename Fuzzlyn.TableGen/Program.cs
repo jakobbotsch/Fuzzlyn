@@ -15,6 +15,8 @@ internal class Program
         GenTable("+");
         Console.WriteLine("Table for shifts:");
         GenTable("<<");
+        Console.WriteLine("Table for bitwise ops:");
+        GenTable("^");
         Console.WriteLine("Table for equality:");
         GenTable("==");
         Console.WriteLine("Table for relops:");
@@ -24,8 +26,8 @@ internal class Program
 
     private static void GenTable(string op)
     {
-        string[] types = { "sbyte", "short", "int", "long", "byte", "ushort", "uint", "ulong", "bool", };
-        string[] shortNames = { "i08", "i16", "i32", "i64", "u08", "u16", "u32", "u64", "bol", };
+        string[] types = { "sbyte", "short", "int", "long", "byte", "ushort", "uint", "ulong", "float", "double", "bool", };
+        string[] shortNames = { "i08", "i16", "i32", "i64", "u08", "u16", "u32", "u64", "flt", "dbl", "bol", };
 
         Console.WriteLine("//        {0}", string.Join("  ", shortNames));
         for (int i = 0; i < types.Length; i++)
@@ -68,6 +70,8 @@ class C
                     case SpecialType.System_Int64: Console.Write("I64"); break;
                     case SpecialType.System_UInt32: Console.Write("U32"); break;
                     case SpecialType.System_UInt64: Console.Write("U64"); break;
+                    case SpecialType.System_Single: Console.Write("FLT"); break;
+                    case SpecialType.System_Double: Console.Write("DBL"); break;
                     default: throw new Exception("wtf");
                 }
             }

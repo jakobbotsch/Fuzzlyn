@@ -35,7 +35,7 @@ internal static class LiteralGenerator
 
     private static LiteralExpressionSyntax GenPrimitiveLiteral(Randomizer random, PrimitiveType primType)
     {
-        if (!primType.Info.IsIntegral || !random.FlipCoin(random.Options.PickLiteralFromTableProb))
+        if (!primType.Info.IsNumeric || !random.FlipCoin(random.Options.PickLiteralFromTableProb))
             return primType.Info.GenRandomLiteral(random.Rng);
 
         object minValue = primType.Info.Type.GetField("MinValue").GetValue(null);

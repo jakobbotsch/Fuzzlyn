@@ -39,8 +39,12 @@ internal class UnOpTable
                 return 6;
             case SyntaxKind.ULongKeyword:
                 return 7;
-            case SyntaxKind.BoolKeyword:
+            case SyntaxKind.FloatKeyword:
                 return 8;
+            case SyntaxKind.DoubleKeyword:
+                return 9;
+            case SyntaxKind.BoolKeyword:
+                return 10;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind));
         }
@@ -51,18 +55,20 @@ internal class UnOpTable
     private const SyntaxKind I64 = SyntaxKind.LongKeyword;
     private const SyntaxKind U32 = SyntaxKind.UIntKeyword;
     private const SyntaxKind U64 = SyntaxKind.ULongKeyword;
+    private const SyntaxKind FLT = SyntaxKind.FloatKeyword;
+    private const SyntaxKind DBL = SyntaxKind.DoubleKeyword;
 
     private static readonly SyntaxKind[] s_unaryPlus =
-    //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    [I32, I32, I32, I64, I32, I32, U32, U64, ERR];
+    //i08  i16  i32  i64  u08  u16  u32  u64  flt  dbl  bol
+    [I32, I32, I32, I64, I32, I32, U32, U64, FLT, DBL, ERR];
 
     private static readonly SyntaxKind[] s_unaryMinus =
-    //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    [I32, I32, I32, I64, I32, I32, I64, ERR, ERR];
+    //i08  i16  i32  i64  u08  u16  u32  u64  flt  dbl  bol
+    [I32, I32, I32, I64, I32, I32, I64, ERR, FLT, DBL, ERR];
 
     private static readonly SyntaxKind[] s_bitwiseNot =
-    //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    [I32, I32, I32, I64, I32, I32, U32, U64, ERR];
+    //i08  i16  i32  i64  u08  u16  u32  u64  flt  dbl  bol
+    [I32, I32, I32, I64, I32, I32, U32, U64, ERR, ERR, ERR];
 
     public static UnOpTable UnaryPlus { get; } = new UnOpTable(s_unaryPlus);
     public static UnOpTable UnaryMinus { get; } = new UnOpTable(s_unaryMinus);

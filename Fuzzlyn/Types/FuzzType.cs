@@ -10,7 +10,7 @@ public abstract class FuzzType
 
     public bool IsCastableTo(FuzzType other)
         => Equals(other) ||
-           (this is PrimitiveType pt && other is PrimitiveType opt && pt.Info.IsIntegral && opt.Info.IsIntegral) ||
+           (this is PrimitiveType pt && other is PrimitiveType opt && pt.Info.IsNumeric && opt.Info.IsNumeric) ||
            (this is AggregateType agg && other is InterfaceType it && agg.Implements(it));
 
     public ArrayType MakeArrayType(int rank = 1)

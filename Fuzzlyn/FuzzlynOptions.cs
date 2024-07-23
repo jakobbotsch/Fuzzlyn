@@ -123,6 +123,13 @@ internal class FuzzlynOptions
             [(int)SyntaxKind.ExclusiveOrExpression] = 0.1,
         });
 
+    public ProbabilityDistribution UnaryFloatDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)SyntaxKind.UnaryPlusExpression] = 0.1,
+            [(int)SyntaxKind.UnaryMinusExpression] = 0.9,
+        });
+
     public ProbabilityDistribution BinaryBoolDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {

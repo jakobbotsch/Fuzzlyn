@@ -93,7 +93,9 @@ internal class TypeManager(Randomizer random)
             SyntaxKind.UIntKeyword,
             SyntaxKind.LongKeyword,
             SyntaxKind.ULongKeyword,
-            // string, floats, IntPtr/UIntPtr?
+            SyntaxKind.FloatKeyword,
+            SyntaxKind.DoubleKeyword,
+            // string, IntPtr/UIntPtr?
 
             // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
         ];
