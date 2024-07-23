@@ -1,15 +1,8 @@
 ﻿namespace Fuzzlyn.ExecutionServer;
 
-public class ProgramPair
+public class ProgramPair(bool trackOutput, byte[] debug, byte[] release)
 {
-    public ProgramPair(bool trackOutput, byte[] debug, byte[] release)
-    {
-        TrackOutput = trackOutput;
-        Debug = debug;
-        Release = release;
-    }
-
-    public bool TrackOutput { get; }
-    public byte[] Debug { get; }
-    public byte[] Release { get; }
+    public bool TrackOutput { get; } = trackOutput;
+    public byte[] Debug { get; } = debug;
+    public byte[] Release { get; } = release;
 }

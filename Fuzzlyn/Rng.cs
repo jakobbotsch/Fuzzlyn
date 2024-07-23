@@ -4,17 +4,9 @@ using System.Security.Cryptography;
 
 namespace Fuzzlyn;
 
-public class Rng
+public class Rng(ulong s0, ulong s1, ulong s2, ulong s3)
 {
-    private ulong _s0, _s1, _s2, _s3;
-
-    public Rng(ulong s0, ulong s1, ulong s2, ulong s3)
-    {
-        _s0 = s0;
-        _s1 = s1;
-        _s2 = s2;
-        _s3 = s3;
-    }
+    private ulong _s0 = s0, _s1 = s1, _s2 = s2, _s3 = s3;
 
     public int Next(int max) => Next(0, max);
     public int Next(int min, int max)

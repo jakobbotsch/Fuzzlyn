@@ -3,14 +3,9 @@ using System.Collections.Generic;
 
 namespace Fuzzlyn;
 
-internal class KnownErrors
+internal class KnownErrors(IEnumerable<string> errors)
 {
-    private readonly HashSet<string> _errors;
-
-    public KnownErrors(IEnumerable<string> errors)
-    {
-        _errors = new HashSet<string>(errors);
-    }
+    private readonly HashSet<string> _errors = new HashSet<string>(errors);
 
     public bool Contains(string fullError)
     {

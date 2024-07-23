@@ -8,19 +8,13 @@ namespace Fuzzlyn.Statics;
 /// <summary>
 /// Manages static variables generated automatically in the class containing methods.
 /// </summary>
-internal class StaticsManager
+internal class StaticsManager(Randomizer random, TypeManager types)
 {
     private readonly List<StaticField> _fields = new();
     private int _counter;
 
-    public StaticsManager(Randomizer random, TypeManager types)
-    {
-        Random = random;
-        Types = types;
-    }
-
-    public Randomizer Random { get; }
-    public TypeManager Types { get; }
+    public Randomizer Random { get; } = random;
+    public TypeManager Types { get; } = types;
     public IReadOnlyList<StaticField> Fields => _fields;
 
     public StaticField PickStatic(FuzzType type = null)

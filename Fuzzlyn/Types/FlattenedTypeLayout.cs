@@ -86,16 +86,10 @@ public class FlattenedTypeLayout
     }
 }
 
-public struct FlattenedLayoutField
+public struct FlattenedLayoutField(int offset, PrimitiveType type)
 {
-    public FlattenedLayoutField(int offset, PrimitiveType type)
-    {
-        Offset = offset;
-        Type = type;
-    }
-
-    public int Offset { get; }
-    public PrimitiveType Type { get; }
+    public int Offset { get; } = offset;
+    public PrimitiveType Type { get; } = type;
 
     public int Size => Type.Info.Size;
 }

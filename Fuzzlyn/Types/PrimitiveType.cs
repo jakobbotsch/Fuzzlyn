@@ -6,14 +6,9 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Types;
 
-public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
+public class PrimitiveType(SyntaxKind keyword) : FuzzType, IEquatable<PrimitiveType>
 {
-    public PrimitiveType(SyntaxKind keyword)
-    {
-        Keyword = keyword;
-    }
-
-    public SyntaxKind Keyword { get; }
+    public SyntaxKind Keyword { get; } = keyword;
     internal PrimitiveTypeInfo Info => s_infoTable[Keyword];
 
     public override TypeSyntax GenReferenceTo() => PredefinedType(Token(Keyword));

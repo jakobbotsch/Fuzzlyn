@@ -2,16 +2,10 @@
 
 namespace Fuzzlyn.ProbabilityDistributions;
 
-internal class GeometricDistribution : ProbabilityDistribution
+internal class GeometricDistribution(double successProbability, int baseValue = 0) : ProbabilityDistribution
 {
-    public GeometricDistribution(double successProbability, int baseValue = 0)
-    {
-        SuccessProbability = successProbability;
-        BaseValue = baseValue;
-    }
-
-    public double SuccessProbability { get; }
-    public int BaseValue { get; }
+    public double SuccessProbability { get; } = successProbability;
+    public int BaseValue { get; } = baseValue;
 
     internal override int Sample(Rng rng)
     {

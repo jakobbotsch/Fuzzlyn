@@ -5,19 +5,13 @@ using System.Linq;
 
 namespace Fuzzlyn;
 
-internal class ExecutionServerPool
+internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions)
 {
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
 
-    public ExecutionServerPool(string host, SpmiSetupOptions spmiOptions)
-    {
-        Host = host;
-        SpmiOptions = spmiOptions;
-    }
-
-    public string Host { get; }
-    public SpmiSetupOptions SpmiOptions { get; }
+    public string Host { get; } = host;
+    public SpmiSetupOptions SpmiOptions { get; } = spmiOptions;
 
     private List<RunningExecutionServer> _pool = new();
 

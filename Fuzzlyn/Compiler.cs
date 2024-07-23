@@ -61,16 +61,9 @@ internal static class Compiler
     }
 }
 
-internal class CompileResult
+internal class CompileResult(Exception roslynException, ImmutableArray<Diagnostic> compileErrors, byte[] assembly)
 {
-    public CompileResult(Exception roslynException, ImmutableArray<Diagnostic> compileErrors, byte[] assembly)
-    {
-        RoslynException = roslynException;
-        CompileErrors = compileErrors;
-        Assembly = assembly;
-    }
-
-    public Exception RoslynException { get; }
-    public ImmutableArray<Diagnostic> CompileErrors { get; }
-    public byte[] Assembly { get; }
+    public Exception RoslynException { get; } = roslynException;
+    public ImmutableArray<Diagnostic> CompileErrors { get; } = compileErrors;
+    public byte[] Assembly { get; } = assembly;
 }

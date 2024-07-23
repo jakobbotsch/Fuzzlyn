@@ -7,25 +7,15 @@ namespace Fuzzlyn.Methods;
 /// Represents information about an l-value, which is an expression that can be assigned to,
 /// or have a reference taken to.
 /// </summary>
-internal class LValueInfo
+internal class LValueInfo(ExpressionSyntax expression, FuzzType type, int refEscapeScope, bool isOnStack, bool readOnly, ScopeValue baseLocal)
 {
-    public LValueInfo(ExpressionSyntax expression, FuzzType type, int refEscapeScope, bool isOnStack, bool readOnly, ScopeValue baseLocal)
-    {
-        Expression = expression;
-        Type = type;
-        RefEscapeScope = refEscapeScope;
-        IsOnStack = isOnStack;
-        ReadOnly = readOnly;
-        BaseLocal = baseLocal;
-    }
-
-    public ExpressionSyntax Expression { get; }
-    public FuzzType Type { get; }
+    public ExpressionSyntax Expression { get; } = expression;
+    public FuzzType Type { get; } = type;
     /// <summary>See <see cref="ScopeValue.RefEscapeScope"/>.</summary>
-    public int RefEscapeScope { get; }
-    public bool IsOnStack { get; }
-    public bool ReadOnly { get; }
-    public ScopeValue BaseLocal { get; }
+    public int RefEscapeScope { get; } = refEscapeScope;
+    public bool IsOnStack { get; } = isOnStack;
+    public bool ReadOnly { get; } = readOnly;
+    public ScopeValue BaseLocal { get; } = baseLocal;
 
     public override string ToString() => Expression.ToString();
 }

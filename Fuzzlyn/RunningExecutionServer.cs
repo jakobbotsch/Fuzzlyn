@@ -166,17 +166,10 @@ internal enum RunSeparatelyResultsKind
     Success
 }
 
-internal class RunSeparatelyResults
+internal class RunSeparatelyResults(RunSeparatelyResultsKind kind, ProgramPairResults results, string crashError)
 {
-    public RunSeparatelyResults(RunSeparatelyResultsKind kind, ProgramPairResults results, string crashError)
-    {
-        Kind = kind;
-        Results = results;
-        CrashError = crashError;
-    }
-
-    public RunSeparatelyResultsKind Kind { get; }
-    public ProgramPairResults Results { get; }
+    public RunSeparatelyResultsKind Kind { get; } = kind;
+    public ProgramPairResults Results { get; } = results;
     public int ExitCode { get; }
-    public string CrashError { get; }
+    public string CrashError { get; } = crashError;
 }

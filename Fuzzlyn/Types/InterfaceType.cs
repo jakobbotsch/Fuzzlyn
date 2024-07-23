@@ -13,14 +13,9 @@ namespace Fuzzlyn.Types;
 // We don't generate the methods that will be on interface types beforehand.
 // However, we do figure out which interfaces a specified aggregate type implements beforehand.
 // This is necessary to be able to figure out which types are assignable-to.
-public class InterfaceType : FuzzType
+public class InterfaceType(string name) : FuzzType
 {
-    public InterfaceType(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
 

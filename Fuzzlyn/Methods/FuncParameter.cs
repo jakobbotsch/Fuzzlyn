@@ -2,14 +2,8 @@
 
 namespace Fuzzlyn.Methods;
 
-public class FuncParameter
+public class FuncParameter(FuzzType type, string name)
 {
-    public FuncParameter(FuzzType type, string name)
-    {
-        Type = type;
-        Name = name;
-    }
-
-    public FuzzType Type { get; }
-    public string Name { get; }
+    public FuzzType Type { get; } = type;
+    public string Name { get; } = name;
 }

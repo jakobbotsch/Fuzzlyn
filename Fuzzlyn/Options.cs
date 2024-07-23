@@ -496,19 +496,14 @@ public class OptionException : Exception
 
 public delegate void OptionAction<TKey, TValue>(TKey key, TValue value);
 
-public class OptionSet : KeyedCollection<string, Option>
+public class OptionSet(Converter<string, string> localizer) : KeyedCollection<string, Option>
 {
     public OptionSet()
         : this(delegate (string f) { return f; })
     {
     }
 
-    public OptionSet(Converter<string, string> localizer)
-    {
-        this.localizer = localizer;
-    }
-
-    readonly Converter<string, string> localizer;
+    readonly Converter<string, string> localizer = localizer;
 
     public Converter<string, string> MessageLocalizer
     {
@@ -593,15 +588,9 @@ public class OptionSet : KeyedCollection<string, Option>
         return this;
     }
 
-    sealed class ActionOption : Option
+    sealed class ActionOption(string prototype, string description, int count, Action<OptionValueCollection> action) : Option(prototype, description, count)
     {
-        readonly Action<OptionValueCollection> action;
-
-        public ActionOption(string prototype, string description, int count, Action<OptionValueCollection> action)
-            : base(prototype, description, count)
-        {
-            this.action = action ?? throw new ArgumentNullException("action");
-        }
+        readonly Action<OptionValueCollection> action = action ?? throw new ArgumentNullException("action");
 
         protected override void OnParseComplete(OptionContext c)
         {
@@ -639,15 +628,9 @@ public class OptionSet : KeyedCollection<string, Option>
         return this;
     }
 
-    sealed class ActionOption<T> : Option
+    sealed class ActionOption<T>(string prototype, string description, Action<T> action) : Option(prototype, description, 1)
     {
-        readonly Action<T> action;
-
-        public ActionOption(string prototype, string description, Action<T> action)
-            : base(prototype, description, 1)
-        {
-            this.action = action ?? throw new ArgumentNullException("action");
-        }
+        readonly Action<T> action = action ?? throw new ArgumentNullException("action");
 
         protected override void OnParseComplete(OptionContext c)
         {
@@ -655,15 +638,9 @@ public class OptionSet : KeyedCollection<string, Option>
         }
     }
 
-    sealed class ActionOption<TKey, TValue> : Option
+    sealed class ActionOption<TKey, TValue>(string prototype, string description, OptionAction<TKey, TValue> action) : Option(prototype, description, 2)
     {
-        readonly OptionAction<TKey, TValue> action;
-
-        public ActionOption(string prototype, string description, OptionAction<TKey, TValue> action)
-            : base(prototype, description, 2)
-        {
-            this.action = action ?? throw new ArgumentNullException("action");
-        }
+        readonly OptionAction<TKey, TValue> action = action ?? throw new ArgumentNullException("action");
 
         protected override void OnParseComplete(OptionContext c)
         {

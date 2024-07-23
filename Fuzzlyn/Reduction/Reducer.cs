@@ -14,24 +14,16 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction;
 
-internal class Reducer
+internal class Reducer(ExecutionServerPool pool, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
 {
-    private readonly ExecutionServerPool _pool;
-    private readonly Rng _rng;
+    private readonly ExecutionServerPool _pool = pool;
+    private readonly Rng _rng = Rng.FromSplitMix64Seed(reducerSeed);
     private int _varCounter;
-    private readonly string _reduceDebugGitDir;
+    private readonly string _reduceDebugGitDir = reduceDebugGitDir;
     private readonly Stopwatch _timer = new();
     private TimeSpan _nextUpdate;
 
-    public Reducer(ExecutionServerPool pool, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
-    {
-        _pool = pool;
-        Original = original;
-        _rng = Rng.FromSplitMix64Seed(reducerSeed);
-        _reduceDebugGitDir = reduceDebugGitDir;
-    }
-
-    public CompilationUnitSyntax Original { get; }
+    public CompilationUnitSyntax Original { get; } = original;
     public CompilationUnitSyntax Reduced { get; private set; }
 
     public CompilationUnitSyntax Reduce()

@@ -181,16 +181,10 @@ internal enum LValueKind
     Reinterpretation,
 }
 
-internal class HillEquationParameters
+internal class HillEquationParameters(double n, double h)
 {
-    public HillEquationParameters(double n, double h)
-    {
-        N = n;
-        H = h;
-    }
-
-    public double N { get; }
-    public double H { get; }
+    public double N { get; } = n;
+    public double H { get; } = h;
 
     // This equation is taken from https://math.stackexchange.com/a/2324218.
     // Properties:

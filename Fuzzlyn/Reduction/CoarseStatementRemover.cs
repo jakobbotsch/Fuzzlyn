@@ -8,14 +8,9 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction;
 
-internal class CoarseStatementRemover : CSharpSyntaxRewriter
+internal class CoarseStatementRemover(Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> isInteresting) : CSharpSyntaxRewriter
 {
-    public CoarseStatementRemover(Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> isInteresting)
-    {
-        IsInteresting = isInteresting;
-    }
-
-    public Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> IsInteresting { get; }
+    public Func<MethodDeclarationSyntax, MethodDeclarationSyntax, bool> IsInteresting { get; } = isInteresting;
 
     public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax orig)
     {
@@ -116,13 +111,9 @@ internal class CoarseStatementRemover : CSharpSyntaxRewriter
         }
     }
 
-    private class RemoveIdsRewriter : CSharpSyntaxRewriter
+    private class RemoveIdsRewriter(HashSet<string> ids) : CSharpSyntaxRewriter
     {
-        private readonly HashSet<string> _ids;
-        public RemoveIdsRewriter(HashSet<string> ids)
-        {
-            _ids = ids;
-        }
+        private readonly HashSet<string> _ids = ids;
 
         public override SyntaxNode Visit(SyntaxNode node)
         {

@@ -1,13 +1,7 @@
 ﻿namespace Fuzzlyn.Types;
 
-public class AggregateField
+public class AggregateField(FuzzType type, string name)
 {
-    public AggregateField(FuzzType type, string name)
-    {
-        Type = type;
-        Name = name;
-    }
-
-    public FuzzType Type { get; }
-    public string Name { get; }
+    public FuzzType Type { get; } = type;
+    public string Name { get; } = name;
 }

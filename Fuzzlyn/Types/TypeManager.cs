@@ -7,19 +7,14 @@ using System.Linq;
 
 namespace Fuzzlyn.Types;
 
-internal class TypeManager
+internal class TypeManager(Randomizer random)
 {
     private readonly List<PrimitiveType> _primitiveTypes = new();
     private readonly List<InterfaceType> _interfaceTypes = new();
     private readonly List<AggregateType> _aggTypes = new();
     private readonly Dictionary<InterfaceType, List<AggregateType>> _implementingTypes = new();
 
-    public TypeManager(Randomizer random)
-    {
-        Random = random;
-    }
-
-    public Randomizer Random { get; }
+    public Randomizer Random { get; } = random;
     public FuzzlynOptions Options => Random.Options;
 
     public AggregateType PickAggregateType()

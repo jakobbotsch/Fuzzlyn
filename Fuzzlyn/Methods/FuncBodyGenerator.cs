@@ -12,41 +12,29 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Methods;
 
-internal class FuncBodyGenerator
+internal class FuncBodyGenerator(
+    List<FuncGenerator> funcs,
+    Randomizer random,
+    TypeManager types,
+    StaticsManager statics,
+    Func<string> genChecksumSiteId,
+    int funcIndex,
+    FuzzType returnType,
+    bool isInPrimaryClass)
 {
-    private readonly List<FuncGenerator> _funcs;
-    private readonly Randomizer _random;
-    private readonly TypeManager _types;
-    private readonly StaticsManager _statics;
-    private readonly Func<string> _genChecksumSiteId;
-    private readonly int _funcIndex;
-    private readonly FuzzType _returnType;
-    private readonly bool _isInPrimaryClass;
+    private readonly List<FuncGenerator> _funcs = funcs;
+    private readonly Randomizer _random = random;
+    private readonly TypeManager _types = types;
+    private readonly StaticsManager _statics = statics;
+    private readonly Func<string> _genChecksumSiteId = genChecksumSiteId;
+    private readonly int _funcIndex = funcIndex;
+    private readonly FuzzType _returnType = returnType;
+    private readonly bool _isInPrimaryClass = isInPrimaryClass;
 
     private readonly List<ScopeFrame> _scope = new();
     private int _finallyCount;
     private int _varCounter;
     private int _statementLevel = -1;
-
-    public FuncBodyGenerator(
-        List<FuncGenerator> funcs,
-        Randomizer random,
-        TypeManager types,
-        StaticsManager statics,
-        Func<string> genChecksumSiteId,
-        int funcIndex,
-        FuzzType returnType,
-        bool isInPrimaryClass)
-    {
-        _funcs = funcs;
-        _random = random;
-        _types = types;
-        _statics = statics;
-        _genChecksumSiteId = genChecksumSiteId;
-        _funcIndex = funcIndex;
-        _returnType = returnType;
-        _isInPrimaryClass = isInPrimaryClass;
-    }
 
     private FuzzlynOptions Options => _random.Options;
 

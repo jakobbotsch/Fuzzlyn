@@ -3,16 +3,10 @@ using System.Collections.Generic;
 
 namespace Fuzzlyn.ExecutionServer;
 
-public class ChecksumSite : IEquatable<ChecksumSite>
+public class ChecksumSite(string id, string value) : IEquatable<ChecksumSite>
 {
-    public ChecksumSite(string id, string value)
-    {
-        Id = id;
-        Value = value;
-    }
-
-    public string Id { get; }
-    public string Value { get; }
+    public string Id { get; } = id;
+    public string Value { get; } = value;
 
     public override bool Equals(object obj)
     {

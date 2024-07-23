@@ -7,20 +7,13 @@ using System.Linq;
 
 namespace Fuzzlyn.Methods;
 
-internal class MethodManager
+internal class MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
 {
     private readonly List<FuncGenerator> _funcs = new();
 
-    public MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
-    {
-        Random = random;
-        Types = types;
-        Statics = statics;
-    }
-
-    public Randomizer Random { get; }
-    public TypeManager Types { get; }
-    public StaticsManager Statics { get; }
+    public Randomizer Random { get; } = random;
+    public TypeManager Types { get; } = types;
+    public StaticsManager Statics { get; } = statics;
 
     internal void GenerateMethods(Func<string> genChecksumSiteId)
     {

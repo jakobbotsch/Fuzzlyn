@@ -5,18 +5,11 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Statics;
 
-internal class StaticField
+internal class StaticField(FuzzType type, string name, ExpressionSyntax initializer)
 {
-    public StaticField(FuzzType type, string name, ExpressionSyntax initializer)
-    {
-        Type = type;
-        Name = name;
-        Initializer = initializer;
-    }
-
-    public FuzzType Type { get; }
-    public string Name { get; }
-    public ExpressionSyntax Initializer { get; }
+    public FuzzType Type { get; } = type;
+    public string Name { get; } = name;
+    public ExpressionSyntax Initializer { get; } = initializer;
 
     public ExpressionSyntax CreateAccessor(bool prefixWithClass)
     {
