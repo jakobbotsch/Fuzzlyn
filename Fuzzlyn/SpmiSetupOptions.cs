@@ -29,11 +29,11 @@ internal class SpmiSetupOptions
 
         string hostDir = Path.GetDirectoryName(host);
         (string shimName, string jitName)[] setups =
-        {
+        [
             ("superpmi-shim-collector.dll", "clrjit.dll"),
             ("libsuperpmi-shim-collector.so", "libclrjit.so"),
             ("libsuperpmi-shim-collector.dylib", "libclrjit.dylib")
-        };
+        ];
 
         foreach ((string shimName, string jitName) in setups)
         {

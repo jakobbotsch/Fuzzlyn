@@ -345,7 +345,7 @@ public abstract class Option
     public string[] GetValueSeparators()
     {
         if (separators == null)
-            return new string[0];
+            return [];
         return (string[])separators.Clone();
     }
 
@@ -372,7 +372,7 @@ public abstract class Option
     internal string[] Names { get { return names; } }
     internal string[] ValueSeparators { get { return separators; } }
 
-    static readonly char[] NameTerminator = new char[] { '=', ':' };
+    static readonly char[] NameTerminator = ['=', ':'];
 
     private OptionValueType ParsePrototype()
     {
@@ -407,7 +407,7 @@ public abstract class Option
         if (count > 1)
         {
             if (seps.Count == 0)
-                this.separators = new string[] { ":", "=" };
+                this.separators = [":", "="];
             else if (seps.Count == 1 && seps[0].Length == 0)
                 this.separators = null;
             else
@@ -838,7 +838,7 @@ public class OptionSet : KeyedCollection<string, Option>
         if (option != null)
             foreach (string o in c.Option.ValueSeparators != null
                     ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
-                    : new string[] { option })
+                    : [option])
             {
                 c.OptionValues.Add(o);
             }
@@ -1018,9 +1018,9 @@ public class OptionSet : KeyedCollection<string, Option>
             return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
         string[] nameStart;
         if (maxIndex == 1)
-            nameStart = new string[] { "{0:", "{" };
+            nameStart = ["{0:", "{"];
         else
-            nameStart = new string[] { "{" + index + ":" };
+            nameStart = ["{" + index + ":"];
         for (int i = 0; i < nameStart.Length; ++i)
         {
             int start, j = 0;

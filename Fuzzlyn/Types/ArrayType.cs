@@ -21,7 +21,7 @@ public class ArrayType : FuzzType, IEquatable<ArrayType>
     public FuzzType ElementType { get; }
     public int Rank { get; }
 
-    public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = new SyntaxKind[0];
+    public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = [];
 
     public override TypeSyntax GenReferenceTo() => GenReferenceToArrayType();
 

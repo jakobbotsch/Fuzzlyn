@@ -24,9 +24,8 @@ internal class KnownErrors
     }
 
     public static KnownErrors DotnetRuntime { get; } = new KnownErrors(
-        new string[]
-        {
+        [
             "inVarToRegMap[varIndex] == REG_STK",
             "!foundMismatch",
-        });
+        ]);
 }

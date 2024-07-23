@@ -88,7 +88,7 @@ internal class TypeManager
     public void GenerateTypes()
     {
         SyntaxKind[] primitiveTypes =
-        {
+        [
             SyntaxKind.BoolKeyword,
             SyntaxKind.SByteKeyword,
             SyntaxKind.ByteKeyword,
@@ -101,7 +101,7 @@ internal class TypeManager
             // string, floats, IntPtr/UIntPtr?
 
             // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
-        };
+        ];
 
         _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
 

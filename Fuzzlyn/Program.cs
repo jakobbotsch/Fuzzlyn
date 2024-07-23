@@ -202,7 +202,7 @@ internal class Program
     {
         if (knownErrors == null)
         {
-            options.KnownErrors = new KnownErrors(new string[0]);
+            options.KnownErrors = new KnownErrors([]);
             return true;
         }
 

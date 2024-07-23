@@ -16,7 +16,7 @@ namespace Fuzzlyn;
 internal static class Compiler
 {
     private static readonly MetadataReference[] s_references =
-    {
+    [
         MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
         MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location),
         MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
@@ -24,7 +24,7 @@ internal static class Compiler
         // See here: https://github.com/dotnet/corefx/issues/11601
         MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
         MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
-    };
+    ];
 
     private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 
@@ -38,7 +38,7 @@ internal static class Compiler
     public static CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
     {
         int compileID = Interlocked.Increment(ref _compiles);
-        SyntaxTree[] trees = { SyntaxTree(program, s_parseOptions) };
+        SyntaxTree[] trees = [SyntaxTree(program, s_parseOptions)];
         CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, s_references, opts);
 
         using (var ms = new MemoryStream())

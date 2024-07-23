@@ -50,7 +50,7 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
     static PrimitiveType()
     {
         SyntaxKind[] intAssigns =
-        {
+        [
             SyntaxKind.AddAssignmentExpression,
             SyntaxKind.SubtractAssignmentExpression,
             SyntaxKind.MultiplyAssignmentExpression,
@@ -65,14 +65,14 @@ public class PrimitiveType : FuzzType, IEquatable<PrimitiveType>
             SyntaxKind.PostIncrementExpression,
             SyntaxKind.PreDecrementExpression,
             SyntaxKind.PostDecrementExpression,
-        };
+        ];
 
         SyntaxKind[] boolAssigns =
-        {
+        [
             SyntaxKind.AndAssignmentExpression,
             SyntaxKind.ExclusiveOrAssignmentExpression,
             SyntaxKind.OrAssignmentExpression,
-        };
+        ];
 
         s_infoTable = new Dictionary<SyntaxKind, PrimitiveTypeInfo>
         {

@@ -591,7 +591,7 @@ public static void Main()
             .WithIdentifier(Identifier("MainInner"))
             .WithParameterList(ParseParameterList("(IRuntime rt)"));
 
-        prog = prog.ReplaceNode(oldMainMethod, new[] { newMainMethod, newInnerMainMethod });
+        prog = prog.ReplaceNode(oldMainMethod, [newMainMethod, newInnerMainMethod]);
 
         // Now change references of Checksum -> WriteLine and Fuzzlyn.ExecutionServer.IRuntime => IRuntime
         Dictionary<SyntaxNode, SyntaxNode> replacements = new();

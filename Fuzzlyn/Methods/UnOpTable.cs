@@ -54,15 +54,15 @@ internal class UnOpTable
 
     private static readonly SyntaxKind[] s_unaryPlus =
     //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    { I32, I32, I32, I64, I32, I32, U32, U64, ERR };
+    [I32, I32, I32, I64, I32, I32, U32, U64, ERR];
 
     private static readonly SyntaxKind[] s_unaryMinus =
     //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    { I32, I32, I32, I64, I32, I32, I64, ERR, ERR };
+    [I32, I32, I32, I64, I32, I32, I64, ERR, ERR];
 
     private static readonly SyntaxKind[] s_bitwiseNot =
     //i08  i16  i32  i64  u08  u16  u32  u64  bol
-    { I32, I32, I32, I64, I32, I32, U32, U64, ERR };
+    [I32, I32, I32, I64, I32, I32, U32, U64, ERR];
 
     public static UnOpTable UnaryPlus { get; } = new UnOpTable(s_unaryPlus);
     public static UnOpTable UnaryMinus { get; } = new UnOpTable(s_unaryMinus);

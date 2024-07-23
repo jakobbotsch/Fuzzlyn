@@ -58,7 +58,7 @@ internal class CodeGenerator
             .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
             .WithMembers(OutputProgramMembers(staticFuncs).ToSyntaxList());
 
-        types = types.Concat(new[] { programClass });
+        types = types.Concat([programClass]);
 
         unit = unit.WithUsings(OutputUsings().ToSyntaxList());
         unit = unit.WithMembers(types.ToSyntaxList());

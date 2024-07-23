@@ -396,7 +396,7 @@ internal class FuncBodyGenerator
         ExpressionSyntax incr =
             PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indVar.Expression);
 
-        BlockSyntax block = GenBlock(new[] { indVar });
+        BlockSyntax block = GenBlock([indVar]);
 
         ForStatementSyntax @for = ForStatement(decl, SeparatedList<ExpressionSyntax>(), cond, SingletonSeparatedList(incr), block);
         return @for;
@@ -902,7 +902,7 @@ internal class FuncBodyGenerator
     private ExpressionSyntax GenIncDec(FuzzType type, bool isIncrement)
     {
         SyntaxKind[] acceptedTypes =
-        {
+        [
             SyntaxKind.ULongKeyword,
             SyntaxKind.LongKeyword,
             SyntaxKind.UIntKeyword,
@@ -911,7 +911,7 @@ internal class FuncBodyGenerator
             SyntaxKind.ShortKeyword,
             SyntaxKind.ByteKeyword,
             SyntaxKind.SByteKeyword,
-        };
+        ];
 
         if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
             return null;
