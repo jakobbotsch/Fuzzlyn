@@ -26,7 +26,6 @@ internal class KnownErrors
     public static KnownErrors DotnetRuntime { get; } = new KnownErrors(
         new string[]
         {
-            "!\"Too many unreachable block removal loops\"",
             "inVarToRegMap[varIndex] == REG_STK",
             "!foundMismatch",
         });
