@@ -1054,7 +1054,11 @@ internal class FuncBodyGenerator(
         foreach (ScopeValue variable in variables)
             AppendVariablePaths(paths, variable);
 
-        paths.RemoveAll(lv => !(lv.Type is PrimitiveType) && !(lv.Type is RefType rt && rt.InnerType is PrimitiveType));
+        paths.RemoveAll(lv =>
+        {
+            FuzzType innerType = lv.Type is RefType rt ? rt.InnerType : lv.Type;
+            return innerType is not PrimitiveType and not VectorType;
+        });
 
         ExpressionSyntax checksumCall;
 
