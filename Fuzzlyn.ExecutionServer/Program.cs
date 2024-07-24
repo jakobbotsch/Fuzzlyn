@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using System.Runtime.Loader;
 using System.Text.Json;
 using System.Threading;
@@ -55,6 +56,12 @@ public static class Program
                         resp = new Response
                         {
                             RunPairResult = results
+                        };
+                        break;
+                    case RequestKind.GetSupportedExtensions:
+                        resp = new Response
+                        {
+                            SupportedExtensions = ExtensionHelpers.GetSupportedExtensions(),
                         };
                         break;
                     case RequestKind.Shutdown:

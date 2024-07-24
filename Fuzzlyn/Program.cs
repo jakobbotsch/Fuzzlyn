@@ -89,6 +89,9 @@ internal class Program
         if (seedSpecString != null && !SeedSpecification.TryParse(seedSpecString, out seedSpec, out string seedSpecError))
             error = seedSpecError;
 
+        if (seedSpec != null && genExtensionsString != null)
+            error = "Cannot specify both --seed and --gen-extensions";
+
         HashSet<Extension> genExtensions = [];
         if (genExtensionsString != null && !SeedSpecification.TryParseExtensions(genExtensionsString, genExtensions, out string extensionsError))
             error = extensionsError;
@@ -110,7 +113,10 @@ internal class Program
         FuzzlynOptions options = new();
 
         if (seedSpec != null)
-            options.Seed = seedSpec;
+        {
+            options.Seed = seedSpec.Seed;
+            options.GenExtensions = seedSpec.Extensions;
+        }
         if (numPrograms.HasValue)
             options.NumPrograms = numPrograms.Value;
         if (timeToRun.HasValue)
@@ -142,7 +148,7 @@ internal class Program
             return;
         }
 
-        if (options.Reduce && options.Seed != null)
+        if (options.Reduce && options.Seed == null)
         {
             Console.WriteLine("Error: Cannot reduce without a seed.");
             return;
@@ -156,6 +162,9 @@ internal class Program
 
         if (options.Output)
         {
+            if (options.GenExtensions == null)
+                options.GenExtensions = []; // No extension by default with --output
+
             GenerateProgramsAndOutput(options);
         }
         else if (options.Reduce)
@@ -238,18 +247,25 @@ internal class Program
 
     private static bool ExpandExtensions(FuzzlynOptions options)
     {
-        if (!options.GenExtensions.Contains(Extension.AllSupported))
+        if (options.GenExtensions != null)
         {
             return true;
         }
 
-        if (options.GenExtensions.Count != 1)
+        // All supported extensions by default when running them.
+        HashSet<Extension> allSupportedExtensions = [.. s_executionServerPool.GetSupportedExtensions()];
+        HashSet<Extension> newExtensions = [.. allSupportedExtensions];
+
+        foreach (Extension ext in allSupportedExtensions)
         {
-            Console.WriteLine("Error: The extension 'allsupported' can only be specified alone");
-            return false;
+            Extension? baseExt = ExtensionHelpers.GetBaseExtension(ext);
+            if (baseExt.HasValue)
+            {
+                newExtensions.Remove(baseExt.Value);
+            }
         }
 
-        // TODO: Expand to host supported extensions
+        options.GenExtensions = newExtensions;
         return true;
     }
 
@@ -258,7 +274,7 @@ internal class Program
         var cg = new CodeGenerator(options);
         CompilationUnitSyntax original = cg.GenerateProgram();
 
-        Reducer reducer = new(s_executionServerPool, original, options.Seed.Seed, reduceDebugGitDir);
+        Reducer reducer = new(s_executionServerPool, original, options.Seed.Value, reduceDebugGitDir);
         CompilationUnitSyntax reduced = reducer.Reduce();
         string source = reduced.NormalizeWhitespace().ToFullString();
         if (outputPath != null)
@@ -269,7 +285,7 @@ internal class Program
 
     private static void GenerateProgramsAndOutput(FuzzlynOptions options)
     {
-        void Output(CompilationUnitSyntax unit, ulong seed)
+        void Output(CompilationUnitSyntax unit, SeedSpecification seed)
         {
             Console.WriteLine(unit.NormalizeWhitespace().ToFullString());
         }
@@ -280,7 +296,7 @@ internal class Program
     private static void GenerateProgramsAndGetStats(FuzzlynOptions options)
     {
         List<double> sizes = new();
-        void AddProgramSize(CompilationUnitSyntax unit, ulong seed)
+        void AddProgramSize(CompilationUnitSyntax unit, SeedSpecification seed)
         {
             double size = unit.NormalizeWhitespace().ToFullString().Length;
             lock (sizes)
@@ -317,7 +333,7 @@ internal class Program
             AddEvent(options.OutputEventsTo, new Event(EventKind.RunSummary, DateTimeOffset.UtcNow, null, new RunSummaryEvent(result.DegreeOfParallelism, result.TotalGenerated, numProgramsWithKnownErrors, result.TimeTaken)));
     }
 
-    private static GenerateProgramsResult GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, ulong> action)
+    private static GenerateProgramsResult GeneratePrograms(FuzzlynOptions options, Action<CompilationUnitSyntax, SeedSpecification> action)
     {
         int numThreads = options.Parallelism == -1 ? Environment.ProcessorCount : options.Parallelism;
 
@@ -366,7 +382,7 @@ internal class Program
 
                 CodeGenerator gen = new(options);
                 CompilationUnitSyntax unit = gen.GenerateProgram();
-                action(unit, gen.Random.Seed);
+                action(unit, new SeedSpecification(gen.Random.Seed, gen.Options.GenExtensions));
                 if (programIndex % 100 == 0)
                 {
                     string elapsedOutOf = options.TimeToRun.HasValue ? $"/{options.TimeToRun.Value:c}" : "";
@@ -381,7 +397,7 @@ internal class Program
     private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
 
     private static readonly object s_fileLock = new();
-    private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, ulong seed, ref int numProgramsWithKnownErrors)
+    private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, SeedSpecification seed, ref int numProgramsWithKnownErrors)
     {
         byte[] debug = Compile(Compiler.DebugOptions);
         byte[] release = Compile(Compiler.ReleaseOptions);
@@ -437,7 +453,7 @@ internal class Program
             return comp.Assembly;
         }
 
-        void CheckExample(ulong seed, ProgramPairResults result, ref int numProgramsWithKnownErrors)
+        void CheckExample(SeedSpecification seed, ProgramPairResults result, ref int numProgramsWithKnownErrors)
         {
             ProgramResult assertRes;
             if ((assertRes = result.DebugResult).Kind == ProgramResultKind.HitsJitAssert ||
@@ -462,10 +478,10 @@ internal class Program
         {
             switch (example)
             {
-                case { Seed: ulong seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
+                case { Seed: SeedSpecification seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
                     Console.WriteLine("Found example with seed {0} that hits error{1}{2}", seed, Environment.NewLine, error);
                     break;
-                case { Seed: ulong seed, Kind: ExampleKind.BadResult }:
+                case { Seed: SeedSpecification seed, Kind: ExampleKind.BadResult }:
                     Console.WriteLine("Found example with seed {0}", seed);
                     break;
             }
@@ -503,6 +519,6 @@ internal class Program
         Crash,
     }
 
-    private record class ExampleEvent(ulong Seed, ExampleKind Kind, string Message);
+    private record class ExampleEvent(SeedSpecification Seed, ExampleKind Kind, string Message);
     private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, int TotalProgramsWithKnownErrors, TimeSpan TotalRunTime);
 }

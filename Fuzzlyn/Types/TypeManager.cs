@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Fuzzlyn.ExecutionServer;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -163,7 +164,7 @@ internal class TypeManager(Randomizer random)
 
         foreach ((Extension extension, VectorTypeWidth width) in vectorBaseTypes)
         {
-            if (!Options.Seed.Extensions.Contains(extension))
+            if (!Options.GenExtensions.Contains(extension))
                 continue;
 
             foreach (SyntaxKind elementType in vectorElementTypes)

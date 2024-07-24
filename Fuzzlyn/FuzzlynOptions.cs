@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Methods;
+﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.Methods;
 using Fuzzlyn.ProbabilityDistributions;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -8,10 +9,10 @@ namespace Fuzzlyn;
 
 internal class FuzzlynOptions
 {
-    public SeedSpecification Seed { get; set; }
+    public ulong? Seed { get; set; }
     public int NumPrograms { get; set; } = 1;
     public TimeSpan? TimeToRun { get; set; }
-    public HashSet<Extension> GenExtensions { get; set; } = [];
+    public HashSet<Extension> GenExtensions { get; set; }
     public string OutputEventsTo { get; set; }
     public string Host { get; set; }
     public int Parallelism { get; set; } = 1;
@@ -193,10 +194,9 @@ internal class FuzzlynOptions
     public ProbabilityDistribution CreateVectorKindDist { get; set; }
     = new TableDistribution(new Dictionary<int, double>
     {
-        [(int)VectorCreationKind.Create] = 0.1,
-        [(int)VectorCreationKind.CreateBroadcast] = 0.43,
-        [(int)VectorCreationKind.CreateScalar] = 0.43,
-        [(int)VectorCreationKind.CreateSequence] = 0.04,
+        [(int)VectorCreationKind.Create] = 0.12,
+        [(int)VectorCreationKind.CreateBroadcast] = 0.44,
+        [(int)VectorCreationKind.CreateScalar] = 0.44,
     });
 }
 
@@ -213,7 +213,6 @@ internal enum VectorCreationKind
     Create,
     CreateBroadcast,
     CreateScalar,
-    CreateSequence,
 }
 
 internal class HillEquationParameters(double n, double h)

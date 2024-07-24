@@ -104,6 +104,27 @@ internal class RunningExecutionServer
         return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, result.Response.RunPairResult, null);
     }
 
+    public Extension[] GetSupportedExtensions()
+    {
+        ReceiveResult result =
+            RequestAndReceive(new Request
+            {
+                Kind = RequestKind.GetSupportedExtensions,
+            }, TimeSpan.FromSeconds(30));
+
+        if (result.Ended)
+        {
+            throw new Exception("Host died while querying for supported extensions");
+        }
+
+        if (result.Timeout)
+        {
+            throw new Exception($"Host timed out while querying for supported extensions");
+        }
+
+        return result.Response.SupportedExtensions;
+    }
+
     public void Shutdown()
     {
         ReceiveResult result = RequestAndReceive(new Request { Kind = RequestKind.Shutdown }, TimeSpan.FromSeconds(1));

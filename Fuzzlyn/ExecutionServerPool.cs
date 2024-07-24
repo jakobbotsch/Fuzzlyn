@@ -89,4 +89,19 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions)
                 Return(server);
         }
     }
+
+    public Extension[] GetSupportedExtensions()
+    {
+        RunningExecutionServer server = null;
+        try
+        {
+            server = Get(false);
+            return server.GetSupportedExtensions();
+        }
+        finally
+        {
+            if (server != null)
+                Return(server);
+        }
+    }
 }

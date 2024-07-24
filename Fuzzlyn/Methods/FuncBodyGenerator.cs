@@ -983,7 +983,6 @@ internal class FuncBodyGenerator(
         int numArgs = creationKind switch
         {
             VectorCreationKind.Create => vt.NumElements(),
-            VectorCreationKind.CreateSequence => 2,
             _ => 1
         };
 
@@ -1004,7 +1003,6 @@ internal class FuncBodyGenerator(
                         SingletonSeparatedList(
                             vt.ElementType.GenReferenceTo()))),
 
-            VectorCreationKind.CreateSequence => IdentifierName("CreateSequence"),
             _ => IdentifierName("CreateScalar"),
         };
 
@@ -1153,6 +1151,23 @@ internal class FuncBodyGenerator(
                     Literal(checksumSiteId));
 
             ExpressionSyntax expr = lvalue.Expression;
+
+            FuzzType innerType = lvalue.Type is RefType rt ? rt.InnerType : lvalue.Type;
+            if (innerType is PrimitiveType pt && pt.Info.IsFloat)
+            {
+                string name = pt.Keyword == SyntaxKind.FloatKeyword ? "SingleToUInt32Bits" : "DoubleToUInt64Bits";
+                expr =
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("BitConverter"),
+                            IdentifierName(name)))
+                    .WithArgumentList(
+                        ArgumentList(
+                            SingletonSeparatedList(
+                                Argument(expr))));
+            }
+
             ExpressionStatementSyntax stmt =
                 ExpressionStatement(
                     InvocationExpression(checksumCall)
