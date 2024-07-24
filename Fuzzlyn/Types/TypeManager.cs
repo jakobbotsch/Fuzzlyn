@@ -10,6 +10,7 @@ namespace Fuzzlyn.Types;
 internal class TypeManager(Randomizer random)
 {
     private readonly List<PrimitiveType> _primitiveTypes = new();
+    private readonly List<VectorType> _vectorTypes = new();
     private readonly List<InterfaceType> _interfaceTypes = new();
     private readonly List<AggregateType> _aggTypes = new();
     private readonly Dictionary<InterfaceType, List<AggregateType>> _implementingTypes = new();
@@ -36,6 +37,9 @@ internal class TypeManager(Randomizer random)
 
     public FuzzType PickExistingType()
     {
+        if (_vectorTypes.Count > 0 && Random.FlipCoin(Options.MakeVectorProb))
+            return Random.NextElement(_vectorTypes);
+
         int num = Random.Next(_primitiveTypes.Count + _aggTypes.Count + _interfaceTypes.Count);
         if (num < _primitiveTypes.Count)
             return _primitiveTypes[num];
@@ -102,6 +106,8 @@ internal class TypeManager(Randomizer random)
 
         _primitiveTypes.AddRange(primitiveTypes.Select(pt => new PrimitiveType(pt)));
 
+        AddVectorTypes();
+
         int numAggs = Options.NumAggregateTypesDist.Sample(Random.Rng);
         for (int i = 0; i < numAggs; i++)
         {
@@ -130,6 +136,41 @@ internal class TypeManager(Randomizer random)
                 implementor.ImplementedInterfaces.Add(it);
 
             _implementingTypes.Add(it, implementors);
+        }
+    }
+
+    private void AddVectorTypes()
+    {
+        SyntaxKind[] vectorElementTypes =
+        [
+            SyntaxKind.SByteKeyword,
+            SyntaxKind.ByteKeyword,
+            SyntaxKind.ShortKeyword,
+            SyntaxKind.UShortKeyword,
+            SyntaxKind.IntKeyword,
+            SyntaxKind.UIntKeyword,
+            SyntaxKind.LongKeyword,
+            SyntaxKind.ULongKeyword,
+            SyntaxKind.FloatKeyword,
+            SyntaxKind.DoubleKeyword,
+        ];
+
+        ReadOnlySpan<(Extension, VectorTypeWidth)> vectorBaseTypes =
+            [(Extension.Vector64, VectorTypeWidth.Width64),
+            (Extension.Vector128, VectorTypeWidth.Width128),
+            (Extension.Vector256, VectorTypeWidth.Width256),
+            (Extension.Vector512, VectorTypeWidth.Width512)];
+
+        foreach ((Extension extension, VectorTypeWidth width) in vectorBaseTypes)
+        {
+            if (!Options.Seed.Extensions.Contains(extension))
+                continue;
+
+            foreach (SyntaxKind elementType in vectorElementTypes)
+            {
+                PrimitiveType primType = GetPrimitiveType(elementType);
+                _vectorTypes.Add(new VectorType(width, primType));
+            }
         }
     }
 

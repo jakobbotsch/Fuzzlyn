@@ -7,7 +7,7 @@ internal class Randomizer
     public Randomizer(FuzzlynOptions options)
     {
         Options = options;
-        Seed = options.Seed ?? Rng.GenSeed();
+        Seed = options.Seed?.Seed ?? Rng.GenSeed();
         Rng = Rng.FromSplitMix64Seed(Seed);
     }
 

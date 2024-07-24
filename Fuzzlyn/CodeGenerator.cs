@@ -77,6 +77,18 @@ internal class CodeGenerator
                             IdentifierName("Runtime")),
                         IdentifierName("CompilerServices")));
         yield return compilerServices;
+
+        if (Options.Seed.Extensions.Count > 0)
+        {
+            UsingDirectiveSyntax runtimeIntrinsics =
+                UsingDirective(
+                        QualifiedName(
+                            QualifiedName(
+                                IdentifierName("System"),
+                                IdentifierName("Runtime")),
+                            IdentifierName("Intrinsics")));
+            yield return runtimeIntrinsics;
+        }
     }
 
     private IEnumerable<MemberDeclarationSyntax> OutputProgramMembers(List<MethodDeclarationSyntax> methods)

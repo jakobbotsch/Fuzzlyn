@@ -8,9 +8,10 @@ namespace Fuzzlyn;
 
 internal class FuzzlynOptions
 {
-    public ulong? Seed { get; set; }
+    public SeedSpecification Seed { get; set; }
     public int NumPrograms { get; set; } = 1;
     public TimeSpan? TimeToRun { get; set; }
+    public HashSet<Extension> GenExtensions { get; set; } = [];
     public string OutputEventsTo { get; set; }
     public string Host { get; set; }
     public int Parallelism { get; set; } = 1;
@@ -47,6 +48,7 @@ internal class FuzzlynOptions
     public ProbabilityDistribution NumImplementorsDist { get; set; } = new GeometricDistribution(0.5, 1);
     public ProbabilityDistribution MakeArrayCountDist { get; set; } = new GeometricDistribution(0.8);
     public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
+    public double MakeVectorProb { get; set; } = 0.3;
     public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
     public ProbabilityDistribution StatementTypeDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
@@ -178,6 +180,15 @@ internal class FuzzlynOptions
          [(int)LValueKind.Static] = 0.2,
          [(int)LValueKind.RefReturningCall] = 0.1,
      });
+
+    public ProbabilityDistribution CreateVectorKindDist { get; set; }
+    = new TableDistribution(new Dictionary<int, double>
+    {
+        [(int)VectorCreationKind.Create] = 0.1,
+        [(int)VectorCreationKind.CreateBroadcast] = 0.43,
+        [(int)VectorCreationKind.CreateScalar] = 0.43,
+        [(int)VectorCreationKind.CreateSequence] = 0.04,
+    });
 }
 
 internal enum LValueKind
@@ -186,6 +197,14 @@ internal enum LValueKind
     Static,
     RefReturningCall,
     Reinterpretation,
+}
+
+internal enum VectorCreationKind
+{
+    Create,
+    CreateBroadcast,
+    CreateScalar,
+    CreateSequence,
 }
 
 internal class HillEquationParameters(double n, double h)

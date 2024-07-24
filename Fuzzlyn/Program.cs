@@ -23,9 +23,10 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        ulong? seed = null;
+        string seedSpecString = null;
         int? numPrograms = null;
         TimeSpan? timeToRun = null;
+        string genExtensionsString = null;
         string outputEventsTo = null;
         string host = null;
         int? parallelism = null;
@@ -41,7 +42,7 @@ internal class Program
         string knownErrors = null;
         OptionSet optionSet = new()
         {
-            { "seed=|s=", "Seed to use when generating a single program", (ulong v) => seed = v },
+            { "seed=|s=", "Seed to use when generating a single program, of the format <number>-<extension1>,<extension2>,...", v => seedSpecString = v },
             { "parallelism=", "Number of cores to use, or -1 to use all cores available. Default value is 1.", (int? p) => parallelism = p },
             { "num-programs=|n=", "Number of programs to generate. Mutually exclusive with seconds-to-run.", (int v) => numPrograms = v },
             { "seconds-to-run=", "Seconds to run Fuzzlyn for. Mutually exclusive with num-programs.", (int v) => timeToRun = new TimeSpan(0, 0, v) },
@@ -55,6 +56,7 @@ internal class Program
                 "cases were generated and the time that was run for.",
                 v => outputEventsTo = v
             },
+            { "gen-extensions=", "Extensions to use when generating new programs, in format <extension1>,<extension2>,... Specify 'allsupported' for all supported extensions by the host.", v => genExtensionsString = v },
             { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
             { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
             { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
@@ -81,9 +83,15 @@ internal class Program
         }
 
         if (timeToRun.HasValue && numPrograms.HasValue)
-        {
             error = "--num-programs and --seconds-to-run are mutually exclusive";
-        }
+
+        SeedSpecification seedSpec = null;
+        if (seedSpecString != null && !SeedSpecification.TryParse(seedSpecString, out seedSpec, out string seedSpecError))
+            error = seedSpecError;
+
+        HashSet<Extension> genExtensions = [];
+        if (genExtensionsString != null && !SeedSpecification.TryParseExtensions(genExtensionsString, genExtensions, out string extensionsError))
+            error = extensionsError;
 
         if (error != null)
         {
@@ -101,12 +109,14 @@ internal class Program
 
         FuzzlynOptions options = new();
 
-        if (seed.HasValue)
-            options.Seed = seed.Value;
+        if (seedSpec != null)
+            options.Seed = seedSpec;
         if (numPrograms.HasValue)
             options.NumPrograms = numPrograms.Value;
         if (timeToRun.HasValue)
             options.TimeToRun = timeToRun;
+        if (genExtensionsString != null)
+            options.GenExtensions = genExtensions;
         if (outputEventsTo != null)
             options.OutputEventsTo = outputEventsTo;
         if (host != null)
@@ -126,13 +136,13 @@ internal class Program
         if (execute.HasValue)
             options.Execute = execute.Value;
 
-        if (options.NumPrograms != 1 && options.Seed.HasValue)
+        if (options.NumPrograms != 1 && options.Seed != null)
         {
             Console.WriteLine("Error: Must specify exactly 1 program if a seed is specified.");
             return;
         }
 
-        if (options.Reduce && !options.Seed.HasValue)
+        if (options.Reduce && options.Seed != null)
         {
             Console.WriteLine("Error: Cannot reduce without a seed.");
             return;
@@ -167,6 +177,9 @@ internal class Program
                     return;
 
                 if (!LoadKnownErrors(options, knownErrors))
+                    return;
+
+                if (!ExpandExtensions(options))
                     return;
             }
 
@@ -223,12 +236,29 @@ internal class Program
         return true;
     }
 
+    private static bool ExpandExtensions(FuzzlynOptions options)
+    {
+        if (!options.GenExtensions.Contains(Extension.AllSupported))
+        {
+            return true;
+        }
+
+        if (options.GenExtensions.Count != 1)
+        {
+            Console.WriteLine("Error: The extension 'allsupported' can only be specified alone");
+            return false;
+        }
+
+        // TODO: Expand to host supported extensions
+        return true;
+    }
+
     private static void ReduceProgram(FuzzlynOptions options, string outputPath, string reduceDebugGitDir)
     {
         var cg = new CodeGenerator(options);
         CompilationUnitSyntax original = cg.GenerateProgram();
 
-        Reducer reducer = new(s_executionServerPool, original, options.Seed.Value, reduceDebugGitDir);
+        Reducer reducer = new(s_executionServerPool, original, options.Seed.Seed, reduceDebugGitDir);
         CompilationUnitSyntax reduced = reducer.Reduce();
         string source = reduced.NormalizeWhitespace().ToFullString();
         if (outputPath != null)
