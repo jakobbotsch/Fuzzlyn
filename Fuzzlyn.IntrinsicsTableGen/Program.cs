@@ -13,13 +13,13 @@ internal class Program
             .Where(t => namespaces.Contains(t.Namespace!) && t.GetProperty("IsSupported") != null)
             .ToArray();
 
-        List<(string ExtensionName, string? ParentExtensionName, string? CheckSupported)> extensions = new();
-        extensions.Add(("AllSupported", null, null));
-        extensions.Add(("VectorT", null, "Vector.IsHardwareAccelerated"));
-        extensions.Add(("Vector64", null, "Vector64.IsHardwareAccelerated"));
-        extensions.Add(("Vector128", null, "Vector128.IsHardwareAccelerated"));
-        extensions.Add(("Vector256", null, "Vector256.IsHardwareAccelerated"));
-        extensions.Add(("Vector512", null, "(bool?)spc.GetType(\"System.Runtime.Intrinsics.Vector512\")?.GetProperty(\"IsHardwareAccelerated\", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false"));
+        List<(string ExtensionName, string? ParentExtensionName, string? CheckSupported, List<HardwareIntrinsicsApi>? APIs)> extensions = new();
+        extensions.Add(("AllSupported", null, null, null));
+        extensions.Add(("VectorT", null, "Vector.IsHardwareAccelerated", null));
+        extensions.Add(("Vector64", null, "Vector64.IsHardwareAccelerated", null));
+        extensions.Add(("Vector128", null, "Vector128.IsHardwareAccelerated", null));
+        extensions.Add(("Vector256", null, "Vector256.IsHardwareAccelerated", null));
+        extensions.Add(("Vector512", null, "(bool?)spc.GetType(\"System.Runtime.Intrinsics.Vector512\")?.GetProperty(\"IsHardwareAccelerated\", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false", null));
 
         string? ToExtensionName(string fullName)
         {
@@ -53,7 +53,7 @@ internal class Program
             string checkIsSupported =
                 $"(bool?)spc.GetType(\"{t.FullName}\")?.GetProperty(\"IsSupported\", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false";
 
-            extensions.Add((extensionName, baseExtensionName, checkIsSupported));
+            extensions.Add((extensionName, baseExtensionName, checkIsSupported, null));
         }
 
         {
@@ -69,7 +69,7 @@ internal class Program
             sw.WriteLine("public enum Extension");
             sw.WriteLine("{");
 
-            foreach ((string ext, _, _) in extensions)
+            foreach ((string ext, _, _, _) in extensions)
             {
                 sw.WriteLine($"    {ext},");
             }
@@ -84,7 +84,7 @@ internal class Program
             sw.WriteLine("        List<Extension> extensions = [];");
             sw.WriteLine("        Assembly spc = typeof(System.Runtime.Intrinsics.X86.Sse).Assembly;");
 
-            foreach ((string ext, _, string? check) in extensions)
+            foreach ((string ext, _, string? check, _) in extensions)
             {
                 if (check == null)
                     continue;
@@ -98,7 +98,7 @@ internal class Program
             sw.WriteLine("        => ext switch");
             sw.WriteLine("        {");
 
-            foreach ((string ext, string? baseExt, _) in extensions)
+            foreach ((string ext, string? baseExt, _, _) in extensions)
             {
                 if (baseExt == null)
                     continue;
@@ -110,5 +110,9 @@ internal class Program
             sw.WriteLine("        };");
             sw.WriteLine("}");
         }
+    }
+
+    private class HardwareIntrinsicsApi
+    {
     }
 }

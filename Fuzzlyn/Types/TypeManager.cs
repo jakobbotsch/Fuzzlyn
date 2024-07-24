@@ -160,7 +160,8 @@ internal class TypeManager(Randomizer random)
             [(Extension.Vector64, VectorTypeWidth.Width64),
             (Extension.Vector128, VectorTypeWidth.Width128),
             (Extension.Vector256, VectorTypeWidth.Width256),
-            (Extension.Vector512, VectorTypeWidth.Width512)];
+            (Extension.Vector512, VectorTypeWidth.Width512),
+            (Extension.VectorT, VectorTypeWidth.WidthUnknown)];
 
         foreach ((Extension extension, VectorTypeWidth width) in vectorBaseTypes)
         {

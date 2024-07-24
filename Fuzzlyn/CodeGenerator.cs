@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Methods;
+﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.Methods;
 using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis;
@@ -80,6 +81,16 @@ internal class CodeGenerator
                             IdentifierName("Runtime")),
                         IdentifierName("CompilerServices")));
         yield return compilerServices;
+
+        if (Options.GenExtensions.Contains(Extension.VectorT))
+        {
+            UsingDirectiveSyntax numerics =
+                UsingDirective(
+                    QualifiedName(
+                        IdentifierName("System"),
+                        IdentifierName("Numerics")));
+            yield return numerics;
+        }
 
         if (Options.GenExtensions.Count > 0)
         {

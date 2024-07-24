@@ -953,12 +953,12 @@ internal class FuncBodyGenerator(
             }
             else if (type is VectorType vt)
             {
-                int numElems = vt.NumElements();
+                int? numElems = vt.NumElements();
                 VectorCreationKind creationKind;
                 do
                 {
                     creationKind = (VectorCreationKind)Options.CreateVectorKindDist.Sample(_random.Rng);
-                } while (creationKind == VectorCreationKind.Create && numElems > 4);
+                } while (creationKind == VectorCreationKind.Create && (!numElems.HasValue || numElems.Value > 4));
 
                 return GenVectorCreation(creationKind, vt, () => GenExpression(vt.ElementType));
             }
@@ -982,7 +982,7 @@ internal class FuncBodyGenerator(
     {
         int numArgs = creationKind switch
         {
-            VectorCreationKind.Create => vt.NumElements(),
+            VectorCreationKind.Create => vt.NumElements().Value,
             _ => 1
         };
 
@@ -1006,14 +1006,30 @@ internal class FuncBodyGenerator(
             _ => IdentifierName("CreateScalar"),
         };
 
-        return
+        string baseName = vt.GetBaseName();
+        bool isCreateScalarVectorT = vt.Width == VectorTypeWidth.WidthUnknown && creationKind == VectorCreationKind.CreateScalar;
+        if (isCreateScalarVectorT)
+        {
+            // No CreateScalar for Vector<T> yet. We will use
+            // Vector128.CreateScalar(x).AsVector().
+            baseName = "Vector128";
+        }
+
+        ExpressionSyntax invoc =
             InvocationExpression(
                 MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName(vt.GetBaseName()),
+                    IdentifierName(baseName),
                     memberName))
             .WithArgumentList(
                 ArgumentList(SeparatedList(arguments)));
+
+        if (isCreateScalarVectorT)
+        {
+            invoc = InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, invoc, IdentifierName("AsVector")));
+        }
+
+        return invoc;
     }
 
     private ExpressionSyntax GenReinterpretation(FuzzType type, LValueInfo asgDst)

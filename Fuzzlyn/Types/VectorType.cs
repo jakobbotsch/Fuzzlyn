@@ -10,6 +10,7 @@ public enum VectorTypeWidth
     Width128,
     Width256,
     Width512,
+    WidthUnknown,
 }
 
 public class VectorType(VectorTypeWidth width, PrimitiveType elementType) : FuzzType
@@ -35,25 +36,27 @@ public class VectorType(VectorTypeWidth width, PrimitiveType elementType) : Fuzz
         return _type;
     }
 
-    public int NumElements()
+    public int? NumElements()
         => GetWidthInBytes() / ElementType.Info.Size;
 
-    public int GetWidthInBytes()
+    public int? GetWidthInBytes()
         => Width switch
         {
             VectorTypeWidth.Width64 => 8,
+            VectorTypeWidth.Width128 => 16,
             VectorTypeWidth.Width256 => 32,
             VectorTypeWidth.Width512 => 64,
-            _ => 16,
+            _ => null,
         };
 
     public string GetBaseName()
         => Width switch
         {
             VectorTypeWidth.Width64 => "Vector64",
+            VectorTypeWidth.Width128 => "Vector128",
             VectorTypeWidth.Width256 => "Vector256",
             VectorTypeWidth.Width512 => "Vector512",
-            _ => "Vector128",
+            _ => "Vector",
         };
 
     public override int GetHashCode()

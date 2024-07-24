@@ -144,7 +144,12 @@ internal static class LiteralGenerator
 
     private static ExpressionSyntax GenVectorCreation(Randomizer random, VectorType vt)
     {
-        VectorCreationKind creationKind = (VectorCreationKind)random.Options.CreateVectorKindDist.Sample(random.Rng);
+        VectorCreationKind creationKind;
+        do
+        {
+            creationKind = (VectorCreationKind)random.Options.CreateVectorKindDist.Sample(random.Rng);
+        } while (creationKind == VectorCreationKind.Create && vt.Width == VectorTypeWidth.WidthUnknown);
+
         return FuncBodyGenerator.GenVectorCreation(creationKind, vt, () => GenPrimitiveLiteral(random, vt.ElementType));
     }
 }
