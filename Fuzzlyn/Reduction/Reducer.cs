@@ -600,9 +600,44 @@ public static void Main()
             // Convert s_rt.Checksum calls to s_rt.WriteLine
             if (node is ExpressionStatementSyntax expStmt &&
                 expStmt.Expression is InvocationExpressionSyntax invoc &&
-                invoc.Expression is MemberAccessExpressionSyntax mem &&
-                mem.Name.Identifier.Text == "Checksum")
+                invoc.Expression is MemberAccessExpressionSyntax mem)
             {
+                switch (mem.Name.Identifier.Text)
+                {
+                    case "ChecksumSingle":
+                    case "ChecksumDouble":
+                        ExpressionSyntax floatOrDouble = invoc.ArgumentList.Arguments[^1].Expression;
+                        ExpressionSyntax bits =
+                            InvocationExpression(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("System"),
+                                        IdentifierName("BitConverter")),
+                                    IdentifierName(mem.Name.Identifier.Text == "ChecksumSingle" ? "SingleToUInt32Bits" : "DoubleToUInt64Bits")))
+                            .WithArgumentList(
+                                ArgumentList(
+                                    SingletonSeparatedList(
+                                        Argument(
+                                            floatOrDouble))));
+                        replacements.Add(floatOrDouble, bits);
+                        break;
+                    case "ChecksumSingles":
+                    case "ChecksumDoubles":
+                        ExpressionSyntax vectorFloatOrDouble = invoc.ArgumentList.Arguments[^1].Expression;
+                        ExpressionSyntax vectorBits =
+                            InvocationExpression(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    vectorFloatOrDouble,
+                                    IdentifierName("AsUInt32")));
+                        replacements.Add(vectorFloatOrDouble, vectorBits);
+                        break;
+                    default:
+                        continue;
+                };
+
                 replacements.Add(mem.Name, IdentifierName("WriteLine"));
             }
         }
@@ -784,7 +819,7 @@ public static void Main()
             if (node is ExpressionStatementSyntax expStmt &&
                 expStmt.Expression is InvocationExpressionSyntax invoc &&
                 invoc.Expression is MemberAccessExpressionSyntax mem &&
-                mem.Name.Identifier.Text == "WriteLine")
+                mem.Name.Identifier.Text is "WriteLine")
             {
                 replacements.Add(invoc, invoc.WithArgumentList(invoc.ArgumentList.WithArguments(invoc.ArgumentList.Arguments.RemoveAt(0))));
             }
@@ -826,18 +861,53 @@ public class Runtime : IRuntime
 
         void TryRewriteWriteLine(SyntaxNode node)
         {
-            if (node is ExpressionStatementSyntax expStmt &&
-                expStmt.Expression is InvocationExpressionSyntax invoc &&
-                invoc.Expression is MemberAccessExpressionSyntax mem &&
-                mem.Name.Identifier.Text == "WriteLine")
+            if (node is not ExpressionStatementSyntax expStmt ||
+                expStmt.Expression is not InvocationExpressionSyntax invoc ||
+                invoc.Expression is not MemberAccessExpressionSyntax mem)
             {
-                ArgumentSyntax arg = invoc.ArgumentList.Arguments[^1];
-                InvocationExpressionSyntax newCall =
-                    InvocationExpression(
-                        ParseExpression("System.Console.WriteLine"),
-                        ArgumentList(
-                            SingletonSeparatedList(arg)));
-                replacements.Add(invoc, newCall);
+                return;
+            }
+
+            switch (mem.Name.Identifier.Text)
+            {
+                case "WriteLine":
+                case "WriteLineSingle":
+                case "WriteLineDouble":
+                    ArgumentSyntax arg = invoc.ArgumentList.Arguments[^1];
+
+                    string calledFunc = mem.Name.Identifier.Text switch
+                    {
+                        "WriteLineSingle" => "SingleToUInt32Bits",
+                        "WriteLineDouble" => "DoubleToUInt64Bits",
+                        _ => null,
+                    };
+
+                    if (calledFunc != null)
+                    {
+                        arg =
+                            arg.WithExpression(
+                                InvocationExpression(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            IdentifierName("System"),
+                                            IdentifierName("BitConverter")),
+                                        IdentifierName(calledFunc)))
+                                .WithArgumentList(
+                                    ArgumentList(
+                                        SingletonSeparatedList(
+                                            Argument(
+                                                arg.Expression)))));
+                    }
+
+                    InvocationExpressionSyntax newCall =
+                        InvocationExpression(
+                            ParseExpression("System.Console.WriteLine"),
+                            ArgumentList(
+                                SingletonSeparatedList(arg)));
+                    replacements.Add(invoc, newCall);
+                    break;
             }
         }
 

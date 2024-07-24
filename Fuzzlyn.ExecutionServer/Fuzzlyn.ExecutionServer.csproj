@@ -9,7 +9,7 @@
     <LangVersion>preview</LangVersion>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>

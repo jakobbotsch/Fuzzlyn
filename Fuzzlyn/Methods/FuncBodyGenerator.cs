@@ -1120,28 +1120,6 @@ internal class FuncBodyGenerator(
             return innerType is not PrimitiveType and not VectorType;
         });
 
-        ExpressionSyntax checksumCall;
-
-        if (prefixRuntimeAccess)
-        {
-            checksumCall =
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName(CodeGenerator.ClassNameForStaticMethods),
-                        IdentifierName("s_rt")),
-                    IdentifierName("Checksum"));
-        }
-        else
-        {
-            checksumCall =
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName("s_rt"),
-                    IdentifierName("Checksum"));
-        }
-
         foreach (LValueInfo lvalue in paths)
         {
             string checksumSiteId = siteIdGenerator();
@@ -1153,19 +1131,37 @@ internal class FuncBodyGenerator(
             ExpressionSyntax expr = lvalue.Expression;
 
             FuzzType innerType = lvalue.Type is RefType rt ? rt.InnerType : lvalue.Type;
+
+            string checksumFuncName = "Checksum";
             if (innerType is PrimitiveType pt && pt.Info.IsFloat)
             {
-                string name = pt.Keyword == SyntaxKind.FloatKeyword ? "SingleToUInt32Bits" : "DoubleToUInt64Bits";
-                expr =
-                    InvocationExpression(
+                checksumFuncName = pt.Keyword == SyntaxKind.FloatKeyword ? "ChecksumSingle" : "ChecksumDouble";
+            }
+            else if (innerType is VectorType vt && vt.ElementType.Info.IsFloat)
+            {
+                checksumFuncName = vt.ElementType.Keyword == SyntaxKind.FloatKeyword ? "ChecksumSingles" : "ChecksumDoubles";
+            }
+
+            ExpressionSyntax checksumCall;
+
+            if (prefixRuntimeAccess)
+            {
+                checksumCall =
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
                         MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("BitConverter"),
-                            IdentifierName(name)))
-                    .WithArgumentList(
-                        ArgumentList(
-                            SingletonSeparatedList(
-                                Argument(expr))));
+                            IdentifierName(CodeGenerator.ClassNameForStaticMethods),
+                            IdentifierName("s_rt")),
+                        IdentifierName(checksumFuncName));
+            }
+            else
+            {
+                checksumCall =
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("s_rt"),
+                        IdentifierName(checksumFuncName));
             }
 
             ExpressionStatementSyntax stmt =
