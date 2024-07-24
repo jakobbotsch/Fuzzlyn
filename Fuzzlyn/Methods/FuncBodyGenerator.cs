@@ -399,7 +399,16 @@ internal class FuncBodyGenerator(
         ExpressionSyntax gen = null;
         do
         {
-            ExpressionKind kind = (ExpressionKind)Options.ExpressionTypeDist.Sample(_random.Rng);
+            ExpressionKind kind;
+            if (type is VectorType)
+            {
+                kind = (ExpressionKind)Options.VectorExpressionTypeDist.Sample(_random.Rng);
+            }
+            else
+            {
+                kind = (ExpressionKind)Options.ExpressionTypeDist.Sample(_random.Rng);
+            }
+
             switch (kind)
             {
                 case ExpressionKind.MemberAccess:
@@ -942,6 +951,17 @@ internal class FuncBodyGenerator(
             {
                 at = _random.NextElement(_types.GetImplementingTypes(it));
             }
+            else if (type is VectorType vt)
+            {
+                int numElems = vt.NumElements();
+                VectorCreationKind creationKind;
+                do
+                {
+                    creationKind = (VectorCreationKind)Options.CreateVectorKindDist.Sample(_random.Rng);
+                } while (creationKind == VectorCreationKind.Create && numElems > 4);
+
+                return GenVectorCreation(creationKind, vt, () => GenExpression(vt.ElementType));
+            }
             else
             {
                 return null;
@@ -956,6 +976,46 @@ internal class FuncBodyGenerator(
                         at.Fields.Select(f => Argument(GenExpression(f.Type))))));
 
         return creation;
+    }
+
+    internal static ExpressionSyntax GenVectorCreation(VectorCreationKind creationKind, VectorType vt, Func<ExpressionSyntax> genElement)
+    {
+        int numArgs = creationKind switch
+        {
+            VectorCreationKind.Create => vt.NumElements(),
+            VectorCreationKind.CreateSequence => 2,
+            _ => 1
+        };
+
+        ArgumentSyntax[] arguments = new ArgumentSyntax[numArgs];
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            ExpressionSyntax expr = CastExpression(vt.ElementType.GenReferenceTo(), genElement());
+            arguments[i] = Argument(expr);
+        }
+
+        SimpleNameSyntax memberName = creationKind switch
+        {
+            VectorCreationKind.Create => IdentifierName("Create"),
+            VectorCreationKind.CreateBroadcast =>
+                GenericName("Create")
+                .WithTypeArgumentList(
+                    TypeArgumentList(
+                        SingletonSeparatedList(
+                            vt.ElementType.GenReferenceTo()))),
+
+            VectorCreationKind.CreateSequence => IdentifierName("CreateSequence"),
+            _ => IdentifierName("CreateScalar"),
+        };
+
+        return
+            InvocationExpression(
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName(vt.GetBaseName()),
+                    memberName))
+            .WithArgumentList(
+                ArgumentList(SeparatedList(arguments)));
     }
 
     private ExpressionSyntax GenReinterpretation(FuzzType type, LValueInfo asgDst)

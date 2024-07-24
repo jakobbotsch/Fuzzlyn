@@ -74,6 +74,15 @@ internal class FuzzlynOptions
             [(int)ExpressionKind.Decrement] = 0.05,
         });
 
+    public ProbabilityDistribution VectorExpressionTypeDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)ExpressionKind.MemberAccess] = 0.5,
+            [(int)ExpressionKind.NewObject] = 0.18,
+            [(int)ExpressionKind.Literal] = 0.18,
+            [(int)ExpressionKind.Call] = 0.14,
+        });
+
     // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
     // https://www.desmos.com/calculator/lxqwr6if6d
     public HillEquationParameters StatementRejection { get; set; } = new HillEquationParameters(2.4, 2);

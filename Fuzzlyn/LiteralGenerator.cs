@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Types;
+﻿using Fuzzlyn.Methods;
+using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -144,41 +145,6 @@ internal static class LiteralGenerator
     private static ExpressionSyntax GenVectorCreation(Randomizer random, VectorType vt)
     {
         VectorCreationKind creationKind = (VectorCreationKind)random.Options.CreateVectorKindDist.Sample(random.Rng);
-        int numArgs = creationKind switch
-        {
-            VectorCreationKind.Create => vt.NumElements(),
-            VectorCreationKind.CreateSequence => 2,
-            _ => 1
-        };
-
-        ArgumentSyntax[] arguments = new ArgumentSyntax[numArgs];
-        for (int i = 0; i < arguments.Length; i++)
-        {
-            ExpressionSyntax expr = CastExpression(vt.ElementType.GenReferenceTo(), GenPrimitiveLiteral(random, vt.ElementType));
-            arguments[i] = Argument(expr);
-        }
-
-        SimpleNameSyntax memberName = creationKind switch
-        {
-            VectorCreationKind.Create => IdentifierName("Create"),
-            VectorCreationKind.CreateBroadcast =>
-                GenericName("Create")
-                .WithTypeArgumentList(
-                    TypeArgumentList(
-                        SingletonSeparatedList(
-                            vt.ElementType.GenReferenceTo()))),
-
-            VectorCreationKind.CreateSequence => IdentifierName("CreateSequence"),
-            _ => IdentifierName("CreateScalar"),
-        };
-
-        return
-            InvocationExpression(
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName(vt.GetBaseName()),
-                    memberName))
-            .WithArgumentList(
-                ArgumentList(SeparatedList(arguments)));
+        return FuncBodyGenerator.GenVectorCreation(creationKind, vt, () => GenPrimitiveLiteral(random, vt.ElementType));
     }
 }
