@@ -916,6 +916,8 @@ internal class FuncBodyGenerator(
             SyntaxKind.ShortKeyword,
             SyntaxKind.ByteKeyword,
             SyntaxKind.SByteKeyword,
+            SyntaxKind.FloatKeyword,
+            SyntaxKind.DoubleKeyword,
         ];
 
         if (type is not PrimitiveType pt || !acceptedTypes.Contains(pt.Keyword))
