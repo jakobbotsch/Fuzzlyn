@@ -15,6 +15,7 @@ internal class Program
 
         List<(string ExtensionName, string? ParentExtensionName, string? CheckSupported)> extensions = new();
         extensions.Add(("AllSupported", null, null));
+        extensions.Add(("VectorT", null, "Vector.IsHardwareAccelerated"));
         extensions.Add(("Vector64", null, "Vector64.IsHardwareAccelerated"));
         extensions.Add(("Vector128", null, "Vector128.IsHardwareAccelerated"));
         extensions.Add(("Vector256", null, "Vector256.IsHardwareAccelerated"));
@@ -59,6 +60,7 @@ internal class Program
             using StreamWriter sw = new StreamWriter(File.OpenWrite(args[0]));
 
             sw.WriteLine("using System.Collections.Generic;");
+            sw.WriteLine("using System.Numerics;");
             sw.WriteLine("using System.Reflection;");
             sw.WriteLine("using System.Runtime.Intrinsics;");
             sw.WriteLine();

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Intrinsics;
 
@@ -7,6 +8,7 @@ namespace Fuzzlyn.ExecutionServer;
 public enum Extension
 {
     AllSupported,
+    VectorT,
     Vector64,
     Vector128,
     Vector256,
@@ -91,6 +93,7 @@ public static class ExtensionHelpers
     {
         List<Extension> extensions = [];
         Assembly spc = typeof(System.Runtime.Intrinsics.X86.Sse).Assembly;
+        if (Vector.IsHardwareAccelerated) extensions.Add(Extension.VectorT);
         if (Vector64.IsHardwareAccelerated) extensions.Add(Extension.Vector64);
         if (Vector128.IsHardwareAccelerated) extensions.Add(Extension.Vector128);
         if (Vector256.IsHardwareAccelerated) extensions.Add(Extension.Vector256);
