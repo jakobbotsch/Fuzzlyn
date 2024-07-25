@@ -678,14 +678,19 @@ public static void Main()
         string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
         try
         {
-            (string debugStdout, string debugStderr) = ExecuteInSubProcess(prog, Compiler.DebugOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
-            (string releaseStdout, string releaseStderr) = ExecuteInSubProcess(prog, Compiler.ReleaseOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
+            (string debugStdout, string debugStderr, int debugExitCode) = ExecuteInSubProcess(prog, Compiler.DebugOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
+            (string releaseStdout, string releaseStderr, int releaseExitCode) = ExecuteInSubProcess(prog, Compiler.ReleaseOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
             if (debugStderr.Contains("Assert failure") || debugStderr.Contains("JIT assert failed"))
             {
                 return true;
             }
 
             if (releaseStderr.Contains("Assert failure") || releaseStderr.Contains("JIT assert failed"))
+            {
+                return true;
+            }
+
+            if (debugExitCode == unchecked((int)0xc0000005) || releaseExitCode == unchecked((int)0xc0000005))
             {
                 return true;
             }
@@ -719,7 +724,7 @@ public static void Main()
             }
         }
 
-        (string stdout, string stderr) ExecuteInSubProcess(CompilationUnitSyntax node, CSharpCompilationOptions opts, string tempAsmPath)
+        (string stdout, string stderr, int exitCode) ExecuteInSubProcess(CompilationUnitSyntax node, CSharpCompilationOptions opts, string tempAsmPath)
         {
             CompileResult result = _compiler.Compile(node, opts);
             if (result.Assembly == null)
@@ -763,7 +768,7 @@ public static void Main()
                 p.BeginErrorReadLine();
                 p.WaitForExit();
 
-                return (stdout.ToString(), stderr.ToString());
+                return (stdout.ToString(), stderr.ToString(), p.ExitCode);
             }
         }
     }
