@@ -253,19 +253,7 @@ internal class Program
         }
 
         // All supported extensions by default when running them.
-        HashSet<Extension> allSupportedExtensions = [.. s_executionServerPool.GetSupportedExtensions()];
-        HashSet<Extension> newExtensions = [.. allSupportedExtensions];
-
-        foreach (Extension ext in allSupportedExtensions)
-        {
-            Extension? baseExt = ExtensionHelpers.GetBaseExtension(ext);
-            if (baseExt.HasValue)
-            {
-                newExtensions.Remove(baseExt.Value);
-            }
-        }
-
-        options.GenExtensions = newExtensions;
+        options.GenExtensions = [.. s_executionServerPool.GetSupportedExtensions()];
         return true;
     }
 

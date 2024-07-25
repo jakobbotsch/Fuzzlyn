@@ -90,6 +90,7 @@ internal class FuzzlynOptions
     public HillEquationParameters ExpressionRejection { get; set; } = new HillEquationParameters(3.5, 3);
     // Probability that we will attempt to generate a new method when trying to generate a call.
     public double GenNewFunctionProb { get; set; } = 0.07;
+    public double GenCallToApiProb { get; set; } = 0.5;
     // Controls the probability of generating a new function as a function of the total number of current
     // functions we have.
     // https://www.desmos.com/calculator/iaqs1fgrok

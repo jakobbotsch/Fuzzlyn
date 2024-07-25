@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Methods;
@@ -20,12 +21,14 @@ internal class FuncGenerator
         Randomizer random,
         TypeManager types,
         StaticsManager statics,
+        ApiManager apis,
         Func<string> genChecksumSiteId)
     {
         _funcs = funcs;
         Random = random;
         Types = types;
         Statics = statics;
+        Apis = apis;
         _genChecksumSiteId = genChecksumSiteId;
 
         FuncIndex = funcs.Count;
@@ -38,6 +41,7 @@ internal class FuncGenerator
     public FuzzlynOptions Options => Random.Options;
     public TypeManager Types { get; }
     public StaticsManager Statics { get; }
+    public ApiManager Apis { get; }
     public int FuncIndex { get; }
 
     // If non-null, this is an instance method on the specified type
@@ -169,6 +173,7 @@ internal class FuncGenerator
                 Random,
                 Types,
                 Statics,
+                Apis,
                 _genChecksumSiteId,
                 FuncIndex,
                 ReturnType,

@@ -17,6 +17,7 @@ internal class FuncBodyGenerator(
     Randomizer random,
     TypeManager types,
     StaticsManager statics,
+    ApiManager apis,
     Func<string> genChecksumSiteId,
     int funcIndex,
     FuzzType returnType,
@@ -26,6 +27,7 @@ internal class FuncBodyGenerator(
     private readonly Randomizer _random = random;
     private readonly TypeManager _types = types;
     private readonly StaticsManager _statics = statics;
+    private readonly ApiManager _apis = apis;
     private readonly Func<string> _genChecksumSiteId = genChecksumSiteId;
     private readonly int _funcIndex = funcIndex;
     private readonly FuzzType _returnType = returnType;
@@ -514,7 +516,7 @@ internal class FuncBodyGenerator(
             // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
             // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
             // and the result of that call would not be valid to return.
-            ArgumentSyntax[] args = GenArgs(funcToCall, minRefEscapeScope, out int argsMinRefEscapeScope);
+            ArgumentSyntax[] args = GenArgs(funcToCall.Parameters.Select(p => p.Type).ToArray(), minRefEscapeScope, out int argsMinRefEscapeScope);
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
                     invocExpr,
@@ -794,21 +796,35 @@ internal class FuncBodyGenerator(
     {
         Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
-        FuncGenerator func;
+        FuncGenerator func = null;
+        FuzzType[] parameterTypes = null;
+        ExpressionSyntax invocFuncExpr = null;
+
         if (allowNew && _random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, _random.Rng))
         {
             type ??= _types.PickType(Options.ReturnTypeIsByRefProb);
 
-            func = new FuncGenerator(_funcs, _random, _types, _statics, _genChecksumSiteId);
+            func = new FuncGenerator(_funcs, _random, _types, _statics, _apis, _genChecksumSiteId);
             func.Generate(type, true);
         }
         else
         {
-            IEnumerable<FuncGenerator> funcs =
-                _funcs
-                .Skip(_funcIndex + 1)
-                .Where(candidate =>
-                {
+            if (_apis.Any() && _random.FlipCoin(Options.GenCallToApiProb))
+            {
+                Api api = _apis.PickRandomApi(type);
+                if (api == null)
+                    return null;
+                type ??= api.ReturnType;
+                parameterTypes = api.ParameterTypes;
+                invocFuncExpr = ParseExpression($"{api.ClassName}.{api.MethodName}");
+            }
+            else
+            {
+                IEnumerable<FuncGenerator> funcs =
+                    _funcs
+                    .Skip(_funcIndex + 1)
+                    .Where(candidate =>
+                    {
                         // Make sure we do not get too many leaf calls. Here we compute what the new transitive
                         // number of calls would be to each function, and if it's too much, reject this candidate.
                         // Note that we will never reject calling a leaf function directly, even if the +1 puts
@@ -816,39 +832,45 @@ internal class FuncBodyGenerator(
                         // which happens when functions call functions multiple times, and those functions also
                         // call functions multiple times.
                         foreach (var (transFunc, transNumCall) in candidate.CallCounts)
-                    {
-                        CallCounts.TryGetValue(transFunc, out long curNumCalls);
-                        if (curNumCalls + transNumCall > Options.SingleFunctionMaxTotalCalls)
-                            return false;
-                    }
+                        {
+                            CallCounts.TryGetValue(transFunc, out long curNumCalls);
+                            if (curNumCalls + transNumCall > Options.SingleFunctionMaxTotalCalls)
+                                return false;
+                        }
 
-                    return true;
-                });
+                        return true;
+                    });
 
-            if (type != null)
-                funcs = funcs.Where(f => f.ReturnType.IsCastableTo(type) || (f.ReturnType is RefType rt && rt.InnerType.IsCastableTo(type)));
+                if (type != null)
+                    funcs = funcs.Where(f => f.ReturnType.IsCastableTo(type) || (f.ReturnType is RefType rt && rt.InnerType.IsCastableTo(type)));
 
-            List<FuncGenerator> list = funcs.ToList();
-            if (list.Count == 0)
-                return null;
+                List<FuncGenerator> list = funcs.ToList();
+                if (list.Count == 0)
+                    return null;
 
-            func = _random.NextElement(list);
-            type ??= func.ReturnType;
+                func = _random.NextElement(list);
+                type ??= func.ReturnType;
+            }
         }
 
         // Update transitive call counts before generating args, so we decrease chance of
         // calling the same methods in the arg expressions.
-        CallCounts.TryGetValue(func.FuncIndex, out long numCalls);
-        CallCounts[func.FuncIndex] = numCalls + 1;
-
-        foreach (var (transFunc, transNumCalls) in func.CallCounts)
+        if (func != null)
         {
-            CallCounts.TryGetValue(transFunc, out long curNumCalls);
-            CallCounts[transFunc] = curNumCalls + transNumCalls;
+            CallCounts.TryGetValue(func.FuncIndex, out long numCalls);
+            CallCounts[func.FuncIndex] = numCalls + 1;
+
+            foreach (var (transFunc, transNumCalls) in func.CallCounts)
+            {
+                CallCounts.TryGetValue(transFunc, out long curNumCalls);
+                CallCounts[transFunc] = curNumCalls + transNumCalls;
+            }
+
+            parameterTypes = func.Parameters.Select(p => p.Type).ToArray();
+            invocFuncExpr = GenInvocFuncExpr(func);
         }
 
-        ExpressionSyntax invocFuncExpr = GenInvocFuncExpr(func);
-        ArgumentSyntax[] args = GenArgs(func, 0, out _);
+        ArgumentSyntax[] args = GenArgs(parameterTypes, 0, out _);
         InvocationExpressionSyntax invoc =
             InvocationExpression(
                 invocFuncExpr,
@@ -890,14 +912,14 @@ internal class FuncBodyGenerator(
                 IdentifierName(func.Name));
     }
 
-    private ArgumentSyntax[] GenArgs(FuncGenerator funcToCall, int minRefEscapeScope, out int argsMinRefEscapeScope)
+    private ArgumentSyntax[] GenArgs(FuzzType[] parameterTypes, int minRefEscapeScope, out int argsMinRefEscapeScope)
     {
-        ArgumentSyntax[] args = new ArgumentSyntax[funcToCall.Parameters.Length];
+        ArgumentSyntax[] args = new ArgumentSyntax[parameterTypes.Length];
         argsMinRefEscapeScope = int.MaxValue;
 
         for (int i = 0; i < args.Length; i++)
         {
-            FuzzType paramType = funcToCall.Parameters[i].Type;
+            FuzzType paramType = parameterTypes[i];
             if (paramType is RefType rt)
             {
                 LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
@@ -1007,8 +1029,8 @@ internal class FuncBodyGenerator(
         };
 
         string baseName = vt.GetBaseName();
-        bool isCreateScalarVectorT = vt.Width == VectorTypeWidth.WidthUnknown && creationKind == VectorCreationKind.CreateScalar;
-        if (isCreateScalarVectorT)
+        bool isVectorTCreateScalar = vt.Width == VectorTypeWidth.WidthUnknown && creationKind == VectorCreationKind.CreateScalar;
+        if (isVectorTCreateScalar)
         {
             // No CreateScalar for Vector<T> yet. We will use
             // Vector128.CreateScalar(x).AsVector().
@@ -1024,7 +1046,7 @@ internal class FuncBodyGenerator(
             .WithArgumentList(
                 ArgumentList(SeparatedList(arguments)));
 
-        if (isCreateScalarVectorT)
+        if (isVectorTCreateScalar)
         {
             invoc = InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, invoc, IdentifierName("AsVector")));
         }

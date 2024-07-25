@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Statics;
+﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -10,14 +11,18 @@ namespace Fuzzlyn.Methods;
 internal class MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
 {
     private readonly List<FuncGenerator> _funcs = new();
+    private readonly List<Api> _apis = new();
 
     public Randomizer Random { get; } = random;
     public TypeManager Types { get; } = types;
     public StaticsManager Statics { get; } = statics;
+    public ApiManager Apis { get; } = new ApiManager(random);
 
     internal void GenerateMethods(Func<string> genChecksumSiteId)
     {
-        FuncGenerator gen = new(_funcs, Random, Types, Statics, genChecksumSiteId);
+        Apis.Initialize(Types, Random.Options.GenExtensions);
+
+        FuncGenerator gen = new(_funcs, Random, Types, Statics, Apis, genChecksumSiteId);
         gen.Generate(null, false);
     }
 

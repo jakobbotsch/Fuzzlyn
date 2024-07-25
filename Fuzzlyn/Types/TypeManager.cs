@@ -69,6 +69,7 @@ internal class TypeManager(Randomizer random)
     public List<AggregateType> GetImplementingTypes(InterfaceType type)
         => _implementingTypes[type];
 
+    public IEnumerable<PrimitiveType> PrimitiveTypes => _primitiveTypes;
     public IEnumerable<AggregateType> AggregateTypes => _aggTypes;
     public IEnumerable<InterfaceType> InterfaceTypes => _interfaceTypes;
 
@@ -195,4 +196,16 @@ internal class TypeManager(Randomizer random)
     }
 
     internal PrimitiveType GetPrimitiveType(SyntaxKind kind) => _primitiveTypes.First(pt => pt.Keyword == kind);
+
+    public bool IsSupportedType(FuzzType type)
+    {
+        return type switch
+        {
+            PrimitiveType pt => _primitiveTypes.Any(pt2 => pt2.Keyword == pt.Keyword),
+            VectorType vt => _vectorTypes.Any(vt2 => vt2.Equals(vt)),
+            ArrayType at => IsSupportedType(at.ElementType),
+            RefType rt => IsSupportedType(rt.InnerType),
+            _ => throw new ArgumentException("Cannot query support for type " + type),
+        };
+    }
 }
