@@ -58,7 +58,14 @@ internal class Program
                 $"(bool?)spc.GetType(\"{t.FullName}\")?.GetProperty(\"IsSupported\", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false";
 
             string namespaceName = t.Namespace!;
-            string className = t.Name.Replace("+", ".");
+
+            string className = t.Name;
+            Type? parentType = t.DeclaringType;
+            while (parentType != null)
+            {
+                className = $"{parentType.Name}.{t.Name}";
+                parentType = parentType.DeclaringType;
+            }
 
             List<Api> apis = new();
 
