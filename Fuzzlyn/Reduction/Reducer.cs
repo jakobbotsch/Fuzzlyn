@@ -14,9 +14,10 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction;
 
-internal class Reducer(ExecutionServerPool pool, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
+internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
 {
     private readonly ExecutionServerPool _pool = pool;
+    private readonly Compiler _compiler = compiler;
     private readonly Rng _rng = Rng.FromSplitMix64Seed(reducerSeed);
     private int _varCounter;
     private readonly string _reduceDebugGitDir = reduceDebugGitDir;
@@ -29,21 +30,21 @@ internal class Reducer(ExecutionServerPool pool, CompilationUnitSyntax original,
     public CompilationUnitSyntax Reduce()
     {
         _timer.Restart();
-        CompileResult debug = Compiler.Compile(Original, Compiler.DebugOptions);
-        CompileResult release = Compiler.Compile(Original, Compiler.ReleaseOptions);
+        CompileResult debug = _compiler.Compile(Original, Compiler.DebugOptions);
+        CompileResult release = _compiler.Compile(Original, Compiler.ReleaseOptions);
 
         Func<CompilationUnitSyntax, bool> isInteresting;
         if (debug.RoslynException != null || release.RoslynException != null)
         {
             CSharpCompilationOptions opts = debug.RoslynException != null ? Compiler.DebugOptions : Compiler.ReleaseOptions;
-            isInteresting = program => Compiler.Compile(program, opts).RoslynException != null;
+            isInteresting = program => _compiler.Compile(program, opts).RoslynException != null;
         }
         else if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
         {
             CSharpCompilationOptions opts = debug.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
             isInteresting = program =>
             {
-                CompileResult recompiled = Compiler.Compile(program, opts);
+                CompileResult recompiled = _compiler.Compile(program, opts);
                 if (recompiled.CompileErrors.Length <= 0)
                     return false;
 
@@ -276,8 +277,8 @@ internal class Reducer(ExecutionServerPool pool, CompilationUnitSyntax original,
 
     private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, bool keepPoolNonEmptyEagerly)
     {
-        CompileResult progDebug = Compiler.Compile(prog, Compiler.DebugOptions);
-        CompileResult progRelease = Compiler.Compile(prog, Compiler.ReleaseOptions);
+        CompileResult progDebug = _compiler.Compile(prog, Compiler.DebugOptions);
+        CompileResult progRelease = _compiler.Compile(prog, Compiler.ReleaseOptions);
 
         if (progDebug.Assembly == null || progRelease.Assembly == null)
             return null;
@@ -433,7 +434,7 @@ internal class Reducer(ExecutionServerPool pool, CompilationUnitSyntax original,
             CSharpCompilationOptions compileOpts =
                 ogDebugCompile.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
 
-            CompileResult result = Compiler.Compile(Reduced.NormalizeWhitespace(), compileOpts);
+            CompileResult result = _compiler.Compile(Reduced.NormalizeWhitespace(), compileOpts);
             yield return $"// Roslyn gives '{result.CompileErrors[0]}'";
             yield break;
         }
@@ -720,7 +721,7 @@ public static void Main()
 
         (string stdout, string stderr) ExecuteInSubProcess(CompilationUnitSyntax node, CSharpCompilationOptions opts, string tempAsmPath)
         {
-            CompileResult result = Compiler.Compile(node, opts);
+            CompileResult result = _compiler.Compile(node, opts);
             if (result.Assembly == null)
             {
                 throw new Exception(

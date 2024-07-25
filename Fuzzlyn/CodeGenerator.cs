@@ -102,6 +102,12 @@ internal class CodeGenerator
                                 IdentifierName("Runtime")),
                             IdentifierName("Intrinsics")));
             yield return runtimeIntrinsics;
+
+            foreach (string ns in Methods.Apis.GetNamespaces())
+            {
+                UsingDirectiveSyntax usingNamespace = UsingDirective(ParseName(ns));
+                yield return usingNamespace;
+            }
         }
     }
 

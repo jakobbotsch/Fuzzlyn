@@ -270,10 +270,11 @@ internal class Program
 
     private static void ReduceProgram(FuzzlynOptions options, string outputPath, string reduceDebugGitDir)
     {
+        Compiler compiler = Compiler.CreateForHost(options.Host);
         var cg = new CodeGenerator(options);
         CompilationUnitSyntax original = cg.GenerateProgram();
 
-        Reducer reducer = new(s_executionServerPool, original, options.Seed.Value, reduceDebugGitDir);
+        Reducer reducer = new(s_executionServerPool, compiler, original, options.Seed.Value, reduceDebugGitDir);
         CompilationUnitSyntax reduced = reducer.Reduce();
         string source = reduced.NormalizeWhitespace().ToFullString();
         if (outputPath != null)
@@ -332,8 +333,9 @@ internal class Program
 
     private static void GenerateProgramsAndCheck(FuzzlynOptions options)
     {
+        Compiler compiler = Compiler.CreateForHost(options.Host);
         int numProgramsWithKnownErrors = 0;
-        GenerateProgramsResult result = GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, unit, seed, ref numProgramsWithKnownErrors));
+        GenerateProgramsResult result = GeneratePrograms(options, (unit, seed) => CompileAndCheck(options, compiler, unit, seed, ref numProgramsWithKnownErrors));
         if (options.OutputEventsTo != null)
             AddEvent(options.OutputEventsTo, new Event(EventKind.RunSummary, DateTimeOffset.UtcNow, null, new RunSummaryEvent(result.DegreeOfParallelism, result.TotalGenerated, numProgramsWithKnownErrors, result.TimeTaken)));
     }
@@ -402,7 +404,7 @@ internal class Program
     private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
 
     private static readonly object s_fileLock = new();
-    private static void CompileAndCheck(FuzzlynOptions options, CompilationUnitSyntax program, SeedSpecification seed, ref int numProgramsWithKnownErrors)
+    private static void CompileAndCheck(FuzzlynOptions options, Compiler compiler, CompilationUnitSyntax program, SeedSpecification seed, ref int numProgramsWithKnownErrors)
     {
         byte[] debug = Compile(Compiler.DebugOptions);
         byte[] release = Compile(Compiler.ReleaseOptions);
@@ -434,7 +436,7 @@ internal class Program
 
         byte[] Compile(CSharpCompilationOptions opts)
         {
-            CompileResult comp = Compiler.Compile(program, opts);
+            CompileResult comp = compiler.Compile(program, opts);
             if (comp.RoslynException != null)
             {
                 lock (s_fileLock)

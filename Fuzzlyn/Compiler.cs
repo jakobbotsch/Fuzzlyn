@@ -13,18 +13,14 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn;
 
-internal static class Compiler
+internal class Compiler
 {
-    private static readonly MetadataReference[] s_references =
-    [
-        MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-        MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location),
-        MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
-        // These two are needed to properly pick up System.Object when using methods on System.Console.
-        // See here: https://github.com/dotnet/corefx/issues/11601
-        MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
-        MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location),
-    ];
+    private readonly MetadataReference[] _references;
+
+    private Compiler(MetadataReference[] references)
+    {
+        _references = references;
+    }
 
     private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 
@@ -35,11 +31,11 @@ internal static class Compiler
         new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release);
 
     private static int _compiles;
-    public static CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
+    public CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
     {
         int compileID = Interlocked.Increment(ref _compiles);
         SyntaxTree[] trees = [SyntaxTree(program, s_parseOptions)];
-        CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, s_references, opts);
+        CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, _references, opts);
 
         using (var ms = new MemoryStream())
         {
@@ -58,6 +54,31 @@ internal static class Compiler
 
             return new CompileResult(null, ImmutableArray<Diagnostic>.Empty, ms.ToArray());
         }
+    }
+
+    public static Compiler CreateForHost(string hostPath)
+    {
+        string hostDir = Path.GetDirectoryName(hostPath);
+        string[] assembliesNextToHost = ["System.Private.CoreLib.dll", "System.Runtime.dll", "System.Console.dll", "mscorlib.dll"];
+        MetadataReference[] references;
+        if (assembliesNextToHost.All(a => File.Exists(Path.Combine(hostDir, a))))
+        {
+            references =
+                assembliesNextToHost.Select(a => MetadataReference.CreateFromFile(Path.Combine(hostDir, a))).ToArray();
+        }
+        else
+        {
+            references =
+                [MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+                // These two are needed to properly pick up System.Object when using methods on System.Console.
+                // See here: https://github.com/dotnet/corefx/issues/11601
+                MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("System.Runtime")).Location),
+                MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location)];
+        }
+
+        references = [.. references, MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location)];
+        return new Compiler(references);
     }
 }
 

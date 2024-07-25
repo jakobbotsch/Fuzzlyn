@@ -797,6 +797,7 @@ internal class FuncBodyGenerator(
         Debug.Assert(!(type is RefType), "Cannot GenCall to ref type -- use GenExistingLValue for that");
 
         FuncGenerator func = null;
+        FuzzType returnType = null;
         FuzzType[] parameterTypes = null;
         ExpressionSyntax invocFuncExpr = null;
 
@@ -815,6 +816,7 @@ internal class FuncBodyGenerator(
                 if (api == null)
                     return null;
                 type ??= api.ReturnType;
+                returnType = api.ReturnType;
                 parameterTypes = api.ParameterTypes;
                 invocFuncExpr = ParseExpression($"{api.ClassName}.{api.MethodName}");
             }
@@ -866,6 +868,7 @@ internal class FuncBodyGenerator(
                 CallCounts[transFunc] = curNumCalls + transNumCalls;
             }
 
+            returnType = func.ReturnType;
             parameterTypes = func.Parameters.Select(p => p.Type).ToArray();
             invocFuncExpr = GenInvocFuncExpr(func);
         }
@@ -877,7 +880,7 @@ internal class FuncBodyGenerator(
                 ArgumentList(
                     SeparatedList(args)));
 
-        if (func.ReturnType == type || (func.ReturnType is AggregateType agg && type is InterfaceType it && agg.Implements(it)) || (func.ReturnType is RefType retRt && retRt.InnerType == type))
+        if (returnType == type || (returnType is AggregateType agg && type is InterfaceType it && agg.Implements(it)) || (returnType is RefType retRt && retRt.InnerType == type))
             return invoc;
 
         return CastExpression(type.GenReferenceTo(), invoc);

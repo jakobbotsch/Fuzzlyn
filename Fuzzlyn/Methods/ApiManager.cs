@@ -21,7 +21,7 @@ internal class ApiManager(Randomizer random)
             Api[] apis = ApiTable.GetApis(ext);
             foreach (Api api in apis)
             {
-                if (!types.IsSupportedType(api.ReturnType))
+                if (api.ReturnType != null && !types.IsSupportedType(api.ReturnType))
                     continue;
 
                 if (!api.ParameterTypes.All(types.IsSupportedType))
@@ -85,5 +85,10 @@ internal class ApiManager(Randomizer random)
         }
 
         return null;
+    }
+
+    public IEnumerable<string> GetNamespaces()
+    {
+        return _apis.Select(a => a.NamespaceName).Distinct().OrderBy(n => n);
     }
 }
