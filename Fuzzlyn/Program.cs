@@ -425,7 +425,7 @@ internal class Program
                 if (options.KnownErrors.Contains(results.CrashError))
                     Interlocked.Increment(ref numProgramsWithKnownErrors);
                 else
-                    AddExample(new ExampleEvent(seed, ExampleKind.Crash, results.CrashError));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.Crash, results.CrashError));
                 break;
             case RunSeparatelyResultsKind.Success:
                 CheckExample(seed, results.Results, ref numProgramsWithKnownErrors);
@@ -467,7 +467,7 @@ internal class Program
                 if (options.KnownErrors.Contains(assertRes.JitAssertError))
                     Interlocked.Increment(ref numProgramsWithKnownErrors);
                 else
-                    AddExample(new ExampleEvent(seed, ExampleKind.HitsJitAssert, assertRes.JitAssertError));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.HitsJitAssert, assertRes.JitAssertError));
             }
             else
             {
@@ -475,7 +475,7 @@ internal class Program
                 bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                    AddExample(new ExampleEvent(seed, ExampleKind.BadResult, null));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.BadResult, null));
             }
         }
 
@@ -483,10 +483,10 @@ internal class Program
         {
             switch (example)
             {
-                case { Seed: SeedSpecification seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
+                case { Seed: string seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
                     Console.WriteLine("Found example with seed {0} that hits error{1}{2}", seed, Environment.NewLine, error);
                     break;
-                case { Seed: SeedSpecification seed, Kind: ExampleKind.BadResult }:
+                case { Seed: string seed, Kind: ExampleKind.BadResult }:
                     Console.WriteLine("Found example with seed {0}", seed);
                     break;
             }
@@ -524,6 +524,6 @@ internal class Program
         Crash,
     }
 
-    private record class ExampleEvent(SeedSpecification Seed, ExampleKind Kind, string Message);
+    private record class ExampleEvent(string Seed, ExampleKind Kind, string Message);
     private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, int TotalProgramsWithKnownErrors, TimeSpan TotalRunTime);
 }

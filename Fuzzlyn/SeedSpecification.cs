@@ -19,7 +19,7 @@ internal class SeedSpecification(ulong seed, HashSet<Extension> extensions)
         {
             sb.Append('-');
             bool first = true;
-            foreach (Extension ext in Extensions)
+            foreach (Extension ext in Extensions.OrderBy(e => (int)e))
             {
                 if (!first)
                     sb.Append(',');
