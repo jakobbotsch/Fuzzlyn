@@ -76,7 +76,7 @@ internal class Program
                     continue;
                 }
 
-                if (className == "Sve" && mi.Name.StartsWith("Scatter"))
+                if (className == "Sve" && (mi.Name.StartsWith("Scatter") || mi.Name.StartsWith("GatherVector")))
                 {
                     // These API take memory addresses as Vector<ulong>, which
                     // would AV.
