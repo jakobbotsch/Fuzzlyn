@@ -27,6 +27,7 @@ internal class Program
         int? numPrograms = null;
         TimeSpan? timeToRun = null;
         string genExtensionsString = null;
+        bool? supportedExtensions = null;
         string outputEventsTo = null;
         string host = null;
         int? parallelism = null;
@@ -57,6 +58,7 @@ internal class Program
                 v => outputEventsTo = v
             },
             { "gen-extensions=", "Extensions to use when generating new programs, in format <extension1>,<extension2>,... Specify 'allsupported' for all supported extensions by the host.", v => genExtensionsString = v },
+            { "supported-extensions", "Query the specified host for supported extensions", v => supportedExtensions = v != null },
             { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
             { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
             { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
@@ -123,6 +125,8 @@ internal class Program
             options.TimeToRun = timeToRun;
         if (genExtensionsString != null)
             options.GenExtensions = genExtensions;
+        if (supportedExtensions != null)
+            options.SupportedExtensions = supportedExtensions.Value;
         if (outputEventsTo != null)
             options.OutputEventsTo = outputEventsTo;
         if (host != null)
@@ -173,6 +177,13 @@ internal class Program
                 return;
 
             ReduceProgram(options, outputPath, reduceDebugGitDir);
+        }
+        else if (options.SupportedExtensions)
+        {
+            if (!CreateExecutionServerPool(options))
+                return;
+
+            SupportedExtensions(options);
         }
         else if (options.Stats)
         {
@@ -269,6 +280,12 @@ internal class Program
             File.WriteAllText(outputPath, source);
         else
             Console.WriteLine(source);
+    }
+
+    private static void SupportedExtensions(FuzzlynOptions options)
+    {
+        Extension[] extensions = s_executionServerPool.GetSupportedExtensions();
+        Console.WriteLine(string.Join(",", extensions.Select(e => e.ToString().ToLowerInvariant())));
     }
 
     private static void GenerateProgramsAndOutput(FuzzlynOptions options)

@@ -13,6 +13,7 @@ internal class FuzzlynOptions
     public int NumPrograms { get; set; } = 1;
     public TimeSpan? TimeToRun { get; set; }
     public HashSet<Extension> GenExtensions { get; set; }
+    public bool SupportedExtensions { get; set; }
     public string OutputEventsTo { get; set; }
     public string Host { get; set; }
     public int Parallelism { get; set; } = 1;
