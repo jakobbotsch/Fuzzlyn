@@ -604,6 +604,8 @@ public static void Main()
             {
                 switch (mem.Name.Identifier.Text)
                 {
+                    case "Checksum":
+                        break;
                     case "ChecksumSingle":
                     case "ChecksumDouble":
                         ExpressionSyntax floatOrDouble = invoc.ArgumentList.Arguments[^1].Expression;
@@ -982,7 +984,7 @@ public class Runtime : IRuntime
     private bool IsChecksumCall(InvocationExpressionSyntax invoc)
     {
         return invoc.Expression is MemberAccessExpressionSyntax mem &&
-               mem.Name.Identifier.Text == "Checksum";
+               mem.Name.Identifier.Text is "Checksum" or "ChecksumSingle" or "ChecksumDouble" or "ChecksumSingles" or "ChecksumDoubles";
     }
 
     private readonly List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)> _simplifiers =
