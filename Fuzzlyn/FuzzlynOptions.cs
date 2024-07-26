@@ -27,7 +27,13 @@ internal class FuzzlynOptions
     // Probability that we pick a class when generating a new type. Otherwise we make a struct.
     public double MakeClassProb { get; set; } = 0.5;
     // Probability that a field of an aggregate type gets a primitive type vs a aggregate type.
-    public double PrimitiveFieldProb { get; set; } = 0.8;
+    public ProbabilityDistribution AggregateFieldTypeDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)AggregateFieldKind.Primitive] = 0.65,
+            [(int)AggregateFieldKind.Vector] = 0.15,
+            [(int)AggregateFieldKind.Aggregate] = 0.20,
+        });
     public int ProgramMinStatements { get; set; } = 50;
     /// <summary>
     /// Max total number of calls for a single function in the program.
@@ -200,6 +206,13 @@ internal class FuzzlynOptions
         [(int)VectorCreationKind.CreateBroadcast] = 0.44,
         [(int)VectorCreationKind.CreateScalar] = 0.44,
     });
+}
+
+internal enum AggregateFieldKind
+{
+    Primitive,
+    Vector,
+    Aggregate,
 }
 
 internal enum LValueKind

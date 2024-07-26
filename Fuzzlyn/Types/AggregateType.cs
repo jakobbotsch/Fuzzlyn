@@ -62,6 +62,10 @@ public class AggregateType : FuzzType
             {
                 count += at.GetTotalNumPrimitiveFields();
             }
+            if (field.Type is VectorType vt)
+            {
+                count++;
+            }
             else
             {
                 Debug.Assert(field.Type is PrimitiveType);
@@ -91,6 +95,16 @@ public class AggregateType : FuzzType
 
                 alignment = Math.Max(alignment, at.FlattenedLayout.Alignment);
             }
+            else if (field.Type is VectorType vt)
+            {
+                int? width = vt.GetWidthInBytes();
+                if (!width.HasValue)
+                {
+                    return (null, null);
+                }
+
+                alignment = Math.Max(alignment, width.Value);
+            }
             else
             {
                 Debug.Assert(field.Type is PrimitiveType);
@@ -112,16 +126,22 @@ public class AggregateType : FuzzType
 
                 foreach (FlattenedLayoutField fieldLayoutField in at.FlattenedLayout.Fields)
                 {
-                    flattenedFields.Add(new FlattenedLayoutField(offset + fieldLayoutField.Offset, fieldLayoutField.Type));
+                    flattenedFields.Add(new FlattenedLayoutField(offset + fieldLayoutField.Offset, fieldLayoutField.Size));
                 }
 
                 offset += at.FlattenedLayout.Size;
+            }
+            else if (field.Type is VectorType vt)
+            {
+                int vtSize = vt.GetWidthInBytes().Value;
+                offset = RoundUp(offset, vtSize);
+                flattenedFields.Add(new FlattenedLayoutField(offset, vtSize));
             }
             else
             {
                 PrimitiveType pt = (PrimitiveType)field.Type;
                 offset = RoundUp(offset, pt.Info.Size);
-                flattenedFields.Add(new FlattenedLayoutField(offset, pt));
+                flattenedFields.Add(new FlattenedLayoutField(offset, pt.Info.Size));
 
                 offset += pt.Info.Size;
             }

@@ -184,10 +184,15 @@ internal class TypeManager(Randomizer random)
         for (int i = 0; i < numFields; i++)
         {
             FuzzType type;
-            if (_aggTypes.Count > 0 && !Random.FlipCoin(Options.PrimitiveFieldProb))
-                type = Random.NextElement(_aggTypes);
-            else
-                type = Random.NextElement(_primitiveTypes);
+            do
+            {
+                type = (AggregateFieldKind)Options.AggregateFieldTypeDist.Sample(Random.Rng) switch
+                {
+                    AggregateFieldKind.Vector => _vectorTypes.Count > 0 ? Random.NextElement(_vectorTypes) : null,
+                    AggregateFieldKind.Aggregate => _aggTypes.Count > 0 ? Random.NextElement(_aggTypes) : null,
+                    _ => Random.NextElement(_primitiveTypes),
+                };
+            } while (type == null);
 
             fields.Add(new AggregateField(type, $"F{i}"));
         }
