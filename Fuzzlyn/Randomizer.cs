@@ -24,6 +24,13 @@ internal class Randomizer
     public ulong NextUInt64() => Rng.NextUInt64();
     public double NextDouble() => Rng.NextDouble();
 
+    public int NextInclusive(int min, int max)
+    {
+        ulong bits = Rng.NextUInt64();
+        ulong numVals = (ulong)(max - min) + 1;
+        return min + (int)(bits % numVals);
+    }
+
     public T NextElement<T>(IReadOnlyList<T> list)
         => list[Next(list.Count)];
 

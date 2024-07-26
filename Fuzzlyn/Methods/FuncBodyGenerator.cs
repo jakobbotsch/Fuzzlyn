@@ -516,7 +516,7 @@ internal class FuncBodyGenerator(
             // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
             // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
             // and the result of that call would not be valid to return.
-            ArgumentSyntax[] args = GenArgs(funcToCall.Parameters.Select(p => p.Type).ToArray(), minRefEscapeScope, out int argsMinRefEscapeScope);
+            ArgumentSyntax[] args = GenArgs(funcToCall.Parameters.Select(p => p.Type).ToArray(), null, minRefEscapeScope, out int argsMinRefEscapeScope);
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
                     invocExpr,
@@ -799,6 +799,7 @@ internal class FuncBodyGenerator(
         FuncGenerator func = null;
         FuzzType returnType = null;
         FuzzType[] parameterTypes = null;
+        ParameterMetadata[] parameterMetadata = null;
         ExpressionSyntax invocFuncExpr = null;
 
         if (allowNew && _random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, _random.Rng))
@@ -818,6 +819,7 @@ internal class FuncBodyGenerator(
                 type ??= api.ReturnType;
                 returnType = api.ReturnType;
                 parameterTypes = api.ParameterTypes;
+                parameterMetadata = api.ParameterMetadata;
                 invocFuncExpr = ParseExpression($"{api.ClassName}.{api.MethodName}");
             }
             else
@@ -873,7 +875,7 @@ internal class FuncBodyGenerator(
             invocFuncExpr = GenInvocFuncExpr(func);
         }
 
-        ArgumentSyntax[] args = GenArgs(parameterTypes, 0, out _);
+        ArgumentSyntax[] args = GenArgs(parameterTypes, parameterMetadata, 0, out _);
         InvocationExpressionSyntax invoc =
             InvocationExpression(
                 invocFuncExpr,
@@ -915,7 +917,7 @@ internal class FuncBodyGenerator(
                 IdentifierName(func.Name));
     }
 
-    private ArgumentSyntax[] GenArgs(FuzzType[] parameterTypes, int minRefEscapeScope, out int argsMinRefEscapeScope)
+    private ArgumentSyntax[] GenArgs(FuzzType[] parameterTypes, ParameterMetadata[] parameterMetadata, int minRefEscapeScope, out int argsMinRefEscapeScope)
     {
         ArgumentSyntax[] args = new ArgumentSyntax[parameterTypes.Length];
         argsMinRefEscapeScope = int.MaxValue;
@@ -928,11 +930,35 @@ internal class FuncBodyGenerator(
                 LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
                 argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
                 args[i] = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
+                continue;
             }
-            else
+
+            if (parameterMetadata != null && parameterMetadata[i] is ParameterMetadata pm && pm.ConstantExpected)
             {
-                args[i] = Argument(GenExpression(paramType));
+                Debug.Assert(paramType is PrimitiveType);
+                PrimitiveType pt = (PrimitiveType)paramType;
+
+                Debug.Assert(pt.Info.IsNumeric);
+
+                int min;
+                if (pm.ConstantMin.HasValue)
+                    min = pm.ConstantMin.Value;
+                else
+                    min = (int)Convert.ChangeType(pt.Info.Type.GetField("MinValue").GetValue(null), typeof(int));
+
+                int max;
+                if (pm.ConstantMax.HasValue)
+                    max = pm.ConstantMax.Value;
+                else
+                    max = (int)Convert.ChangeType(pt.Info.Type.GetField("MaxValue").GetValue(null), typeof(int));
+
+                int value = _random.NextInclusive(min, max);
+                dynamic dynVal = Convert.ChangeType(value, pt.Info.Type);
+                args[i] = Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(dynVal)));
+                continue;
             }
+
+            args[i] = Argument(GenExpression(paramType));
         }
 
         return args;
