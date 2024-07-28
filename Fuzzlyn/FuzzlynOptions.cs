@@ -104,20 +104,44 @@ internal class FuzzlynOptions
     public HillEquationParameters FuncGenRejection { get; set; } = new HillEquationParameters(2, 100);
 
     public double PickLiteralFromTableProb { get; set; } = 0.5;
-    public ProbabilityDistribution LiteralDist { get; set; }
+
+    public ProbabilityDistribution SignedIntegerTypicalLiteralDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {
-            [int.MinValue] = 0.1,
-            [int.MinValue + 1] = 0.1,
-            [-10] = 0.04,
-            [-2] = 0.04,
-            [-1] = 0.04,
-            [0] = 0.2,
-            [1] = 0.2,
-            [2] = 0.04,
-            [10] = 0.04,
-            [int.MaxValue - 1] = 0.1,
-            [int.MaxValue] = 0.1,
+            [(int)TypicalLiteralKind.MinValue] = 0.1,
+            [(int)TypicalLiteralKind.MinValuePlusOne] = 0.1,
+            [(int)TypicalLiteralKind.MinusTen] = 0.04,
+            [(int)TypicalLiteralKind.MinusTwo] = 0.04,
+            [(int)TypicalLiteralKind.MinusOne] = 0.04,
+            [(int)TypicalLiteralKind.Zero] = 0.2,
+            [(int)TypicalLiteralKind.One] = 0.2,
+            [(int)TypicalLiteralKind.Two] = 0.04,
+            [(int)TypicalLiteralKind.Ten] = 0.04,
+            [(int)TypicalLiteralKind.MaxValueMinusOne] = 0.1,
+            [(int)TypicalLiteralKind.MaxValue] = 0.1,
+        });
+    public ProbabilityDistribution UnsignedIntegerTypicalLiteralDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)TypicalLiteralKind.Zero] = 0.3,
+            [(int)TypicalLiteralKind.One] = 0.3,
+            [(int)TypicalLiteralKind.Two] = 0.05,
+            [(int)TypicalLiteralKind.Ten] = 0.05,
+            [(int)TypicalLiteralKind.MaxValueMinusOne] = 0.15,
+            [(int)TypicalLiteralKind.MaxValue] = 0.15,
+        });
+    public ProbabilityDistribution FloatTypicalLiteralDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)TypicalLiteralKind.MinValue] = 0.2,
+            [(int)TypicalLiteralKind.MinusTen] = 0.04,
+            [(int)TypicalLiteralKind.MinusTwo] = 0.04,
+            [(int)TypicalLiteralKind.MinusOne] = 0.04,
+            [(int)TypicalLiteralKind.Zero] = 0.2,
+            [(int)TypicalLiteralKind.One] = 0.2,
+            [(int)TypicalLiteralKind.Two] = 0.04,
+            [(int)TypicalLiteralKind.Ten] = 0.04,
+            [(int)TypicalLiteralKind.MaxValue] = 0.2,
         });
 
     public ProbabilityDistribution UnaryIntegralDist { get; set; }
@@ -228,6 +252,21 @@ internal enum VectorCreationKind
     Create,
     CreateBroadcast,
     CreateScalar,
+}
+
+internal enum TypicalLiteralKind
+{
+    MinValue,
+    MinValuePlusOne,
+    MinusTen,
+    MinusTwo,
+    MinusOne,
+    Zero,
+    One,
+    Two,
+    Ten,
+    MaxValueMinusOne,
+    MaxValue,
 }
 
 internal class HillEquationParameters(double n, double h)

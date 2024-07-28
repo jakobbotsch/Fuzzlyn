@@ -36,34 +36,26 @@ internal static class LiteralGenerator
         }
     }
 
-    private static LiteralExpressionSyntax GenPrimitiveLiteral(Randomizer random, PrimitiveType primType)
+    private static ExpressionSyntax GenPrimitiveLiteral(Randomizer random, PrimitiveType primType)
     {
         if (!primType.Info.IsNumeric || !random.FlipCoin(random.Options.PickLiteralFromTableProb))
             return primType.Info.GenRandomLiteral(random.Rng);
 
-        object minValue = primType.Info.Type.GetField("MinValue").GetValue(null);
-        object maxValue = primType.Info.Type.GetField("MaxValue").GetValue(null);
-        dynamic val = 0;
-        do
+        TypicalLiteralKind kind;
+        if (primType.Info.IsFloat)
         {
-            int num = random.Options.LiteralDist.Sample(random.Rng);
+            kind = (TypicalLiteralKind)random.Options.FloatTypicalLiteralDist.Sample(random.Rng);
+        }
+        else if (primType.Info.IsUnsigned)
+        {
+            kind = (TypicalLiteralKind)random.Options.UnsignedIntegerTypicalLiteralDist.Sample(random.Rng);
+        }
+        else
+        {
+            kind = (TypicalLiteralKind)random.Options.SignedIntegerTypicalLiteralDist.Sample(random.Rng);
+        }
 
-            val = num;
-            if (num == int.MinValue)
-                val = minValue;
-            if (num == int.MinValue + 1)
-                val = (dynamic)minValue + 1;
-
-            if (num == int.MaxValue)
-                val = maxValue;
-            if (num == int.MaxValue - 1)
-                val = (dynamic)maxValue - 1;
-        } while (primType.Info.IsUnsigned && val < 0);
-
-        if (val.GetType() != primType.Info.Type)
-            val = Convert.ChangeType(val, primType.Info.Type);
-
-        return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(val));
+        return primType.Info.GenTypicalLiteral(kind);
     }
 
     private static List<int> GenArrayDimensions(Randomizer random, ArrayType at)

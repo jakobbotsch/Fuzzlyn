@@ -314,7 +314,7 @@ internal class FuncBodyGenerator(
         do
         {
             guard = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
-        } while (guard is LiteralExpressionSyntax && attempts++ < 20);
+        } while (IsLiteralOrCastOfLiteral(guard) && attempts++ < 20);
 
         StatementSyntax gen;
         if (_random.FlipCoin(0.5))
@@ -769,13 +769,18 @@ internal class FuncBodyGenerator(
         return expr;
     }
 
+    private static bool IsLiteralOrCastOfLiteral(ExpressionSyntax expression)
+    {
+        return expression is LiteralExpressionSyntax || expression is CastExpressionSyntax { Expression: LiteralExpressionSyntax };
+    }
+
     private (ExpressionSyntax, ExpressionSyntax) GenLeftRightForBinary(FuzzType leftType, FuzzType rightType)
     {
         ExpressionSyntax left = GenExpression(leftType);
         // There are two reasons we don't allow both left and right to be literals:
         // 1. If the computation overflows, this gives a C# compiler error
         // 2. The compiler is required to constant fold these expressions which is not interesting.
-        if (left is LiteralExpressionSyntax)
+        if (IsLiteralOrCastOfLiteral(left))
             return (left, GenNonLiteralExpression(rightType));
 
         return (left, GenExpression(rightType));
@@ -787,7 +792,7 @@ internal class FuncBodyGenerator(
         do
         {
             gen = GenExpression(type);
-        } while (gen is LiteralExpressionSyntax);
+        } while (IsLiteralOrCastOfLiteral(gen));
 
         return gen;
     }
@@ -939,22 +944,7 @@ internal class FuncBodyGenerator(
                 PrimitiveType pt = (PrimitiveType)paramType;
 
                 Debug.Assert(pt.Info.IsNumeric);
-
-                int min;
-                if (pm.ConstantMin.HasValue)
-                    min = pm.ConstantMin.Value;
-                else
-                    min = (int)Convert.ChangeType(pt.Info.Type.GetField("MinValue").GetValue(null), typeof(int));
-
-                int max;
-                if (pm.ConstantMax.HasValue)
-                    max = pm.ConstantMax.Value;
-                else
-                    max = (int)Convert.ChangeType(pt.Info.Type.GetField("MaxValue").GetValue(null), typeof(int));
-
-                int value = _random.NextInclusive(min, max);
-                dynamic dynVal = Convert.ChangeType(value, pt.Info.Type);
-                args[i] = Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(dynVal)));
+                args[i] = Argument(pt.Info.GenInRange(pm.ConstantMin, pm.ConstantMax, _random.Rng));
                 continue;
             }
 
