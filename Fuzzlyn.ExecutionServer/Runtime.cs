@@ -47,7 +47,7 @@ internal unsafe class Runtime : IRuntime
         {
             string s = string.Join(", ", floats.ToArray().Select(BitConverter.SingleToUInt32Bits));
             if (numFloats > 1)
-                s = $"[{s}]";
+                s = $"<{s}>";
             ChecksumSites.Add(new ChecksumSite(id, s));
         }
 
@@ -72,7 +72,7 @@ internal unsafe class Runtime : IRuntime
         {
             string s = string.Join(", ", doubles.ToArray().Select(BitConverter.DoubleToUInt64Bits));
             if (numDoubles > 1)
-                s = $"[{s}]";
+                s = $"<{s}>";
             ChecksumSites.Add(new ChecksumSite(id, s));
         }
 

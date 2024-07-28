@@ -603,7 +603,8 @@ public static void Main()
                 expStmt.Expression is InvocationExpressionSyntax invoc &&
                 invoc.Expression is MemberAccessExpressionSyntax mem)
             {
-                switch (mem.Name.Identifier.Text)
+                string id = mem.Name.Identifier.Text;
+                switch (id)
                 {
                     case "Checksum":
                         break;
@@ -618,7 +619,7 @@ public static void Main()
                                         SyntaxKind.SimpleMemberAccessExpression,
                                         IdentifierName("System"),
                                         IdentifierName("BitConverter")),
-                                    IdentifierName(mem.Name.Identifier.Text == "ChecksumSingle" ? "SingleToUInt32Bits" : "DoubleToUInt64Bits")))
+                                    IdentifierName(id == "ChecksumSingle" ? "SingleToUInt32Bits" : "DoubleToUInt64Bits")))
                             .WithArgumentList(
                                 ArgumentList(
                                     SingletonSeparatedList(
@@ -634,7 +635,7 @@ public static void Main()
                                 MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     vectorFloatOrDouble,
-                                    IdentifierName("AsUInt32")));
+                                    IdentifierName(id == "ChecksumSingles" ? "AsUInt32" : "AsUInt64")));
                         replacements.Add(vectorFloatOrDouble, vectorBits);
                         break;
                     default:
