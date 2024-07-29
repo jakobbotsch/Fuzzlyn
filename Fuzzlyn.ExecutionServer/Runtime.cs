@@ -56,8 +56,6 @@ internal unsafe class Runtime : IRuntime
             float flt = floats[i];
             if (float.IsNaN(flt))
                 flt = float.NaN;
-            if (flt == 0f)
-                flt = 0f;
 
             ChecksumBytes(ref Unsafe.As<float, byte>(ref flt), sizeof(float));
         }
@@ -83,8 +81,6 @@ internal unsafe class Runtime : IRuntime
             double dbl = doubles[i];
             if (double.IsNaN(dbl))
                 dbl = double.NaN;
-            if (dbl == 0d)
-                dbl = 0d;
 
             ChecksumBytes(ref Unsafe.As<double, byte>(ref dbl), sizeof(double));
         }
