@@ -19,20 +19,12 @@ public class AggregateType : FuzzType
         IsClass = isClass;
         Name = name;
         _fields = fields;
-        (Layout, FlattenedLayout) = ComputeLayouts();
     }
 
     public string Name { get; }
     public IReadOnlyList<AggregateField> Fields => _fields;
     public bool IsClass { get; }
     public HashSet<InterfaceType> ImplementedInterfaces { get; } = new();
-
-    /// <summary> If this is a struct type with a target independent fixed
-    /// layout, then this is its layout. Otherwise null.</summary>
-    public TypeLayout Layout { get; }
-    /// <summary> If this is a struct type with a target independent fixed
-    /// layout, then this is its flattened layout. Otherwise null.</summary>
-    public FlattenedTypeLayout FlattenedLayout { get; }
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
 
@@ -74,90 +66,6 @@ public class AggregateType : FuzzType
         }
 
         return count;
-    }
-
-    private (TypeLayout, FlattenedTypeLayout) ComputeLayouts()
-    {
-        if (IsClass)
-        {
-            return (null, null);
-        }
-
-        int alignment = 0;
-        foreach (AggregateField field in _fields)
-        {
-            if (field.Type is AggregateType at)
-            {
-                if (at.Layout == null)
-                {
-                    return (null, null);
-                }
-
-                alignment = Math.Max(alignment, at.FlattenedLayout.Alignment);
-            }
-            else if (field.Type is VectorType vt)
-            {
-                int? width = vt.GetWidthInBytes();
-                if (!width.HasValue)
-                {
-                    return (null, null);
-                }
-
-                alignment = Math.Max(alignment, width.Value);
-            }
-            else
-            {
-                Debug.Assert(field.Type is PrimitiveType);
-                alignment = Math.Max(alignment, ((PrimitiveType)field.Type).Info.Size);
-            }
-        }
-
-        Debug.Assert(alignment > 0);
-        List<LayoutField> fields = new();
-        List<FlattenedLayoutField> flattenedFields = new();
-        int offset = 0;
-        foreach (AggregateField field in _fields)
-        {
-            fields.Add(new LayoutField(offset, field));
-
-            if (field.Type is AggregateType at)
-            {
-                offset = RoundUp(offset, at.FlattenedLayout.Alignment);
-
-                foreach (FlattenedLayoutField fieldLayoutField in at.FlattenedLayout.Fields)
-                {
-                    flattenedFields.Add(new FlattenedLayoutField(offset + fieldLayoutField.Offset, fieldLayoutField.Size));
-                }
-
-                offset += at.FlattenedLayout.Size;
-            }
-            else if (field.Type is VectorType vt)
-            {
-                int vtSize = vt.GetWidthInBytes().Value;
-                offset = RoundUp(offset, vtSize);
-                flattenedFields.Add(new FlattenedLayoutField(offset, vtSize));
-            }
-            else
-            {
-                PrimitiveType pt = (PrimitiveType)field.Type;
-                offset = RoundUp(offset, pt.Info.Size);
-                flattenedFields.Add(new FlattenedLayoutField(offset, pt.Info.Size));
-
-                offset += pt.Info.Size;
-            }
-        }
-
-        int size = RoundUp(offset, alignment);
-        return (new TypeLayout(alignment, fields.ToArray(), size),
-                new FlattenedTypeLayout(alignment, flattenedFields.ToArray(), size));
-    }
-
-    private static int RoundUp(int val, int alignment)
-    {
-        int rem = val % alignment;
-        if (rem != 0)
-            return val + (alignment - rem);
-        return val;
     }
 
     public bool Implements(InterfaceType it)

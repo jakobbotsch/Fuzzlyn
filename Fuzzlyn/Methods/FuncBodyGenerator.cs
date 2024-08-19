@@ -183,13 +183,13 @@ internal class FuncBodyGenerator(
                 if (newType is RefType newRt)
                 {
                     LValueInfo rhsLV = GenLValue(newRt.InnerType, int.MinValue);
-                    variable = new ScopeValue(newType, IdentifierName(varName), rhsLV.RefEscapeScope, isOnStack: false, readOnly: false);
+                    variable = new ScopeValue(newType, IdentifierName(varName), rhsLV.RefEscapeScope, readOnly: false);
                     rhs = RefExpression(rhsLV.Expression);
                 }
                 else
                 {
                     rhs = GenExpression(newType);
-                    variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), isOnStack: true, readOnly: false);
+                    variable = new ScopeValue(newType, IdentifierName(varName), -(_scope.Count - 1), readOnly: false);
                 }
 
                 LocalDeclarationStatementSyntax decl =
@@ -207,7 +207,7 @@ internal class FuncBodyGenerator(
             }
 
             StaticField newStatic = _statics.GenerateNewField(newType);
-            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, false, readOnly: false, null);
+            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false, null);
         }
 
         // Determine if we should generate a ref-reassignment. In that case we cannot do anything
@@ -228,25 +228,6 @@ internal class FuncBodyGenerator(
 
             // We have a ref-type, but are not generating a ref-reassign, so lift the type and make a normal assignment.
             rhsType = rt.InnerType;
-        }
-        else if (lvalue.IsOnStack && (lvalue.Type is PrimitiveType or AggregateType { Layout: not null }))
-        {
-            // See if we should generate an unsafe copy between two locals.
-            // We do this here instead of in GenExpression to avoid https://github.com/dotnet/runtime/issues/7539.
-            // Here we can explicitly pick two different locals with different storage.
-            if (_random.FlipCoin(lvalue.Type is PrimitiveType ? Options.AssignGenUnsafePrimitiveReinterpretation : Options.AssignGenUnsafeStructReinterpretation))
-            {
-                ExpressionSyntax reinterp = GenReinterpretation(rhsType, lvalue);
-                if (reinterp != null)
-                {
-                    return
-                        ExpressionStatement(
-                            AssignmentExpression(
-                                SyntaxKind.SimpleAssignmentExpression,
-                                lvalue.Expression,
-                                reinterp));
-                }
-            }
         }
 
         SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
@@ -362,7 +343,7 @@ internal class FuncBodyGenerator(
     private StatementSyntax GenLoop()
     {
         string varName = $"var{_varCounter++}";
-        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true, true);
+        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
 
         VariableDeclarationSyntax decl =
             VariableDeclaration(
@@ -467,7 +448,7 @@ internal class FuncBodyGenerator(
         if (lv == null)
         {
             StaticField newStatic = _statics.GenerateNewField(type);
-            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, false, readOnly: false, null);
+            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false, null);
         }
 
         return lv;
@@ -524,7 +505,7 @@ internal class FuncBodyGenerator(
                         SeparatedList(
                             args)));
 
-            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, false, readOnly: false, null);
+            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false, null);
         }
 
         List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, requireAssignable: true);
@@ -587,7 +568,7 @@ internal class FuncBodyGenerator(
         {
             foreach (StaticField stat in _statics.Fields)
             {
-                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false, false));
+                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false));
             }
         }
 
@@ -1073,98 +1054,6 @@ internal class FuncBodyGenerator(
         return invoc;
     }
 
-    private ExpressionSyntax GenReinterpretation(FuzzType type, LValueInfo asgDst)
-    {
-        PrimitiveType pt = type as PrimitiveType;
-        AggregateType at = type as AggregateType;
-
-        if (pt == null && (at == null || at.Layout == null))
-        {
-            return null;
-        }
-
-        Debug.Assert(asgDst != null && asgDst.BaseLocal != null);
-        List<LValueInfo> lvalues = CollectVariablePaths(null, int.MinValue, true, false, false);
-        // Make sure we assign from a local to a local and that they don't
-        // overlap. This works around https://github.com/dotnet/runtime/issues/7539.
-        lvalues.RemoveAll(lv => !lv.IsOnStack || (lv.BaseLocal == asgDst.BaseLocal));
-
-        _random.Shuffle(lvalues);
-
-        int size = pt?.Info.Size ?? at.Layout.Size;
-        int alignment = pt?.Info.Size ?? at.Layout.Alignment;
-
-        foreach (LValueInfo lvalue in lvalues)
-        {
-            if (lvalue.Type is not AggregateType oat || oat.Layout == null || oat == type || oat.Layout.Size < size)
-            {
-                continue;
-            }
-
-            int upperIndex = oat.Layout.FirstFieldAfter(oat.Layout.Size - size);
-            Debug.Assert(upperIndex > 0);
-
-            for (int i = 0; i < 10; i++)
-            {
-                ref LayoutField randomField = ref oat.Layout.Fields[_random.Rng.Next(upperIndex)];
-                if (randomField.Type == type)
-                    continue;
-
-                if (pt != null)
-                {
-                    if (oat.FlattenedLayout.TouchesPadding(randomField.Offset, size))
-                        continue;
-                }
-                else
-                {
-                    if (at.FlattenedLayout.IsSubsetCompatible(oat.FlattenedLayout, randomField.Offset))
-                        continue;
-                }
-
-                ExpressionSyntax fieldAccess =
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        lvalue.Expression,
-                        IdentifierName(randomField.Field.Name));
-
-                ExpressionSyntax reinterpretation =
-                    InvocationExpression(
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("Unsafe"),
-                            GenericName(
-                                Identifier("As"))
-                            .WithTypeArgumentList(
-                                TypeArgumentList(
-                                    SeparatedList(new[] { randomField.Type.GenReferenceTo(), PredefinedType(Token(SyntaxKind.ByteKeyword)) })))))
-                    .WithArgumentList(
-                        ArgumentList(
-                            SingletonSeparatedList(
-                                Argument(fieldAccess).WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
-
-                reinterpretation =
-                    InvocationExpression(
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("Unsafe"),
-                            GenericName(
-                                Identifier("ReadUnaligned"))
-                            .WithTypeArgumentList(
-                                TypeArgumentList(
-                                    SingletonSeparatedList(type.GenReferenceTo())))))
-                    .WithArgumentList(
-                        ArgumentList(
-                            SingletonSeparatedList(
-                                Argument(reinterpretation)
-                                .WithRefKindKeyword(Token(SyntaxKind.RefKeyword)))));
-
-                return reinterpretation;
-            }
-        }
-
-        return null;
-    }
-
     internal static IEnumerable<StatementSyntax> GenChecksumming(bool prefixRuntimeAccess, IEnumerable<ScopeValue> variables, Func<string> siteIdGenerator)
     {
         List<LValueInfo> paths = new();
@@ -1234,11 +1123,11 @@ internal class FuncBodyGenerator(
 
     private static void AppendVariablePaths(List<LValueInfo> paths, ScopeValue var)
     {
-        AddPathsRecursive(var.Expression, var.Type, var.RefEscapeScope, var.IsOnStack, var.ReadOnly);
+        AddPathsRecursive(var.Expression, var.Type, var.RefEscapeScope, var.ReadOnly);
 
-        void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool isOnStack, bool readOnly)
+        void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
         {
-            LValueInfo info = new(curAccess, curType, curRefEscapeScope, isOnStack, readOnly, var);
+            LValueInfo info = new(curAccess, curType, curRefEscapeScope, readOnly, var);
             paths.Add(info);
 
             if (curType is RefType rt)
@@ -1257,7 +1146,6 @@ internal class FuncBodyGenerator(
                                         arr.Rank)))),
                         arr.ElementType,
                         curRefEscapeScope: int.MaxValue,
-                        isOnStack: false,
                         readOnly: false);
                     break;
                 case AggregateType agg:
@@ -1270,7 +1158,6 @@ internal class FuncBodyGenerator(
                                 IdentifierName(field.Name)),
                             field.Type,
                             curRefEscapeScope: agg.IsClass ? int.MaxValue : curRefEscapeScope,
-                            isOnStack: isOnStack && !agg.IsClass,
                             readOnly: readOnly && !agg.IsClass);
                     }
                     break;

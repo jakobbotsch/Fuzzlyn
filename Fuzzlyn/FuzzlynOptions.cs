@@ -209,11 +209,6 @@ internal class FuzzlynOptions
     /// <summary>Probability that we select a local over a static when generating a member access expression.</summary>
     public double MemberAccessSelectLocalProb { get; set; } = 0.8;
 
-    /// <summary>Probability to try to generate an unsafe reinterpretation when generating a struct assignment.</summary>
-    public double AssignGenUnsafeStructReinterpretation { get; set; } = 0.5;
-    /// <summary>Probability to try to generate an unsafe reinterpretation when generating a primitive assignment.</summary>
-    public double AssignGenUnsafePrimitiveReinterpretation { get; set; } = 0.1;
-
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }
      = new TableDistribution(new Dictionary<int, double>

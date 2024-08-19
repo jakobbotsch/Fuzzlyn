@@ -1453,35 +1453,8 @@ public class Runtime : IRuntime
         if (node is not FieldDeclarationSyntax field)
             yield break;
 
-        bool canRemove = true;
-        if (node.Parent is StructDeclarationSyntax type)
-        {
-            // Only allow removing struct fields once we have no more Unsafe.As left.
-            CompilationUnitSyntax comp = node.FirstAncestorOrSelf<CompilationUnitSyntax>();
-            IEnumerable<InvocationExpressionSyntax> invocs =
-                comp.DescendantNodes().OfType<InvocationExpressionSyntax>();
-
-            static bool IsUnsafeMethod(ExpressionSyntax expr)
-            {
-                return
-                    expr is MemberAccessExpressionSyntax
-                    {
-                        Expression: IdentifierNameSyntax { Identifier.ValueText: "Unsafe" },
-                        Name: GenericNameSyntax { Identifier.ValueText: "As" or "ReadUnaligned" }
-                    };
-            }
-
-            if (invocs.Any(invoc => IsUnsafeMethod(invoc.Expression)))
-            {
-                canRemove = false;
-            }
-        }
-
-        if (canRemove)
-        {
-            // Remove
-            yield return null;
-        }
+        // Remove
+        yield return null;
 
         if (field.Declaration.Variables.Count == 1 &&
             field.Declaration.Variables[0].Initializer != null)

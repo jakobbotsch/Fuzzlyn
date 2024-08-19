@@ -145,7 +145,7 @@ internal class FuncGenerator
             {
                 // A ref to a by-ref parameter can escape to at least its parent method
                 int refEscapeScope = param.Type is RefType ? 1 : 0;
-                initialVars.Add(new ScopeValue(param.Type, IdentifierName(param.Name), refEscapeScope, true, false));
+                initialVars.Add(new ScopeValue(param.Type, IdentifierName(param.Name), refEscapeScope, false));
             }
         }
         else
@@ -183,7 +183,7 @@ internal class FuncGenerator
             {
                 // We cannot return refs to 'this', but we can pass them to funcs.
                 // For classes this is quite limited since 'this' is readonly.
-                initialVars.Add(new ScopeValue(type, ThisExpression(), refEscapeScope: 0, isOnStack: false, readOnly: type.IsClass));
+                initialVars.Add(new ScopeValue(type, ThisExpression(), refEscapeScope: 0, readOnly: type.IsClass));
             }
 
             gen.Generate(initialVars);

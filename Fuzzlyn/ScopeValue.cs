@@ -6,7 +6,7 @@ namespace Fuzzlyn;
 /// <summary>
 /// Value accessible in scope. Either a variable or 'this'.
 /// </summary>
-internal class ScopeValue(FuzzType type, ExpressionSyntax expr, int refEscapeScope, bool isOnStack, bool readOnly)
+internal class ScopeValue(FuzzType type, ExpressionSyntax expr, int refEscapeScope, bool readOnly)
 {
     public FuzzType Type { get; } = type;
     public ExpressionSyntax Expression { get; } = expr;
@@ -20,9 +20,5 @@ internal class ScopeValue(FuzzType type, ExpressionSyntax expr, int refEscapeSco
     /// For example, a positive ref escape scope indicates that a ref to that variable can be returned to the caller of a function.
     /// </summary>
     public int RefEscapeScope { get; } = refEscapeScope;
-    /// <summary>
-    /// Whether the value is part of the stack frames owner by this function.
-    /// </summary>
-    public bool IsOnStack { get; } = isOnStack;
     public bool ReadOnly { get; } = readOnly;
 }
