@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -25,10 +26,16 @@ internal class Compiler
     private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
 
     public static readonly CSharpCompilationOptions DebugOptions =
-        new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Debug);
+        new(OutputKind.DynamicallyLinkedLibrary,
+            concurrentBuild: false,
+            optimizationLevel: OptimizationLevel.Debug,
+            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
 
     public static readonly CSharpCompilationOptions ReleaseOptions =
-        new(OutputKind.DynamicallyLinkedLibrary, concurrentBuild: false, optimizationLevel: OptimizationLevel.Release);
+        new(OutputKind.DynamicallyLinkedLibrary,
+            concurrentBuild: false,
+            optimizationLevel: OptimizationLevel.Release,
+            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]);
 
     private static int _compiles;
     public CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
