@@ -787,6 +787,7 @@ internal class FuncBodyGenerator(
         FuzzType[] parameterTypes = null;
         ParameterMetadata[] parameterMetadata = null;
         ExpressionSyntax invocFuncExpr = null;
+        bool addCastsOnArgs = false;
 
         if (allowNew && _random.FlipCoin(Options.GenNewFunctionProb) && !Options.FuncGenRejection.Reject(_funcs.Count, _random.Rng))
         {
@@ -807,6 +808,10 @@ internal class FuncBodyGenerator(
                 parameterTypes = api.ParameterTypes;
                 parameterMetadata = api.ParameterMetadata;
                 invocFuncExpr = ParseExpression($"{api.ClassName}.{api.MethodName}");
+                // Add casts on args to force selection of right overload.
+                // GenExpression(type) may generate a more precise type than
+                // 'type' that can cause a different overload to be selected.
+                addCastsOnArgs = true;
             }
             else
             {
@@ -862,6 +867,15 @@ internal class FuncBodyGenerator(
         }
 
         ArgumentSyntax[] args = GenArgs(parameterTypes, parameterMetadata, 0, out _);
+
+        if (addCastsOnArgs)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = args[i].WithExpression(CastExpression(parameterTypes[i].GenReferenceTo(), ParenthesizeIfNecessary(args[i].Expression)));
+            }
+        }
+
         InvocationExpressionSyntax invoc =
             InvocationExpression(
                 invocFuncExpr,
