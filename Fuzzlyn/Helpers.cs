@@ -72,7 +72,6 @@ internal static class Helpers
     {
         envVars["DOTNET_TieredCompilation"] = "0";
         envVars["DOTNET_JitThrowOnAssertionFailure"] = "1";
-        envVars["DOTNET_LegacyExceptionHandling"] = "1";
     }
 
     public static void SetSpmiCollectionEnvironmentVariables(StringDictionary envVars, SpmiSetupOptions options)
