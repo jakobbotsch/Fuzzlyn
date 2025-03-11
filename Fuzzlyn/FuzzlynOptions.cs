@@ -21,6 +21,7 @@ internal class FuzzlynOptions
     public bool EnableChecksumming { get; set; } = true;
     public bool Reduce { get; set; } = false;
     public string CollectSpmiTo { get; set; }
+    public string LogExecutionServerRequestsTo { get; set; }
     public bool Execute { get; set; } = true;
     public bool Stats { get; set; } = false;
     public KnownErrors KnownErrors { get; set; }

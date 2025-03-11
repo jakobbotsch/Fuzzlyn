@@ -37,6 +37,7 @@ internal class Program
         bool? reduce = null;
         string reduceDebugGitDir = null;
         string collectSpmiTo = null;
+        string logExecutionServerRequestsTo = null;
         string outputPath = null;
         bool? stats = null;
         bool? execute = null;
@@ -66,6 +67,7 @@ internal class Program
             { "output=", "Output program source to this path. Also enables writing updates in the console during reduction.", v => outputPath = v },
             { "reduce-debug-git-dir=", "Create reduce path in specified dir (must not exists beforehand)", v => reduceDebugGitDir = v },
             { "collect-spmi-to=", "Collect SPMI collections to specified directory", v => collectSpmiTo = v },
+            { "log-execution-server-requests-to=", "Log execution server requests to specified directory", v => logExecutionServerRequestsTo = v },
             { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
             { "execute", "Whether or not to execute the generated and compiled programs (enabled by default, disable with --execute-) ", v => execute = v != null },
             { "known-errors=", "A JSON file of known error strings that will be ignored, or the string \"dotnet/runtime\" to use a built-in list for the tip of dotnet/runtime.", v => knownErrors = v },
@@ -141,6 +143,8 @@ internal class Program
             options.Reduce = reduce.Value;
         if (collectSpmiTo != null)
             options.CollectSpmiTo = collectSpmiTo;
+        if (logExecutionServerRequestsTo != null)
+            options.LogExecutionServerRequestsTo = logExecutionServerRequestsTo;
         if (stats.HasValue)
             options.Stats = stats.Value;
         if (execute.HasValue)
@@ -227,7 +231,19 @@ internal class Program
                 return false;
             }
         }
-        s_executionServerPool = new ExecutionServerPool(options.Host, spmiOptions);
+
+        LogExecutionServerRequestsOptions logExecServerRequestsOptions = null;
+        if (options.LogExecutionServerRequestsTo != null)
+        {
+            logExecServerRequestsOptions = LogExecutionServerRequestsOptions.Create(options.LogExecutionServerRequestsTo, out string error);
+            if (logExecServerRequestsOptions == null)
+            {
+                Console.WriteLine("Error: {0}", error);
+                return false;
+            }
+        }
+
+        s_executionServerPool = new ExecutionServerPool(options.Host, spmiOptions, logExecServerRequestsOptions);
         return true;
     }
 

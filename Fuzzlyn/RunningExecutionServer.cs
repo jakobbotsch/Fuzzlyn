@@ -11,17 +11,27 @@ namespace Fuzzlyn;
 internal class RunningExecutionServer
 {
     private Process _process;
+    private LogExecutionServerRequestsOptions _logExecServerRequestOptions;
+    private int _numRequestsSent;
 
-    private RunningExecutionServer(Process process)
+    private RunningExecutionServer(Process process, LogExecutionServerRequestsOptions logExecServerRequestOptions)
     {
         _process = process;
+        _logExecServerRequestOptions = logExecServerRequestOptions;
     }
 
     public Stopwatch LastUseTimer { get; } = new Stopwatch();
 
     private ReceiveResult RequestAndReceive(Request req, TimeSpan timeout)
     {
-        _process.StandardInput.WriteLine(JsonSerializer.Serialize(req));
+        string serialized = JsonSerializer.Serialize(req);
+        if (_logExecServerRequestOptions != null)
+        {
+            File.WriteAllText(Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_numRequestsSent}.json"), serialized);
+        }
+
+        _process.StandardInput.WriteLine(serialized);
+        _numRequestsSent++;
         bool killed = false;
         string line;
         {
@@ -145,7 +155,7 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(string host, SpmiSetupOptions spmiOptions)
+    public static RunningExecutionServer Create(string host, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
     {
         string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
         ProcessStartInfo info = new()
@@ -168,7 +178,7 @@ internal class RunningExecutionServer
         }
 
         Process proc = Process.Start(info);
-        return new RunningExecutionServer(proc);
+        return new RunningExecutionServer(proc, logExecServerRequestsOptions);
     }
 
     private struct ReceiveResult
