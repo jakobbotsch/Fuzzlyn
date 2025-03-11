@@ -99,8 +99,6 @@ internal class TypeManager(Randomizer random)
             SyntaxKind.UIntKeyword,
             SyntaxKind.LongKeyword,
             SyntaxKind.ULongKeyword,
-            SyntaxKind.FloatKeyword,
-            SyntaxKind.DoubleKeyword,
             // string, IntPtr/UIntPtr?
 
             // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
@@ -153,8 +151,6 @@ internal class TypeManager(Randomizer random)
             SyntaxKind.UIntKeyword,
             SyntaxKind.LongKeyword,
             SyntaxKind.ULongKeyword,
-            SyntaxKind.FloatKeyword,
-            SyntaxKind.DoubleKeyword,
         ];
 
         ReadOnlySpan<(Extension, VectorTypeWidth)> vectorBaseTypes =
