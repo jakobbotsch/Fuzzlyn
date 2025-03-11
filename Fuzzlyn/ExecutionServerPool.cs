@@ -14,6 +14,7 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
     public SpmiSetupOptions SpmiOptions { get; } = spmiOptions;
     public LogExecutionServerRequestsOptions LogExceutionServerRequestsOptions { get; } = logRequestsOptions;
 
+    private int _serverIndex;
     private List<RunningExecutionServer> _pool = new();
 
     private RunningExecutionServer Get(bool keepNonEmptyEagerly)
@@ -43,7 +44,7 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(Host, SpmiOptions, LogExceutionServerRequestsOptions);
+            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, SpmiOptions, LogExceutionServerRequestsOptions);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -53,7 +54,7 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(Host, SpmiOptions, LogExceutionServerRequestsOptions);
+        return RunningExecutionServer.Create(_serverIndex++, Host, SpmiOptions, LogExceutionServerRequestsOptions);
     }
 
     private void Return(RunningExecutionServer server)

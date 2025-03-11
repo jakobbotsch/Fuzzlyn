@@ -10,12 +10,14 @@ namespace Fuzzlyn;
 
 internal class RunningExecutionServer
 {
+    private int _serverIndex;
     private Process _process;
     private LogExecutionServerRequestsOptions _logExecServerRequestOptions;
     private int _numRequestsSent;
 
-    private RunningExecutionServer(Process process, LogExecutionServerRequestsOptions logExecServerRequestOptions)
+    private RunningExecutionServer(int serverIndex, Process process, LogExecutionServerRequestsOptions logExecServerRequestOptions)
     {
+        _serverIndex = serverIndex;
         _process = process;
         _logExecServerRequestOptions = logExecServerRequestOptions;
     }
@@ -27,7 +29,7 @@ internal class RunningExecutionServer
         string serialized = JsonSerializer.Serialize(req);
         if (_logExecServerRequestOptions != null)
         {
-            File.WriteAllText(Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_numRequestsSent}.json"), serialized);
+            File.WriteAllText(Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_serverIndex:00}-{_numRequestsSent:0000}.json"), serialized);
         }
 
         _process.StandardInput.WriteLine(serialized);
@@ -155,7 +157,7 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(string host, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
+    public static RunningExecutionServer Create(int serverIndex, string host, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
     {
         string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
         ProcessStartInfo info = new()
@@ -178,7 +180,7 @@ internal class RunningExecutionServer
         }
 
         Process proc = Process.Start(info);
-        return new RunningExecutionServer(proc, logExecServerRequestsOptions);
+        return new RunningExecutionServer(serverIndex, proc, logExecServerRequestsOptions);
     }
 
     private struct ReceiveResult
