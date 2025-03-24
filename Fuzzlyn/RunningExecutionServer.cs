@@ -32,7 +32,16 @@ internal class RunningExecutionServer
             File.WriteAllText(Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_serverIndex:00}-{_numRequestsSent:0000}.json"), serialized);
         }
 
-        _process.StandardInput.WriteLine(serialized);
+        try
+        {
+            _process.StandardInput.WriteLine(serialized);
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine("Got IOException during WriteLine: " + ex);
+            Console.WriteLine("Process ended: {0}", _process.HasExited);
+        }
+
         _numRequestsSent++;
         bool killed = false;
         string line;
