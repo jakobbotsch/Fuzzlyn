@@ -54,7 +54,7 @@ public class AggregateType : FuzzType
             {
                 count += at.GetTotalNumPrimitiveFields();
             }
-            if (field.Type is VectorType vt)
+            else if (field.Type is VectorType vt)
             {
                 count++;
             }
