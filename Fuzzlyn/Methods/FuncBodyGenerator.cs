@@ -376,6 +376,14 @@ internal class FuncBodyGenerator(
         ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
         (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
 
+        bool upCountedLoop = _random.FlipCoin(random.Options.UpCountedLoopProb);
+        SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
+        SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
+        if (!upCountedLoop)
+        {
+            (lowerBound, upperBound) = (upperBound, lowerBound); // swap the bounds
+        }
+
         VariableDeclarationSyntax decl =
             VariableDeclaration(
                 indexVar.Type.GenReferenceTo(),
@@ -387,12 +395,12 @@ internal class FuncBodyGenerator(
 
         ExpressionSyntax cond =
             BinaryExpression(
-                SyntaxKind.LessThanExpression,
+                endCondition,
                 IdentifierName(varName),
                 upperBound);
 
         ExpressionSyntax incr =
-            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indexVar.Expression);
+            PostfixUnaryExpression(nextValueExpression, indexVar.Expression);
 
         BlockSyntax block = GenBlock([indexVar]);
 
@@ -408,6 +416,14 @@ internal class FuncBodyGenerator(
         ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
         (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
 
+        bool upCountedLoop = _random.FlipCoin(random.Options.UpCountedLoopProb);
+        SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
+        SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
+        if (!upCountedLoop)
+        {
+            (lowerBound, upperBound) = (upperBound, lowerBound); // swap the bounds
+        }
+
         VariableDeclarationSyntax decl =
             VariableDeclaration(
                 indexVar.Type.GenReferenceTo(),
@@ -419,12 +435,12 @@ internal class FuncBodyGenerator(
 
         ExpressionSyntax cond =
             BinaryExpression(
-                SyntaxKind.LessThanExpression,
+                endCondition,
                 IdentifierName(varName),
                 upperBound);
 
         ExpressionSyntax incr =
-            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indexVar.Expression);
+            PostfixUnaryExpression(nextValueExpression, indexVar.Expression);
 
         BlockSyntax innerBlock = GenBlock(epilogStatements: [ExpressionStatement(incr)]);
 
