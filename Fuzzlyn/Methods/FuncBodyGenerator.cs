@@ -358,7 +358,7 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenLoop()
     {
-        if (random.FlipCoin(random.Options.ForLoopProb))
+        if (_random.FlipCoin(_random.Options.ForLoopProb))
         {
             return GenForLoop();
         }
@@ -370,13 +370,13 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenForLoop()
     {
-        string varName = $"var{_varCounter++}";
+        string varName = $"lvar{_varCounter++}";
         SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
         PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
         ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
         (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
 
-        bool upCountedLoop = _random.FlipCoin(random.Options.UpCountedLoopProb);
+        bool upCountedLoop = _random.FlipCoin(_random.Options.UpCountedLoopProb);
         SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
         SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
         if (!upCountedLoop)
@@ -410,13 +410,13 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenDoLoop()
     {
-        string varName = $"var{_varCounter++}";
+        string varName = $"lvar{_varCounter++}";
         SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
         PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
         ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
         (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
 
-        bool upCountedLoop = _random.FlipCoin(random.Options.UpCountedLoopProb);
+        bool upCountedLoop = _random.FlipCoin(_random.Options.UpCountedLoopProb);
         SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
         SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
         if (!upCountedLoop)
