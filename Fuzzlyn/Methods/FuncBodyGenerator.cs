@@ -92,7 +92,14 @@ internal class FuncBodyGenerator(
             => Options.StatementRejection.Reject(_statementLevel, _random.Rng);
     }
 
-    private BlockSyntax GenBlock(IEnumerable<ScopeValue> vars = null, bool root = false, int numStatements = -1)
+    // `prologStatements` are generated at the beginning of the block,
+    // `epilogStatements` at the end, but before any `return`.
+    private BlockSyntax GenBlock(
+        IEnumerable<ScopeValue> vars = null,
+        bool root = false,
+        int numStatements = -1,
+        IEnumerable<StatementSyntax> prologStatements = null,
+        IEnumerable<StatementSyntax> epilogStatements = null)
     {
         if (numStatements == -1)
             numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
@@ -116,6 +123,11 @@ internal class FuncBodyGenerator(
         IEnumerable<StatementSyntax> GenStatements()
         {
             StatementSyntax retStmt = null;
+
+            if (prologStatements != null)
+                foreach (StatementSyntax stmt in prologStatements)
+                    yield return stmt;
+
             int numGenerated = 0;
             while (true)
             {
@@ -149,6 +161,10 @@ internal class FuncBodyGenerator(
                 foreach (StatementSyntax stmt in GenChecksumming(prefixRuntimeAccess: !_isInPrimaryClass, scope.Values, _genChecksumSiteId))
                     yield return stmt;
             }
+
+            if (epilogStatements != null)
+                foreach (StatementSyntax stmt in epilogStatements)
+                    yield return stmt;
 
             if (root && retStmt == null && _returnType != null)
                 retStmt = GenReturn();
@@ -342,35 +358,97 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenLoop()
     {
-        string varName = $"var{_varCounter++}";
-        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
+        if (_random.FlipCoin(_random.Options.ForLoopProb))
+        {
+            return GenForLoop();
+        }
+        else
+        {
+            return GenDoLoop();
+        }
+    }
+
+    private StatementSyntax GenForLoop()
+    {
+        string varName = $"lvar{_varCounter++}";
+        SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
+        PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
+        ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
+        (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
+
+        bool upCountedLoop = _random.FlipCoin(_random.Options.UpCountedLoopProb);
+        SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
+        SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
+        if (!upCountedLoop)
+        {
+            (lowerBound, upperBound) = (upperBound, lowerBound); // swap the bounds
+        }
 
         VariableDeclarationSyntax decl =
             VariableDeclaration(
-                indVar.Type.GenReferenceTo(),
+                indexVar.Type.GenReferenceTo(),
                 SingletonSeparatedList(
                     VariableDeclarator(varName)
                     .WithInitializer(
                         EqualsValueClause(
-                            LiteralExpression(
-                                SyntaxKind.NumericLiteralExpression,
-                                Literal(0))))));
+                            lowerBound))));
 
         ExpressionSyntax cond =
             BinaryExpression(
-                SyntaxKind.LessThanExpression,
+                endCondition,
                 IdentifierName(varName),
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(2)));
+                upperBound);
 
         ExpressionSyntax incr =
-            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indVar.Expression);
+            PostfixUnaryExpression(nextValueExpression, indexVar.Expression);
 
-        BlockSyntax block = GenBlock([indVar]);
+        BlockSyntax block = GenBlock([indexVar]);
 
         ForStatementSyntax @for = ForStatement(decl, SeparatedList<ExpressionSyntax>(), cond, SingletonSeparatedList(incr), block);
         return @for;
+    }
+
+    private StatementSyntax GenDoLoop()
+    {
+        string varName = $"lvar{_varCounter++}";
+        SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
+        PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
+        ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
+        (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
+
+        bool upCountedLoop = _random.FlipCoin(_random.Options.UpCountedLoopProb);
+        SyntaxKind endCondition = upCountedLoop ? SyntaxKind.LessThanExpression : SyntaxKind.GreaterThanExpression;
+        SyntaxKind nextValueExpression = upCountedLoop ? SyntaxKind.PostIncrementExpression : SyntaxKind.PostDecrementExpression;
+        if (!upCountedLoop)
+        {
+            (lowerBound, upperBound) = (upperBound, lowerBound); // swap the bounds
+        }
+
+        VariableDeclarationSyntax decl =
+            VariableDeclaration(
+                indexVar.Type.GenReferenceTo(),
+                SingletonSeparatedList(
+                    VariableDeclarator(varName)
+                    .WithInitializer(
+                        EqualsValueClause(
+                            lowerBound))));
+
+        ExpressionSyntax cond =
+            BinaryExpression(
+                endCondition,
+                IdentifierName(varName),
+                upperBound);
+
+        ExpressionSyntax incr =
+            PostfixUnaryExpression(nextValueExpression, indexVar.Expression);
+
+        BlockSyntax innerBlock = GenBlock(epilogStatements: [ExpressionStatement(incr)]);
+
+        DoStatementSyntax @do = DoStatement(innerBlock, cond);
+
+        BlockSyntax outerBlock = Block(LocalDeclarationStatement(decl), @do);
+
+        return outerBlock;
     }
 
     private int _expressionLevel = -1;

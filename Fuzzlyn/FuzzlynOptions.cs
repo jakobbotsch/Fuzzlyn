@@ -105,6 +105,8 @@ internal class FuzzlynOptions
     public HillEquationParameters FuncGenRejection { get; set; } = new HillEquationParameters(2, 100);
 
     public double PickLiteralFromTableProb { get; set; } = 0.5;
+    public double ForLoopProb { get; set; } = 0.8;
+    public double UpCountedLoopProb { get; set; } = 0.5;
 
     public ProbabilityDistribution SignedIntegerTypicalLiteralDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
@@ -191,6 +193,21 @@ internal class FuzzlynOptions
             [(int)SyntaxKind.BitwiseOrExpression] = 0.02,
         });
 
+    public ProbabilityDistribution LoopIndexTypeDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)SyntaxKind.SByteKeyword] = 0.1,
+            [(int)SyntaxKind.ByteKeyword] = 0.1,
+            [(int)SyntaxKind.ShortKeyword] = 0.1,
+            [(int)SyntaxKind.UShortKeyword] = 0.1,
+            [(int)SyntaxKind.IntKeyword] = 0.2,
+            [(int)SyntaxKind.UIntKeyword] = 0.2,
+            [(int)SyntaxKind.LongKeyword] = 0.1,
+            [(int)SyntaxKind.ULongKeyword] = 0.1,
+            // TODO: support float: [(int)SyntaxKind.FloatKeyword] = 0.1,
+            // TODO: support double: [(int)SyntaxKind.DoubleKeyword] = 0.1,
+        });
+
     public int MaxArrayTotalSize { get; set; } = 300;
     public int MaxArrayLengthPerDimension { get; set; } = 10;
     public ProbabilityDistribution FuncKindDist { get; set; }
@@ -212,20 +229,20 @@ internal class FuzzlynOptions
 
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }
-     = new TableDistribution(new Dictionary<int, double>
-     {
-         [(int)LValueKind.Local] = 0.7,
-         [(int)LValueKind.Static] = 0.2,
-         [(int)LValueKind.RefReturningCall] = 0.1,
-     });
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)LValueKind.Local] = 0.7,
+            [(int)LValueKind.Static] = 0.2,
+            [(int)LValueKind.RefReturningCall] = 0.1,
+        });
 
     public ProbabilityDistribution CreateVectorKindDist { get; set; }
-    = new TableDistribution(new Dictionary<int, double>
-    {
-        [(int)VectorCreationKind.Create] = 0.12,
-        [(int)VectorCreationKind.CreateBroadcast] = 0.44,
-        [(int)VectorCreationKind.CreateScalar] = 0.44,
-    });
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)VectorCreationKind.Create] = 0.12,
+            [(int)VectorCreationKind.CreateBroadcast] = 0.44,
+            [(int)VectorCreationKind.CreateScalar] = 0.44,
+        });
 }
 
 internal enum AggregateFieldKind
