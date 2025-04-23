@@ -105,6 +105,7 @@ internal class FuzzlynOptions
     public HillEquationParameters FuncGenRejection { get; set; } = new HillEquationParameters(2, 100);
 
     public double PickLiteralFromTableProb { get; set; } = 0.5;
+    public double ForLoopProb { get; set; } = 0.8;
 
     public ProbabilityDistribution SignedIntegerTypicalLiteralDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
@@ -227,20 +228,20 @@ internal class FuzzlynOptions
 
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }
-     = new TableDistribution(new Dictionary<int, double>
-     {
-         [(int)LValueKind.Local] = 0.7,
-         [(int)LValueKind.Static] = 0.2,
-         [(int)LValueKind.RefReturningCall] = 0.1,
-     });
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)LValueKind.Local] = 0.7,
+            [(int)LValueKind.Static] = 0.2,
+            [(int)LValueKind.RefReturningCall] = 0.1,
+        });
 
     public ProbabilityDistribution CreateVectorKindDist { get; set; }
-    = new TableDistribution(new Dictionary<int, double>
-    {
-        [(int)VectorCreationKind.Create] = 0.12,
-        [(int)VectorCreationKind.CreateBroadcast] = 0.44,
-        [(int)VectorCreationKind.CreateScalar] = 0.44,
-    });
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)VectorCreationKind.Create] = 0.12,
+            [(int)VectorCreationKind.CreateBroadcast] = 0.44,
+            [(int)VectorCreationKind.CreateScalar] = 0.44,
+        });
 }
 
 internal enum AggregateFieldKind

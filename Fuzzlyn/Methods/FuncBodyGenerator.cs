@@ -92,7 +92,14 @@ internal class FuncBodyGenerator(
             => Options.StatementRejection.Reject(_statementLevel, _random.Rng);
     }
 
-    private BlockSyntax GenBlock(IEnumerable<ScopeValue> vars = null, bool root = false, int numStatements = -1)
+    // `prologStatements` are generated at the beginning of the block,
+    // `epilogStatements` at the end, but before any `return`.
+    private BlockSyntax GenBlock(
+        IEnumerable<ScopeValue> vars = null,
+        bool root = false,
+        int numStatements = -1,
+        IEnumerable<StatementSyntax> prologStatements = null,
+        IEnumerable<StatementSyntax> epilogStatements = null)
     {
         if (numStatements == -1)
             numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
@@ -116,6 +123,11 @@ internal class FuncBodyGenerator(
         IEnumerable<StatementSyntax> GenStatements()
         {
             StatementSyntax retStmt = null;
+
+            if (prologStatements != null)
+                foreach (StatementSyntax stmt in prologStatements)
+                    yield return stmt;
+
             int numGenerated = 0;
             while (true)
             {
@@ -149,6 +161,10 @@ internal class FuncBodyGenerator(
                 foreach (StatementSyntax stmt in GenChecksumming(prefixRuntimeAccess: !_isInPrimaryClass, scope.Values, _genChecksumSiteId))
                     yield return stmt;
             }
+
+            if (epilogStatements != null)
+                foreach (StatementSyntax stmt in epilogStatements)
+                    yield return stmt;
 
             if (root && retStmt == null && _returnType != null)
                 retStmt = GenReturn();
@@ -342,6 +358,18 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenLoop()
     {
+        if (random.FlipCoin(random.Options.ForLoopProb))
+        {
+            return GenForLoop();
+        }
+        else
+        {
+            return GenDoLoop();
+        }
+    }
+
+    private StatementSyntax GenForLoop()
+    {
         string varName = $"var{_varCounter++}";
         SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
         PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
@@ -370,6 +398,48 @@ internal class FuncBodyGenerator(
 
         ForStatementSyntax @for = ForStatement(decl, SeparatedList<ExpressionSyntax>(), cond, SingletonSeparatedList(incr), block);
         return @for;
+    }
+
+    private StatementSyntax GenDoLoop()
+    {
+        string varName = $"var{_varCounter++}";
+        SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
+        PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
+        ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
+        (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
+
+        VariableDeclarationSyntax decl =
+            VariableDeclaration(
+                indexVar.Type.GenReferenceTo(),
+                SingletonSeparatedList(
+                    VariableDeclarator(varName)
+                    .WithInitializer(
+                        EqualsValueClause(
+                            lowerBound))));
+
+        ExpressionSyntax cond =
+            BinaryExpression(
+                SyntaxKind.LessThanExpression,
+                IdentifierName(varName),
+                upperBound);
+
+        ExpressionSyntax incr =
+            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indexVar.Expression);
+
+        BlockSyntax innerBlock = GenBlock(epilogStatements: [ExpressionStatement(incr)]);
+
+        DoStatementSyntax @do = DoStatement(
+            Token(SyntaxKind.DoKeyword),
+            innerBlock,
+            Token(SyntaxKind.WhileKeyword),
+            Token(SyntaxKind.OpenParenToken),
+            cond,
+            Token(SyntaxKind.CloseParenToken),
+            Token(SyntaxKind.SemicolonToken));
+
+        BlockSyntax outerBlock = Block(LocalDeclarationStatement(decl), @do);
+
+        return outerBlock;
     }
 
     private int _expressionLevel = -1;
