@@ -61,7 +61,12 @@ internal class FuncBodyGenerator(
             StatementKind kind =
                 (StatementKind)Options.StatementTypeDist.Sample(_random.Rng);
 
-            if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryCatch || kind == StatementKind.TryFinally || kind == StatementKind.Loop) &&
+            if ((kind == StatementKind.Block ||
+                 kind == StatementKind.If ||
+                 kind == StatementKind.Switch ||
+                 kind == StatementKind.TryCatch ||
+                 kind == StatementKind.TryFinally ||
+                 kind == StatementKind.Loop) &&
                 ShouldRejectRecursion())
                 continue;
 
@@ -81,6 +86,8 @@ internal class FuncBodyGenerator(
                     return GenCallStatement(tryExisting: ShouldRejectRecursion());
                 case StatementKind.If:
                     return GenIf();
+                case StatementKind.Switch:
+                    return GenSwitch();
                 case StatementKind.Throw:
                     return GenThrow();
                 case StatementKind.TryCatch:
@@ -330,6 +337,52 @@ internal class FuncBodyGenerator(
         {
             gen = IfStatement(guard, GenBlock(), ElseClause(GenBlock()));
         }
+        return gen;
+    }
+
+    private StatementSyntax GenSwitch()
+    {
+        ExpressionSyntax guard;
+        int attempts = 0;
+        do
+        {
+            guard = GenExpression(new PrimitiveType(SyntaxKind.IntKeyword));
+        } while (IsLiteralOrCastOfLiteral(guard) && attempts++ < 20);
+
+        // C# has a rich 'switch' syntax. Here, for now, generate only a simple switch on int type with dense
+        // numeric cases, to attempt to get Roslyn to generate a 'switch' IL instruction.
+
+        List<SwitchSectionSyntax> switchSections = new();
+        int caseCount = _random.Next(5, 25);
+        for (int caseNumber = 0; caseNumber < caseCount; caseNumber++)
+        {
+            ExpressionSyntax caseValue = LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(caseNumber));
+            switchSections.Add(
+                SwitchSection()
+                .WithLabels(
+                    SingletonList<SwitchLabelSyntax>(
+                        CaseSwitchLabel(caseValue)))
+                .WithStatements(
+                    List<StatementSyntax>(
+                        new StatementSyntax[] {
+                            GenBlock(),
+                            BreakStatement() })));
+        }
+
+        // Add a default case (which is mostly likely what will get executed when we run).
+        switchSections.Add(
+            SwitchSection()
+            .WithLabels(
+                SingletonList<SwitchLabelSyntax>(
+                    DefaultSwitchLabel()))
+            .WithStatements(
+                List<StatementSyntax>(
+                    new StatementSyntax[] {
+                        GenBlock(),
+                        BreakStatement() })));
+
+        SyntaxList<SwitchSectionSyntax> switchSectionSyntax = switchSections.ToSyntaxList();
+        StatementSyntax gen = SwitchStatement(guard, switchSectionSyntax);
         return gen;
     }
 
@@ -1341,6 +1394,7 @@ internal enum StatementKind
     Assignment,
     Call,
     If,
+    Switch,
     Return,
     Throw,
     TryCatch,

@@ -63,7 +63,8 @@ internal class FuzzlynOptions
         = new TableDistribution(new Dictionary<int, double>
         {
             [(int)StatementKind.Assignment] = 0.57,
-            [(int)StatementKind.If] = 0.14,
+            [(int)StatementKind.If] = 0.135,
+            [(int)StatementKind.Switch] = 0.005,
             [(int)StatementKind.Block] = 0.1,
             [(int)StatementKind.Call] = 0.1,
             [(int)StatementKind.Throw] = 0.005,
