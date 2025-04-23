@@ -343,31 +343,30 @@ internal class FuncBodyGenerator(
     private StatementSyntax GenLoop()
     {
         string varName = $"var{_varCounter++}";
-        ScopeValue indVar = new(_types.GetPrimitiveType(SyntaxKind.IntKeyword), IdentifierName(varName), -(_scope.Count - 1), true);
+        SyntaxKind op = (SyntaxKind)Options.LoopIndexTypeDist.Sample(_random.Rng);
+        PrimitiveType indexPrimType = _types.GetPrimitiveType(op);
+        ScopeValue indexVar = new(indexPrimType, IdentifierName(varName), -(_scope.Count - 1), true);
+        (ExpressionSyntax lowerBound, ExpressionSyntax upperBound) = LiteralGenerator.GenPrimitiveLiteralLoopBounds(_random, indexPrimType);
 
         VariableDeclarationSyntax decl =
             VariableDeclaration(
-                indVar.Type.GenReferenceTo(),
+                indexVar.Type.GenReferenceTo(),
                 SingletonSeparatedList(
                     VariableDeclarator(varName)
                     .WithInitializer(
                         EqualsValueClause(
-                            LiteralExpression(
-                                SyntaxKind.NumericLiteralExpression,
-                                Literal(0))))));
+                            lowerBound))));
 
         ExpressionSyntax cond =
             BinaryExpression(
                 SyntaxKind.LessThanExpression,
                 IdentifierName(varName),
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(2)));
+                upperBound);
 
         ExpressionSyntax incr =
-            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indVar.Expression);
+            PostfixUnaryExpression(SyntaxKind.PostIncrementExpression, indexVar.Expression);
 
-        BlockSyntax block = GenBlock([indVar]);
+        BlockSyntax block = GenBlock([indexVar]);
 
         ForStatementSyntax @for = ForStatement(decl, SeparatedList<ExpressionSyntax>(), cond, SingletonSeparatedList(incr), block);
         return @for;

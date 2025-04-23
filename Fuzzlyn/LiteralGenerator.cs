@@ -58,6 +58,26 @@ internal static class LiteralGenerator
         return primType.Info.GenTypicalLiteral(kind);
     }
 
+    // REVIEW: should this be private?
+    public static (ExpressionSyntax, ExpressionSyntax) GenPrimitiveLiteralLoopBounds(Randomizer random, PrimitiveType primType)
+    {
+        TypicalLiteralKind kind;
+        if (primType.Info.IsFloat)
+        {
+            kind = (TypicalLiteralKind)random.Options.FloatTypicalLiteralDist.Sample(random.Rng);
+        }
+        else if (primType.Info.IsUnsigned)
+        {
+            kind = (TypicalLiteralKind)random.Options.UnsignedIntegerTypicalLiteralDist.Sample(random.Rng);
+        }
+        else
+        {
+            kind = (TypicalLiteralKind)random.Options.SignedIntegerTypicalLiteralDist.Sample(random.Rng);
+        }
+
+        return primType.Info.GenTypicalLiteralLoopBounds(kind);
+    }
+
     private static List<int> GenArrayDimensions(Randomizer random, ArrayType at)
     {
         int dimsRequired = at.Rank;

@@ -100,6 +100,7 @@ internal class TypeManager(Randomizer random)
             SyntaxKind.LongKeyword,
             SyntaxKind.ULongKeyword,
             // string, IntPtr/UIntPtr?
+            // float, double?
 
             // if expanding fix PrimitiveType static ctor and GenPrimitiveLiteral as well
         ];

@@ -191,6 +191,21 @@ internal class FuzzlynOptions
             [(int)SyntaxKind.BitwiseOrExpression] = 0.02,
         });
 
+    public ProbabilityDistribution LoopIndexTypeDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [(int)SyntaxKind.SByteKeyword] = 0.1,
+            [(int)SyntaxKind.ByteKeyword] = 0.1,
+            [(int)SyntaxKind.ShortKeyword] = 0.1,
+            [(int)SyntaxKind.UShortKeyword] = 0.1,
+            [(int)SyntaxKind.IntKeyword] = 0.2,
+            [(int)SyntaxKind.UIntKeyword] = 0.2,
+            [(int)SyntaxKind.LongKeyword] = 0.1,
+            [(int)SyntaxKind.ULongKeyword] = 0.1,
+            // TODO: support float: [(int)SyntaxKind.FloatKeyword] = 0.1,
+            // TODO: support double: [(int)SyntaxKind.DoubleKeyword] = 0.1,
+        });
+
     public int MaxArrayTotalSize { get; set; } = 300;
     public int MaxArrayLengthPerDimension { get; set; } = 10;
     public ProbabilityDistribution FuncKindDist { get; set; }
