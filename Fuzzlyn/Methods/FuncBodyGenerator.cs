@@ -34,7 +34,10 @@ internal class FuncBodyGenerator(
     private readonly bool _isInPrimaryClass = isInPrimaryClass;
 
     private readonly List<ScopeFrame> _scope = new();
+    private int _tryFinallyCount;
+    private int _tryCatchCount;
     private int _finallyCount;
+    private int _catchCount;
     private int _varCounter;
     private int _statementLevel = -1;
 
@@ -52,7 +55,7 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenStatement(bool allowReturn = true)
     {
-        if (_finallyCount > 0)
+        if (_finallyCount > 0 || _catchCount > 0)
             allowReturn = false;
 
         while (true)
@@ -60,11 +63,14 @@ internal class FuncBodyGenerator(
             StatementKind kind =
                 (StatementKind)Options.StatementTypeDist.Sample(_random.Rng);
 
-            if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryFinally || kind == StatementKind.Loop) &&
+            if ((kind == StatementKind.Block || kind == StatementKind.If || kind == StatementKind.TryCatch || kind == StatementKind.TryFinally || kind == StatementKind.Loop) &&
                 ShouldRejectRecursion())
                 continue;
 
             if (kind == StatementKind.Return && !allowReturn)
+                continue;
+
+            if (kind == StatementKind.Throw && (_tryCatchCount == 0))
                 continue;
 
             switch (kind)
@@ -77,6 +83,10 @@ internal class FuncBodyGenerator(
                     return GenCallStatement(tryExisting: ShouldRejectRecursion());
                 case StatementKind.If:
                     return GenIf();
+                case StatementKind.Throw:
+                    return GenThrow();
+                case StatementKind.TryCatch:
+                    return GenTryCatch();
                 case StatementKind.TryFinally:
                     return GenTryFinally();
                 case StatementKind.Return:
@@ -325,13 +335,54 @@ internal class FuncBodyGenerator(
         return gen;
     }
 
+    private StatementSyntax GenThrow()
+    {
+        Debug.Assert(_tryCatchCount > 0);
+
+        return
+            ThrowStatement(
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("System"),
+                        IdentifierName("Exception"))));
+    }
+
+    private StatementSyntax GenTryCatch()
+    {
+        int numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
+        int tryStatements = _random.Next(numStatements);
+        int catchStatements = numStatements - tryStatements;
+
+        _tryCatchCount++;
+        BlockSyntax body = GenBlock(numStatements: tryStatements);
+        _tryCatchCount--;
+        _catchCount++;
+        BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
+        _catchCount--;
+        return
+            TryStatement(
+                body,
+                SingletonList<CatchClauseSyntax>(
+                    CatchClause()
+                    .WithDeclaration(
+                        CatchDeclaration(
+                            QualifiedName(
+                                IdentifierName("System"),
+                                IdentifierName("Exception"))))
+                    .WithBlock(catchBody)),
+                null); // no 'finally'
+    }
+
     private StatementSyntax GenTryFinally()
     {
         int numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
         int tryStatements = _random.Next(numStatements);
         int finallyStatements = numStatements - tryStatements;
 
+        _tryFinallyCount++;
         BlockSyntax body = GenBlock(numStatements: tryStatements);
+        _tryFinallyCount--;
         _finallyCount++;
         BlockSyntax finallyBody = GenBlock(numStatements: finallyStatements);
         _finallyCount--;
@@ -1265,6 +1316,8 @@ internal enum StatementKind
     Call,
     If,
     Return,
+    Throw,
+    TryCatch,
     TryFinally,
     Loop,
 }

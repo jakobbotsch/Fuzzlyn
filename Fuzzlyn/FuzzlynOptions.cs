@@ -66,7 +66,9 @@ internal class FuzzlynOptions
             [(int)StatementKind.If] = 0.14,
             [(int)StatementKind.Block] = 0.1,
             [(int)StatementKind.Call] = 0.1,
-            [(int)StatementKind.TryFinally] = 0.05,
+            [(int)StatementKind.Throw] = 0.005,
+            [(int)StatementKind.TryCatch] = 0.015,
+            [(int)StatementKind.TryFinally] = 0.03,
             [(int)StatementKind.Loop] = 0.03,
             [(int)StatementKind.Return] = 0.01,
         });
