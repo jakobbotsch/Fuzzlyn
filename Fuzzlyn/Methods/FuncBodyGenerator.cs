@@ -444,14 +444,7 @@ internal class FuncBodyGenerator(
 
         BlockSyntax innerBlock = GenBlock(epilogStatements: [ExpressionStatement(incr)]);
 
-        DoStatementSyntax @do = DoStatement(
-            Token(SyntaxKind.DoKeyword),
-            innerBlock,
-            Token(SyntaxKind.WhileKeyword),
-            Token(SyntaxKind.OpenParenToken),
-            cond,
-            Token(SyntaxKind.CloseParenToken),
-            Token(SyntaxKind.SemicolonToken));
+        DoStatementSyntax @do = DoStatement(innerBlock, cond);
 
         BlockSyntax outerBlock = Block(LocalDeclarationStatement(decl), @do);
 

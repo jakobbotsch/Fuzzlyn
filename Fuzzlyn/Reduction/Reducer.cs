@@ -1337,6 +1337,18 @@ public class Runtime : IRuntime
     }
 
     [Simplifier]
+    private IEnumerable<SyntaxNode> SimplifyDo(SyntaxNode node)
+    {
+        if (node is not DoStatementSyntax @do)
+            yield break;
+
+        // Simplify 'do stmt while (c)' to
+        // stmt
+        StatementSyntax body = @do.Statement;
+        yield return Block(body);
+    }
+
+    [Simplifier]
     private IEnumerable<SyntaxNode> SimplifyBinaryExpression(SyntaxNode node)
     {
         if (node is not BinaryExpressionSyntax bin)
