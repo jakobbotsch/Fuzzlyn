@@ -1754,7 +1754,7 @@ public class Runtime : IRuntime
     }
 
     [Simplifier]
-    private IEnumerable<SyntaxNode> SimplifyTryFinally(SyntaxNode node)
+    private IEnumerable<SyntaxNode> SimplifyTry(SyntaxNode node)
     {
         if (node is not TryStatementSyntax @try)
             yield break;

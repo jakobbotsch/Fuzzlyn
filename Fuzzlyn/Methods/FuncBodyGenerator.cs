@@ -34,10 +34,8 @@ internal class FuncBodyGenerator(
     private readonly bool _isInPrimaryClass = isInPrimaryClass;
 
     private readonly List<ScopeFrame> _scope = new();
-    private int _tryFinallyCount;
     private int _tryCatchCount;
     private int _finallyCount;
-    private int _catchCount;
     private int _varCounter;
     private int _statementLevel = -1;
 
@@ -55,7 +53,7 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenStatement(bool allowReturn = true)
     {
-        if (_finallyCount > 0 || _catchCount > 0)
+        if (_finallyCount > 0)
             allowReturn = false;
 
         while (true)
@@ -363,9 +361,7 @@ internal class FuncBodyGenerator(
         if (!doCatchWhen)
             _tryCatchCount--;
 
-        _catchCount++;
         BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
-        _catchCount--;
 
         if (doCatchWhen)
         {
@@ -412,9 +408,7 @@ internal class FuncBodyGenerator(
         int tryStatements = _random.Next(numStatements);
         int finallyStatements = numStatements - tryStatements;
 
-        _tryFinallyCount++;
         BlockSyntax body = GenBlock(numStatements: tryStatements);
-        _tryFinallyCount--;
         _finallyCount++;
         BlockSyntax finallyBody = GenBlock(numStatements: finallyStatements);
         _finallyCount--;
