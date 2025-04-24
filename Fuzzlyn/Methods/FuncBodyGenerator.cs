@@ -341,11 +341,12 @@ internal class FuncBodyGenerator(
 
         return
             ThrowStatement(
-                InvocationExpression(
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
+                ObjectCreationExpression(
+                    QualifiedName(
                         IdentifierName("System"),
-                        IdentifierName("Exception"))));
+                        IdentifierName("Exception")))
+                .WithArgumentList(
+                    ArgumentList()));
     }
 
     private StatementSyntax GenTryCatch()
