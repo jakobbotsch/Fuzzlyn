@@ -1769,12 +1769,6 @@ public class Runtime : IRuntime
             // return.
             yield return Block(@try.Finally.Block, @try.Block);
         }
-
-        if (@try.Catches.Any())
-        {
-            foreach (CatchClauseSyntax @catch in @try.Catches)
-                yield return @catch;
-        }
     }
 
     [Simplifier]

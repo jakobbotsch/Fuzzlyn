@@ -353,25 +353,56 @@ internal class FuncBodyGenerator(
         int numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
         int tryStatements = _random.Next(numStatements);
         int catchStatements = numStatements - tryStatements;
+        bool doCatchWhen = _random.FlipCoin(0.2);
 
-        _tryCatchCount++;
+        // Don't allow 'throw' inside 'try' with a 'catch when' clause; we don't know that it will be caught.
+        if (!doCatchWhen)
+            _tryCatchCount++;
         BlockSyntax body = GenBlock(numStatements: tryStatements);
-        _tryCatchCount--;
+        if (!doCatchWhen)
+            _tryCatchCount--;
+
         _catchCount++;
         BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
         _catchCount--;
-        return
-            TryStatement(
-                body,
-                SingletonList<CatchClauseSyntax>(
-                    CatchClause()
-                    .WithDeclaration(
-                        CatchDeclaration(
-                            QualifiedName(
-                                IdentifierName("System"),
-                                IdentifierName("Exception"))))
-                    .WithBlock(catchBody)),
-                null); // no 'finally'
+
+        if (doCatchWhen)
+        {
+            // Make it a "catch when" clause
+
+            ExpressionSyntax whenExpression = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+
+            return
+                TryStatement(
+                    body,
+                    SingletonList<CatchClauseSyntax>(
+                        CatchClause()
+                        .WithDeclaration(
+                            CatchDeclaration(
+                                QualifiedName(
+                                    IdentifierName("System"),
+                                    IdentifierName("Exception"))))
+                        .WithFilter(
+                            CatchFilterClause(whenExpression))
+                        .WithBlock(catchBody)),
+                    null); // no 'finally'
+        }
+        else
+        {
+            return
+                TryStatement(
+                    body,
+                    SingletonList<CatchClauseSyntax>(
+                        CatchClause()
+                        .WithDeclaration(
+                            CatchDeclaration(
+                                QualifiedName(
+                                    IdentifierName("System"),
+                                    IdentifierName("Exception"))))
+                        .WithBlock(catchBody)),
+                    null); // no 'finally'
+
+        }
     }
 
     private StatementSyntax GenTryFinally()
