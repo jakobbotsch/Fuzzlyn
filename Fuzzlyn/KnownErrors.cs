@@ -21,5 +21,6 @@ internal class KnownErrors(IEnumerable<string> errors)
     public static KnownErrors DotnetRuntime { get; } = new KnownErrors(
         [
             "inVarToRegMap[varIndex] == REG_STK",
+            "!fgRngChkThrowAdded"
         ]);
 }

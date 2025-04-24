@@ -1754,17 +1754,21 @@ public class Runtime : IRuntime
     }
 
     [Simplifier]
-    private IEnumerable<SyntaxNode> SimplifyTryFinally(SyntaxNode node)
+    private IEnumerable<SyntaxNode> SimplifyTry(SyntaxNode node)
     {
-        if (node is not TryStatementSyntax @try || @try.Catches.Any())
+        if (node is not TryStatementSyntax @try)
             yield break;
 
         yield return @try.Block;
-        yield return @try.Finally.Block;
-        yield return Block(@try.Block, @try.Finally.Block);
-        // Try finally first and then block. Useful when the try-block contains a
-        // return.
-        yield return Block(@try.Finally.Block, @try.Block);
+
+        if (@try.Finally != null)
+        {
+            yield return @try.Finally.Block;
+            yield return Block(@try.Block, @try.Finally.Block);
+            // Try finally first and then block. Useful when the try-block contains a
+            // return.
+            yield return Block(@try.Finally.Block, @try.Block);
+        }
     }
 
     [Simplifier]
