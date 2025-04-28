@@ -191,6 +191,9 @@ internal class Program
         }
         else if (options.Stats)
         {
+            if (options.GenExtensions == null)
+                options.GenExtensions = []; // No extension by default with --stats
+
             GenerateProgramsAndGetStats(options);
         }
         else
