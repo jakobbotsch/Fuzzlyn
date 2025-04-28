@@ -353,7 +353,7 @@ internal class FuncBodyGenerator(
         // numeric cases, to attempt to get Roslyn to generate a 'switch' IL instruction.
 
         List<SwitchSectionSyntax> switchSections = new();
-        int caseCount = _random.Next(5, 25);
+        int caseCount = Options.SwitchCaseCountDist.Sample(_random.Rng);
         for (int caseNumber = 0; caseNumber < caseCount; caseNumber++)
         {
             ExpressionSyntax caseValue = LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(caseNumber));

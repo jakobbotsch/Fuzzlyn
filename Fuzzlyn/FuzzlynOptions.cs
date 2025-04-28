@@ -246,6 +246,8 @@ internal class FuzzlynOptions
             [(int)VectorCreationKind.CreateBroadcast] = 0.44,
             [(int)VectorCreationKind.CreateScalar] = 0.44,
         });
+
+    public ProbabilityDistribution SwitchCaseCountDist { get; set; } = new GeometricDistribution(0.2, 5);
 }
 
 internal enum AggregateFieldKind
