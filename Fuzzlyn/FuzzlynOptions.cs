@@ -63,7 +63,8 @@ internal class FuzzlynOptions
         = new TableDistribution(new Dictionary<int, double>
         {
             [(int)StatementKind.Assignment] = 0.57,
-            [(int)StatementKind.If] = 0.14,
+            [(int)StatementKind.If] = 0.135,
+            [(int)StatementKind.Switch] = 0.005,
             [(int)StatementKind.Block] = 0.1,
             [(int)StatementKind.Call] = 0.1,
             [(int)StatementKind.Throw] = 0.005,
@@ -109,6 +110,7 @@ internal class FuzzlynOptions
     public double PickLiteralFromTableProb { get; set; } = 0.5;
     public double ForLoopProb { get; set; } = 0.8;
     public double UpCountedLoopProb { get; set; } = 0.5;
+    public double SmallLoopIterationCountProb { get; set; } = 0.25;
 
     public ProbabilityDistribution SignedIntegerTypicalLiteralDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
@@ -245,6 +247,8 @@ internal class FuzzlynOptions
             [(int)VectorCreationKind.CreateBroadcast] = 0.44,
             [(int)VectorCreationKind.CreateScalar] = 0.44,
         });
+
+    public ProbabilityDistribution SwitchCaseCountDist { get; set; } = new GeometricDistribution(0.2, 5);
 }
 
 internal enum AggregateFieldKind

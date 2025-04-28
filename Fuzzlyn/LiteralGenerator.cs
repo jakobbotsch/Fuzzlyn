@@ -75,7 +75,7 @@ internal static class LiteralGenerator
             kind = (TypicalLiteralKind)random.Options.SignedIntegerTypicalLiteralDist.Sample(random.Rng);
         }
 
-        return primType.Info.GenTypicalLiteralLoopBounds(kind);
+        return primType.Info.GenTypicalLiteralLoopBounds(kind, random);
     }
 
     private static List<int> GenArrayDimensions(Randomizer random, ArrayType at)

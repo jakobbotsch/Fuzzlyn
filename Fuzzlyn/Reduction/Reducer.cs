@@ -1324,6 +1324,26 @@ public class Runtime : IRuntime
     }
 
     [Simplifier]
+    private IEnumerable<SyntaxNode> SimplifySwitch(SyntaxNode node)
+    {
+        if (node is not SwitchStatementSyntax @switch)
+            yield break;
+
+        foreach (var section in @switch.Sections)
+        {
+            // Remove the 'break;' statement
+            if (section.Statements.Count > 0)
+            {
+                var lastStmt = section.Statements.Last();
+                if (lastStmt is BreakStatementSyntax)
+                    yield return Block(section.Statements.RemoveAt(section.Statements.Count - 1));
+                else
+                    yield return Block(section.Statements);
+            }
+        }
+    }
+
+    [Simplifier]
     private IEnumerable<SyntaxNode> SimplifyFor(SyntaxNode node)
     {
         if (node is not ForStatementSyntax @for)
