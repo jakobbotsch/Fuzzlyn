@@ -110,6 +110,7 @@ internal class FuzzlynOptions
     public double PickLiteralFromTableProb { get; set; } = 0.5;
     public double ForLoopProb { get; set; } = 0.8;
     public double UpCountedLoopProb { get; set; } = 0.5;
+    public double SmallLoopIterationCountProb { get; set; } = 0.25;
 
     public ProbabilityDistribution SignedIntegerTypicalLiteralDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
