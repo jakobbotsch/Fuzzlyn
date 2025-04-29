@@ -144,31 +144,34 @@ internal class FuncBodyGenerator(
                     yield return stmt;
 
             int numGenerated = 0;
-            while (true)
+            if (numStatements > 0)
             {
-                StatementSyntax stmt = GenStatement(allowReturn: !root);
-
-                if (stmt is ReturnStatementSyntax)
+                while (true)
                 {
-                    retStmt = stmt;
+                    StatementSyntax stmt = GenStatement(allowReturn: !root);
+
+                    if (stmt is ReturnStatementSyntax)
+                    {
+                        retStmt = stmt;
+                        break;
+                    }
+
+                    NumStatements++;
+                    yield return stmt;
+
+                    numGenerated++;
+                    if (numGenerated < numStatements)
+                        continue;
+
+                    // For first block we ensure we get a minimum amount of statements
+                    if (root && _funcIndex == 0)
+                    {
+                        if (_funcs.Sum(f => f.NumStatements) < Options.ProgramMinStatements)
+                            continue;
+                    }
+
                     break;
                 }
-
-                NumStatements++;
-                yield return stmt;
-
-                numGenerated++;
-                if (numGenerated < numStatements)
-                    continue;
-
-                // For first block we ensure we get a minimum amount of statements
-                if (root && _funcIndex == 0)
-                {
-                    if (_funcs.Sum(f => f.NumStatements) < Options.ProgramMinStatements)
-                        continue;
-                }
-
-                break;
             }
 
             if (Options.EnableChecksumming)
@@ -402,9 +405,7 @@ internal class FuncBodyGenerator(
 
     private StatementSyntax GenTryCatch()
     {
-        int numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
-        int tryStatements = _random.Next(numStatements);
-        int catchStatements = numStatements - tryStatements;
+        int tryStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
         bool doCatchWhen = _random.FlipCoin(0.2);
 
         // Don't allow 'throw' inside 'try' with a 'catch when' clause; we don't know that it will be caught.
@@ -414,12 +415,12 @@ internal class FuncBodyGenerator(
         if (!doCatchWhen)
             _tryCatchCount--;
 
-        BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
-
         if (doCatchWhen)
         {
             // Make it a "catch when" clause
 
+            int catchStatements = Options.CatchBlockStatementCountDist.Sample(_random.Rng);
+            BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
             ExpressionSyntax whenExpression = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
 
             return
@@ -439,19 +440,37 @@ internal class FuncBodyGenerator(
         }
         else
         {
-            return
-                TryStatement(
-                    body,
-                    SingletonList<CatchClauseSyntax>(
-                        CatchClause()
-                        .WithDeclaration(
-                            CatchDeclaration(
-                                QualifiedName(
-                                    IdentifierName("System"),
-                                    IdentifierName("Exception"))))
-                        .WithBlock(catchBody)),
-                    null); // no 'finally'
+            // Generate "try/catch/catch/...". We use a fixed set of Exception classes,
+            // with System.Exception at the end.
+            QualifiedNameSyntax[] catchClauseExceptionNames =
+            [
+                QualifiedName(IdentifierName("System"), IdentifierName("Exception")),
+                QualifiedName(IdentifierName("System"), IdentifierName("ArgumentNullException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("ArgumentOutOfRangeException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("InvalidOperationException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("NotImplementedException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("NotSupportedException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("ObjectDisposedException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("IndexOutOfRangeException")),
+                QualifiedName(IdentifierName("System"), IdentifierName("InvalidCastException"))
+            ];
 
+            int totalCatchClauses = Options.CatchCountDist.Sample(_random.Rng);
+            List<CatchClauseSyntax> catchClauses = new();
+
+            for (int catchNum = totalCatchClauses - 1; catchNum >= 0; catchNum--)
+            {
+                int catchStatements = Options.CatchBlockStatementCountDist.Sample(_random.Rng);
+                BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
+                catchClauses.Add(
+                    CatchClause()
+                    .WithDeclaration(
+                        CatchDeclaration(catchClauseExceptionNames[catchNum]))
+                    .WithBlock(catchBody));
+            }
+
+            SyntaxList<CatchClauseSyntax> catchClausesSyntax = catchClauses.ToSyntaxList();
+            return TryStatement(body, catchClausesSyntax, null); // null == no 'finally'
         }
     }
 
@@ -460,6 +479,12 @@ internal class FuncBodyGenerator(
         int numStatements = Options.BlockStatementCountDist.Sample(_random.Rng);
         int tryStatements = _random.Next(numStatements);
         int finallyStatements = numStatements - tryStatements;
+        if (_random.FlipCoin(0.5))
+        {
+            // Randomly swap the number of statements between try and finally. This means that 'finally' will
+            // have zero statements as many times as 'try'.
+            (tryStatements, finallyStatements) = (finallyStatements, tryStatements);
+        }
 
         BlockSyntax body = GenBlock(numStatements: tryStatements);
         _finallyCount++;
