@@ -59,6 +59,7 @@ internal class FuzzlynOptions
     public ProbabilityDistribution ArrayRankDist { get; set; } = new GeometricDistribution(0.9, 1);
     public double MakeVectorProb { get; set; } = 0.3;
     public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
+    public ProbabilityDistribution CatchBlockStatementCountDist { get; set; } = new GeometricDistribution(0.25);
     public ProbabilityDistribution StatementTypeDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {
@@ -93,6 +94,20 @@ internal class FuzzlynOptions
             [(int)ExpressionKind.NewObject] = 0.18,
             [(int)ExpressionKind.Literal] = 0.18,
             [(int)ExpressionKind.Call] = 0.14,
+        });
+
+    public ProbabilityDistribution CatchCountDist { get; set; }
+        = new TableDistribution(new Dictionary<int, double>
+        {
+            [1] = 0.9,
+            [2] = 0.03,
+            [3] = 0.01,
+            [4] = 0.01,
+            [5] = 0.01,
+            [6] = 0.01,
+            [7] = 0.01,
+            [8] = 0.01,
+            [9] = 0.01,
         });
 
     // Controls how the level of nesting rejects generating recursive statements (blocks, ifs, calls).
