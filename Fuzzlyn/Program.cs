@@ -171,7 +171,10 @@ internal class Program
         if (options.Output)
         {
             if (options.GenExtensions == null)
+            {
+                Console.Error.WriteLine("Warning: no extensions specified. Consider using `--supported-extensions` followed by `--output-source --gen-extensions <value>`.");
                 options.GenExtensions = []; // No extension by default with --output
+            }
 
             GenerateProgramsAndOutput(options);
         }
@@ -191,6 +194,12 @@ internal class Program
         }
         else if (options.Stats)
         {
+            if (options.GenExtensions == null)
+            {
+                Console.Error.WriteLine("Warning: no extensions specified. Consider using `--supported-extensions` followed by `--stats --gen-extensions <value>`.");
+                options.GenExtensions = []; // No extension by default with --stats
+            }
+
             GenerateProgramsAndGetStats(options);
         }
         else
