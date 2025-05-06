@@ -30,6 +30,8 @@ public enum Extension
     X86Avx10v1,
     X86Avx10v1V512,
     X86Avx10v1X64,
+    X86Avx10v2,
+    X86Avx10v2V512,
     X86Avx2,
     X86Avx512BW,
     X86Avx512BWVL,
@@ -48,9 +50,14 @@ public enum Extension
     X86Bmi2,
     X86Bmi2X64,
     X86Fma,
+    X86Gfni,
+    X86GfniV256,
+    X86GfniV512,
     X86Lzcnt,
     X86LzcntX64,
     X86Pclmulqdq,
+    X86PclmulqdqV256,
+    X86PclmulqdqV512,
     X86Popcnt,
     X86PopcntX64,
     X86Sse,
@@ -96,6 +103,8 @@ public static class ExtensionHelpers
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v1")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v1);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v1+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v1V512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v1+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v1X64);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v2);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v2+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v2V512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx2);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512BW")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512BW);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512BW+VL")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512BWVL);
@@ -114,9 +123,14 @@ public static class ExtensionHelpers
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Bmi2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Bmi2);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Bmi2+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Bmi2X64);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Fma")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Fma);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Gfni")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Gfni);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Gfni+V256")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86GfniV256);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Gfni+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86GfniV512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Lzcnt")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Lzcnt);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Lzcnt+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86LzcntX64);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Pclmulqdq")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Pclmulqdq);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Pclmulqdq+V256")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86PclmulqdqV256);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Pclmulqdq+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86PclmulqdqV512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Popcnt")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Popcnt);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Popcnt+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86PopcntX64);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Sse")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Sse);
@@ -152,6 +166,8 @@ public static class ExtensionHelpers
             Extension.X86Avx => Extension.X86Sse42,
             Extension.X86Avx10v1 => Extension.X86Avx2,
             Extension.X86Avx10v1V512 => Extension.X86Avx512BW,
+            Extension.X86Avx10v2 => Extension.X86Avx10v1,
+            Extension.X86Avx10v2V512 => Extension.X86Avx10v1V512,
             Extension.X86Avx2 => Extension.X86Avx,
             Extension.X86Avx512BW => Extension.X86Avx512F,
             Extension.X86Avx512BWVL => Extension.X86Avx512FVL,
@@ -166,6 +182,7 @@ public static class ExtensionHelpers
             Extension.X86Bmi1 => Extension.X86X86Base,
             Extension.X86Bmi2 => Extension.X86X86Base,
             Extension.X86Fma => Extension.X86Avx,
+            Extension.X86Gfni => Extension.X86Sse41,
             Extension.X86Lzcnt => Extension.X86X86Base,
             Extension.X86Pclmulqdq => Extension.X86Sse2,
             Extension.X86Popcnt => Extension.X86Sse42,

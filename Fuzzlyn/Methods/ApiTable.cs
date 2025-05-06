@@ -51,6 +51,8 @@ public static class ApiTable
             Extension.X86Avx10v1 => GetX86Avx10v1(),
             Extension.X86Avx10v1V512 => GetX86Avx10v1V512(),
             Extension.X86Avx10v1X64 => GetX86Avx10v1X64(),
+            Extension.X86Avx10v2 => GetX86Avx10v2(),
+            Extension.X86Avx10v2V512 => GetX86Avx10v2V512(),
             Extension.X86Avx2 => GetX86Avx2(),
             Extension.X86Avx512BW => GetX86Avx512BW(),
             Extension.X86Avx512BWVL => GetX86Avx512BWVL(),
@@ -69,9 +71,14 @@ public static class ApiTable
             Extension.X86Bmi2 => GetX86Bmi2(),
             Extension.X86Bmi2X64 => GetX86Bmi2X64(),
             Extension.X86Fma => GetX86Fma(),
+            Extension.X86Gfni => GetX86Gfni(),
+            Extension.X86GfniV256 => GetX86GfniV256(),
+            Extension.X86GfniV512 => GetX86GfniV512(),
             Extension.X86Lzcnt => GetX86Lzcnt(),
             Extension.X86LzcntX64 => GetX86LzcntX64(),
             Extension.X86Pclmulqdq => GetX86Pclmulqdq(),
+            Extension.X86PclmulqdqV256 => GetX86PclmulqdqV256(),
+            Extension.X86PclmulqdqV512 => GetX86PclmulqdqV512(),
             Extension.X86Popcnt => GetX86Popcnt(),
             Extension.X86PopcntX64 => GetX86PopcntX64(),
             Extension.X86Sse => GetX86Sse(),
@@ -2802,6 +2809,14 @@ public static class ApiTable
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetActiveElementCount", s_t9, [s_t60, s_t60], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetActiveElementCount", s_t9, [s_t58, s_t58], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetActiveElementCount", s_t9, [s_t59, s_t59], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrByte", s_t51, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrInt16", s_t57, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrInt32", s_t54, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrInt64", s_t55, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrSByte", s_t56, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrUInt16", s_t60, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrUInt32", s_t58, [], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "GetFfrUInt64", s_t59, [], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "InsertIntoShiftedVector", s_t51, [s_t51, s_t1], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "InsertIntoShiftedVector", s_t52, [s_t52, s_t2], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "InsertIntoShiftedVector", s_t57, [s_t57, s_t7], null),
@@ -3085,6 +3100,14 @@ public static class ApiTable
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "SaturatingIncrementByActiveElementCount", s_t9, [s_t9, s_t59], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "Scale", s_t52, [s_t52, s_t55], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "Scale", s_t53, [s_t53, s_t54], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t51], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t57], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t54], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t55], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t56], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t60], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t58], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve", "SetFfr", s_t61, [s_t59], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ShiftLeftLogical", s_t51, [s_t51, s_t51], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ShiftLeftLogical", s_t51, [s_t51, s_t59], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ShiftLeftLogical", s_t57, [s_t57, s_t60], null),
@@ -3941,6 +3964,37 @@ public static class ApiTable
         new Api("System.Runtime.Intrinsics.X86", "Avx10v1.X64", "ConvertToUInt64", s_t9, [s_t13], null),
         new Api("System.Runtime.Intrinsics.X86", "Avx10v1.X64", "ConvertToUInt64WithTruncation", s_t9, [s_t12], null),
         new Api("System.Runtime.Intrinsics.X86", "Avx10v1.X64", "ConvertToUInt64WithTruncation", s_t9, [s_t13], null),
+    ];
+
+    private static Api[] GetX86Avx10v2() => [
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToByteWithSaturationAndZeroExtendToInt32", s_t14, [s_t13], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToByteWithSaturationAndZeroExtendToInt32", s_t24, [s_t23], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToByteWithTruncatedSaturationAndZeroExtendToInt32", s_t14, [s_t13], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToByteWithTruncatedSaturationAndZeroExtendToInt32", s_t24, [s_t23], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToSByteWithSaturationAndZeroExtendToInt32", s_t14, [s_t13], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToSByteWithSaturationAndZeroExtendToInt32", s_t24, [s_t23], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToSByteWithTruncatedSaturationAndZeroExtendToInt32", s_t14, [s_t13], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "ConvertToSByteWithTruncatedSaturationAndZeroExtendToInt32", s_t24, [s_t23], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMax", s_t12, [s_t12, s_t12, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMax", s_t13, [s_t13, s_t13, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMax", s_t22, [s_t22, s_t22, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMax", s_t23, [s_t23, s_t23, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMaxScalar", s_t12, [s_t12, s_t12, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MinMaxScalar", s_t13, [s_t13, s_t13, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MoveScalar", s_t17, [s_t17], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MoveScalar", s_t14, [s_t14], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MoveScalar", s_t20, [s_t20], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2", "MoveScalar", s_t18, [s_t18], null),
+    ];
+
+    private static Api[] GetX86Avx10v2V512() => [
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "ConvertToByteWithSaturationAndZeroExtendToInt32", s_t34, [s_t33], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "ConvertToByteWithTruncatedSaturationAndZeroExtendToInt32", s_t34, [s_t33], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "ConvertToSByteWithSaturationAndZeroExtendToInt32", s_t34, [s_t33], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "ConvertToSByteWithTruncatedSaturationAndZeroExtendToInt32", s_t34, [s_t33], null),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "MinMax", s_t32, [s_t32, s_t32, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "MinMax", s_t33, [s_t33, s_t33, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Avx10v2.V512", "MultipleSumAbsoluteDifferences", s_t40, [s_t31, s_t31, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
     ];
 
     private static Api[] GetX86Avx2() => [
@@ -5295,6 +5349,24 @@ public static class ApiTable
         new Api("System.Runtime.Intrinsics.X86", "Fma", "MultiplySubtractScalar", s_t13, [s_t13, s_t13, s_t13], null),
     ];
 
+    private static Api[] GetX86Gfni() => [
+        new Api("System.Runtime.Intrinsics.X86", "Gfni", "GaloisFieldAffineTransform", s_t11, [s_t11, s_t11, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni", "GaloisFieldAffineTransformInverse", s_t11, [s_t11, s_t11, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni", "GaloisFieldMultiply", s_t11, [s_t11, s_t11], null),
+    ];
+
+    private static Api[] GetX86GfniV256() => [
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V256", "GaloisFieldAffineTransform", s_t21, [s_t21, s_t21, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V256", "GaloisFieldAffineTransformInverse", s_t21, [s_t21, s_t21, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V256", "GaloisFieldMultiply", s_t21, [s_t21, s_t21], null),
+    ];
+
+    private static Api[] GetX86GfniV512() => [
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V512", "GaloisFieldAffineTransform", s_t31, [s_t31, s_t31, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V512", "GaloisFieldAffineTransformInverse", s_t31, [s_t31, s_t31, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Gfni.V512", "GaloisFieldMultiply", s_t31, [s_t31, s_t31], null),
+    ];
+
     private static Api[] GetX86Lzcnt() => [
         new Api("System.Runtime.Intrinsics.X86", "Lzcnt", "LeadingZeroCount", s_t8, [s_t8], null),
     ];
@@ -5306,6 +5378,16 @@ public static class ApiTable
     private static Api[] GetX86Pclmulqdq() => [
         new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq", "CarrylessMultiply", s_t15, [s_t15, s_t15, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
         new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq", "CarrylessMultiply", s_t19, [s_t19, s_t19, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+    ];
+
+    private static Api[] GetX86PclmulqdqV256() => [
+        new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq.V256", "CarrylessMultiply", s_t25, [s_t25, s_t25, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq.V256", "CarrylessMultiply", s_t29, [s_t29, s_t29, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+    ];
+
+    private static Api[] GetX86PclmulqdqV512() => [
+        new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq.V512", "CarrylessMultiply", s_t35, [s_t35, s_t35, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
+        new Api("System.Runtime.Intrinsics.X86", "Pclmulqdq.V512", "CarrylessMultiply", s_t39, [s_t39, s_t39, s_t1], [null, null, new ParameterMetadata(true, null, null)]),
     ];
 
     private static Api[] GetX86Popcnt() => [
