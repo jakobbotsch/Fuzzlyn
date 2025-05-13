@@ -76,11 +76,21 @@ internal class Program
                     continue;
                 }
 
-                if (className == "Sve" && (mi.Name.StartsWith("Scatter") || mi.Name.StartsWith("GatherVector")))
+                if (className == "Sve")
                 {
-                    // These API take memory addresses as Vector<ulong>, which
-                    // would AV.
-                    continue;
+                    if (mi.Name.StartsWith("Scatter") || mi.Name.StartsWith("GatherVector"))
+                    {
+                        // These APIs take memory addresses as Vector<ulong>, which
+                        // would AV.
+                        continue;
+                    }
+
+                    if (mi.Name.StartsWith("GetFfr") || mi.Name.StartsWith("SetFfr"))
+                    {
+                        // These APIs deal with processor state that opts may
+                        // affect by design.
+                        continue;
+                    }
                 }
 
                 string? returnFuzzType = ToFuzzType(mi.ReturnType);
