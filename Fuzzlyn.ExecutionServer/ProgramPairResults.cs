@@ -1,14 +1,14 @@
 ﻿namespace Fuzzlyn.ExecutionServer;
 
 public class ProgramPairResults(
-    ProgramResult debugResult, ProgramResult releaseResult,
-    long debugNumChecksumCalls, long releaseNumChecksumCalls,
-    ChecksumSite debugFirstUnmatch, ChecksumSite releaseFirstUnmatch)
+    ProgramResult baseResult, ProgramResult diffResult,
+    long baseNumChecksumCalls, long diffNumChecksumCalls,
+    ChecksumSite baseFirstUnmatch, ChecksumSite diffFirstUnmatch)
 {
-    public ProgramResult DebugResult { get; } = debugResult;
-    public ProgramResult ReleaseResult { get; } = releaseResult;
-    public long DebugNumChecksumCalls { get; } = debugNumChecksumCalls;
-    public long ReleaseNumChecksumCalls { get; } = releaseNumChecksumCalls;
-    public ChecksumSite DebugFirstUnmatch { get; } = debugFirstUnmatch;
-    public ChecksumSite ReleaseFirstUnmatch { get; } = releaseFirstUnmatch;
+    public ProgramResult BaseResult { get; } = baseResult;
+    public ProgramResult DiffResult { get; } = diffResult;
+    public long BaseNumChecksumCalls { get; } = baseNumChecksumCalls;
+    public long DiffNumChecksumCalls { get; } = diffNumChecksumCalls;
+    public ChecksumSite BaseFirstUnmatch { get; } = baseFirstUnmatch;
+    public ChecksumSite DiffFirstUnmatch { get; } = diffFirstUnmatch;
 }

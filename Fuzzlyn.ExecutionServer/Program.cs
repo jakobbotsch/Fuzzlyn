@@ -8,6 +8,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Loader;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Fuzzlyn.ExecutionServer;
 
@@ -58,10 +59,10 @@ public static class Program
                             RunPairResult = results
                         };
                         break;
-                    case RequestKind.GetSupportedExtensions:
+                    case RequestKind.GetSupportedIntrinsicExtensions:
                         resp = new Response
                         {
-                            SupportedExtensions = ExtensionHelpers.GetSupportedExtensions(),
+                            Extensions = ExtensionHelpers.GetSupportedIntrinsicExtensions(),
                         };
                         break;
                     case RequestKind.Shutdown:
@@ -93,30 +94,30 @@ public static class Program
 
     private static ProgramPairResults RunPairAsync(AssemblyLoadContext alc, ProgramPair pair)
     {
-        ProgramResult debugResult = RunAndGetResultAsync(pair.Debug);
-        ProgramResult releaseResult = RunAndGetResultAsync(pair.Release);
+        ProgramResult baseResult = RunAndGetResultAsync(pair.Base);
+        ProgramResult diffResult = RunAndGetResultAsync(pair.Diff);
         ChecksumSite unmatch1 = null;
         ChecksumSite unmatch2 = null;
 
-        if (debugResult.Checksum != releaseResult.Checksum && pair.TrackOutput)
+        if (baseResult.Checksum != diffResult.Checksum && pair.TrackOutput)
         {
             int index;
-            int count = Math.Min(debugResult.ChecksumSites.Count, releaseResult.ChecksumSites.Count);
+            int count = Math.Min(baseResult.ChecksumSites.Count, diffResult.ChecksumSites.Count);
             for (index = 0; index < count; index++)
             {
-                ChecksumSite val1 = debugResult.ChecksumSites[index];
-                ChecksumSite val2 = releaseResult.ChecksumSites[index];
+                ChecksumSite val1 = baseResult.ChecksumSites[index];
+                ChecksumSite val2 = diffResult.ChecksumSites[index];
                 if (val1 != val2)
                     break;
             }
 
-            if (index < debugResult.ChecksumSites.Count)
-                unmatch1 = debugResult.ChecksumSites[index];
-            if (index < releaseResult.ChecksumSites.Count)
-                unmatch2 = releaseResult.ChecksumSites[index];
+            if (index < baseResult.ChecksumSites.Count)
+                unmatch1 = baseResult.ChecksumSites[index];
+            if (index < diffResult.ChecksumSites.Count)
+                unmatch2 = diffResult.ChecksumSites[index];
         }
 
-        return new ProgramPairResults(debugResult, releaseResult, debugResult.NumChecksumCalls, releaseResult.NumChecksumCalls, unmatch1, unmatch2);
+        return new ProgramPairResults(baseResult, diffResult, baseResult.NumChecksumCalls, diffResult.NumChecksumCalls, unmatch1, unmatch2);
 
         ProgramResult RunAndGetResultAsync(byte[] bytes)
         {
@@ -148,6 +149,7 @@ public static class Program
             }
 
             AppDomain.CurrentDomain.FirstChanceException += FirstChanceExceptionHandler;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             try
             {
                 entryPoint(runtime);
@@ -201,6 +203,7 @@ public static class Program
             }
             finally
             {
+                TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
                 AppDomain.CurrentDomain.FirstChanceException -= FirstChanceExceptionHandler;
             }
 
@@ -212,6 +215,11 @@ public static class Program
                 NumChecksumCalls = runtime.NumChecksumCalls,
             };
         }
+    }
+
+    private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+    {
+        e.SetObserved();
     }
 
     [Flags]

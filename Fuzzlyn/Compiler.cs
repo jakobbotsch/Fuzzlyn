@@ -23,26 +23,12 @@ internal class Compiler
         _references = references;
     }
 
-    private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
-
-    public static readonly CSharpCompilationOptions DebugOptions =
-        new(OutputKind.DynamicallyLinkedLibrary,
-            concurrentBuild: false,
-            optimizationLevel: OptimizationLevel.Debug,
-            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
-
-    public static readonly CSharpCompilationOptions ReleaseOptions =
-        new(OutputKind.DynamicallyLinkedLibrary,
-            concurrentBuild: false,
-            optimizationLevel: OptimizationLevel.Release,
-            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]);
-
     private static int _compiles;
-    public CompileResult Compile(CompilationUnitSyntax program, CSharpCompilationOptions opts)
+    public CompileResult Compile(CompilationUnitSyntax program, CompilerOptions options)
     {
         int compileID = Interlocked.Increment(ref _compiles);
-        SyntaxTree[] trees = [SyntaxTree(program, s_parseOptions)];
-        CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, _references, opts);
+        SyntaxTree[] trees = [SyntaxTree(program, options.CSParseOptions)];
+        CSharpCompilation comp = CSharpCompilation.Create("FuzzlynProgram" + compileID, trees, _references, options.CSCompilerOptions);
 
         using (var ms = new MemoryStream())
         {
@@ -86,6 +72,37 @@ internal class Compiler
 
         references = [.. references, MetadataReference.CreateFromFile(typeof(IRuntime).Assembly.Location)];
         return new Compiler(references);
+    }
+}
+
+internal class CompilerOptions(string name, CSharpCompilationOptions csCompilerOptions, CSharpParseOptions csParseOptions)
+{
+    public string Name { get; } = name;
+    public CSharpCompilationOptions CSCompilerOptions { get; } = csCompilerOptions;
+    public CSharpParseOptions CSParseOptions { get; } = csParseOptions;
+
+    private static readonly CSharpCompilationOptions s_debugCompilationOptions =
+        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+            concurrentBuild: false,
+            optimizationLevel: OptimizationLevel.Debug,
+            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
+
+    private static readonly CSharpCompilationOptions s_releaseCompilationOptions =
+        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+            concurrentBuild: false,
+            optimizationLevel: OptimizationLevel.Release,
+            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
+
+    private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
+    private static readonly CSharpParseOptions s_runtimeAsyncParseOptions = s_parseOptions.WithFeatures([KeyValuePair.Create("runtime-async", "on")]);
+
+    public static readonly CompilerOptions DebugOptions = new CompilerOptions("Debug", s_debugCompilationOptions, s_parseOptions);
+    public static readonly CompilerOptions ReleaseOptions = new CompilerOptions("Release", s_releaseCompilationOptions, s_parseOptions);
+    public static readonly CompilerOptions RuntimeAsyncReleaseOptions = new CompilerOptions("Release with Runtime Async", s_releaseCompilationOptions, s_runtimeAsyncParseOptions);
+
+    public CompilerOptions AsConsoleApp()
+    {
+        return new CompilerOptions(Name, CSCompilerOptions.WithOutputKind(OutputKind.ConsoleApplication), CSParseOptions);
     }
 }
 

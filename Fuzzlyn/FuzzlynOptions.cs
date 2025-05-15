@@ -13,7 +13,7 @@ internal class FuzzlynOptions
     public int NumPrograms { get; set; } = 1;
     public TimeSpan? TimeToRun { get; set; }
     public HashSet<Extension> GenExtensions { get; set; }
-    public bool SupportedExtensions { get; set; }
+    public bool SupportedIntrinsicExtensions { get; set; }
     public string OutputEventsTo { get; set; }
     public string Host { get; set; }
     public int Parallelism { get; set; } = 1;
@@ -244,6 +244,8 @@ internal class FuzzlynOptions
 
     /// <summary>Probability that we select a local over a static when generating a member access expression.</summary>
     public double MemberAccessSelectLocalProb { get; set; } = 0.8;
+
+    public double MakeMethodAsyncProb { get; set; } = 0.5;
 
     /// <summary>Table to use when selecting an existing lvalue.</summary>
     public ProbabilityDistribution ExistingLValueDist { get; set; }

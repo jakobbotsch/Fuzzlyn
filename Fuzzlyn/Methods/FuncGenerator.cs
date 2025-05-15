@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Statics;
+﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -49,6 +50,7 @@ internal class FuncGenerator
     // If non-null, this is an interface method and has bodies for all implementing types.
     public InterfaceType InterfaceType { get; private set; }
     public FuzzType ReturnType { get; private set; }
+    public bool IsAsync { get; private set; }
     public FuncParameter[] Parameters { get; private set; }
     public string Name { get; }
     // Sum of number of all statements for all bodies of this function
@@ -57,27 +59,41 @@ internal class FuncGenerator
     public Dictionary<int, long> CallCounts { get; } = new Dictionary<int, long>();
 
     public override string ToString()
-        => OutputSignature(false, false).NormalizeWhitespace().ToFullString();
+        => OutputSignature(false, false, false).NormalizeWhitespace().ToFullString();
 
     public void Output(List<MethodDeclarationSyntax> staticMethods, Dictionary<FuzzType, List<MethodDeclarationSyntax>> typeMethods)
     {
         if (InterfaceType != null)
-            typeMethods[InterfaceType].Add(OutputSignature(visibilityMod: false, staticMod: false).WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+            typeMethods[InterfaceType].Add(OutputSignature(visibilityMod: false, staticMod: false, asyncMod: false).WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
 
         foreach ((AggregateType type, FuncBodyGenerator body) in _bodies)
         {
             List<MethodDeclarationSyntax> list = type == null ? staticMethods : typeMethods[type];
-            list.Add(OutputSignature(visibilityMod: true, staticMod: type == null).WithBody(body.Block));
+            list.Add(OutputSignature(visibilityMod: true, staticMod: type == null, asyncMod: IsAsync).WithBody(body.Block));
         }
     }
 
-    private MethodDeclarationSyntax OutputSignature(bool visibilityMod, bool staticMod)
+    private MethodDeclarationSyntax OutputSignature(bool visibilityMod, bool staticMod, bool asyncMod)
     {
         TypeSyntax retType;
         if (ReturnType == null)
-            retType = PredefinedType(Token(SyntaxKind.VoidKeyword));
+        {
+            retType = IsAsync ? IdentifierName("Task") : PredefinedType(Token(SyntaxKind.VoidKeyword));
+        }
         else
+        {
             retType = ReturnType.GenReferenceTo();
+
+            if (IsAsync)
+            {
+                retType =
+                    GenericName("Task")
+                    .WithTypeArgumentList(
+                        TypeArgumentList(
+                            SingletonSeparatedList(
+                                retType)));
+            }
+        }
 
         IEnumerable<ParameterSyntax> GenParameters()
         {
@@ -106,6 +122,8 @@ internal class FuncGenerator
             memberMods = memberMods.Add(Token(SyntaxKind.PublicKeyword));
         if (staticMod)
             memberMods = memberMods.Add(Token(SyntaxKind.StaticKeyword));
+        if (asyncMod)
+            memberMods = memberMods.Add(Token(SyntaxKind.AsyncKeyword));
 
         return
             MethodDeclaration(retType, Name)
@@ -117,6 +135,11 @@ internal class FuncGenerator
     {
         ReturnType = returnType;
 
+        if (!(returnType is RefType) && Options.GenExtensions.Contains(Extension.Async) && Random.FlipCoin(Options.MakeMethodAsyncProb))
+        {
+            IsAsync = true;
+        }
+
         List<ScopeValue> initialVars = new();
         if (randomizeParams)
         {
@@ -126,9 +149,27 @@ internal class FuncGenerator
                     break;
                 case FuncKind.InstanceMethod:
                     InstanceType = Types.PickAggregateType();
+
+                    if (InstanceType is { IsClass: false } && IsAsync && Options.GenExtensions.Contains(Extension.RuntimeAsync))
+                    {
+                        // Current Roslyn does not properly copy 'this' in
+                        // async struct methods, so avoid generating them
+                        IsAsync = false;
+                    }
                     break;
                 case FuncKind.InterfaceMethod:
                     InterfaceType = Types.PickInterfaceType();
+
+                    if (InterfaceType != null &&
+                        IsAsync &&
+                        Options.GenExtensions.Contains(Extension.RuntimeAsync) &&
+                        Types.GetImplementingTypes(InterfaceType).Any(agg => !agg.IsClass))
+                    {
+                        // Like above, we cannot add an async method to an
+                        // interface if that interface is implemented by a
+                        // struct
+                        IsAsync = false;
+                    }
                     break;
             }
 
@@ -136,7 +177,7 @@ internal class FuncGenerator
             Parameters = new FuncParameter[numArgs];
             for (int i = 0; i < Parameters.Length; i++)
             {
-                FuzzType type = Types.PickType(Options.ParameterIsByRefProb);
+                FuzzType type = Types.PickType(IsAsync ? 0 : Options.ParameterIsByRefProb);
                 string name = $"arg{i}";
                 Parameters[i] = new FuncParameter(type, name);
             }
@@ -177,7 +218,8 @@ internal class FuncGenerator
                 _genChecksumSiteId,
                 FuncIndex,
                 ReturnType,
-                type == null);
+                isAsync: IsAsync,
+                isInPrimaryClass: type == null);
 
             if (type != null)
             {

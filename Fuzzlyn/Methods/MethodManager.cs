@@ -11,7 +11,6 @@ namespace Fuzzlyn.Methods;
 internal class MethodManager(Randomizer random, TypeManager types, StaticsManager statics)
 {
     private readonly List<FuncGenerator> _funcs = new();
-    private readonly List<Api> _apis = new();
 
     public Randomizer Random { get; } = random;
     public TypeManager Types { get; } = types;
@@ -23,7 +22,7 @@ internal class MethodManager(Randomizer random, TypeManager types, StaticsManage
         Apis.Initialize(Types, Random.Options.GenExtensions);
 
         FuncGenerator gen = new(_funcs, Random, Types, Statics, Apis, genChecksumSiteId);
-        gen.Generate(null, false);
+        gen.Generate(returnType: null, randomizeParams: false);
     }
 
     internal (List<MethodDeclarationSyntax> StaticFuncs, Dictionary<FuzzType, List<MethodDeclarationSyntax>> TypeMethods) OutputMethods()

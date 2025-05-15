@@ -28,6 +28,9 @@ public static class ApiTable
     public static Api[] GetApis(Extension extension) =>
         extension switch
         {
+            Extension.Default => GetDefault(),
+            Extension.Async => GetAsync(),
+            Extension.RuntimeAsync => GetRuntimeAsync(),
             Extension.VectorT => GetVectorT(),
             Extension.Vector64 => GetVector64(),
             Extension.Vector128 => GetVector128(),
@@ -46,6 +49,7 @@ public static class ApiTable
             Extension.ArmSha1 => GetArmSha1(),
             Extension.ArmSha256 => GetArmSha256(),
             Extension.ArmSve => GetArmSve(),
+            Extension.ArmSve2 => GetArmSve2(),
             Extension.X86Aes => GetX86Aes(),
             Extension.X86Avx => GetX86Avx(),
             Extension.X86Avx10v1 => GetX86Avx10v1(),
@@ -158,6 +162,12 @@ public static class ApiTable
     private static readonly FuzzType s_t59 = new VectorType(VectorTypeWidth.WidthUnknown, new PrimitiveType(SyntaxKind.ULongKeyword));
     private static readonly FuzzType s_t60 = new VectorType(VectorTypeWidth.WidthUnknown, new PrimitiveType(SyntaxKind.UShortKeyword));
     private static readonly FuzzType s_t61 = null;
+
+    private static Api[] GetDefault() => [];
+
+    private static Api[] GetAsync() => [];
+
+    private static Api[] GetRuntimeAsync() => [];
 
     private static Api[] GetVectorT() => [];
 
@@ -3294,6 +3304,17 @@ public static class ApiTable
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ZipLow", s_t60, [s_t60, s_t60], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ZipLow", s_t58, [s_t58, s_t58], null),
         new Api("System.Runtime.Intrinsics.Arm", "Sve", "ZipLow", s_t59, [s_t59, s_t59], null),
+    ];
+
+    private static Api[] GetArmSve2() => [
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t51, [s_t51, s_t51, s_t51], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t57, [s_t57, s_t57, s_t57], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t54, [s_t54, s_t54, s_t54], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t55, [s_t55, s_t55, s_t55], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t56, [s_t56, s_t56, s_t56], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t60, [s_t60, s_t60, s_t60], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t58, [s_t58, s_t58, s_t58], null),
+        new Api("System.Runtime.Intrinsics.Arm", "Sve2", "BitwiseClearXor", s_t59, [s_t59, s_t59, s_t59], null),
     ];
 
     private static Api[] GetX86Aes() => [

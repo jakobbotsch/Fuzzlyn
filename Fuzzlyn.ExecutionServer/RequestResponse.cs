@@ -3,7 +3,7 @@
 public enum RequestKind
 {
     RunPair,
-    GetSupportedExtensions,
+    GetSupportedIntrinsicExtensions,
     Shutdown,
 }
 
@@ -16,6 +16,6 @@ public class Request
 public class Response
 {
     public ProgramPairResults RunPairResult { get; set; }
-    public Extension[] SupportedExtensions { get; set; }
+    public Extension[] Extensions { get; set; }
 }
 

@@ -7,6 +7,9 @@ namespace Fuzzlyn.ExecutionServer;
 
 public enum Extension
 {
+    Default,
+    Async,
+    RuntimeAsync,
     VectorT,
     Vector64,
     Vector128,
@@ -25,6 +28,7 @@ public enum Extension
     ArmSha1,
     ArmSha256,
     ArmSve,
+    ArmSve2,
     X86Aes,
     X86Avx,
     X86Avx10v1,
@@ -76,7 +80,7 @@ public enum Extension
 
 public static class ExtensionHelpers
 {
-    public static Extension[] GetSupportedExtensions()
+    public static Extension[] GetSupportedIntrinsicExtensions()
     {
         List<Extension> extensions = [];
         Assembly spc = typeof(System.Runtime.Intrinsics.X86.Sse).Assembly;
@@ -98,6 +102,7 @@ public static class ExtensionHelpers
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.Arm.Sha1")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.ArmSha1);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.Arm.Sha256")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.ArmSha256);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.Arm.Sve")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.ArmSve);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.Arm.Sve2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.ArmSve2);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Aes")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Aes);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v1")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v1);
@@ -148,7 +153,7 @@ public static class ExtensionHelpers
         return extensions.ToArray();
     }
 
-    public static Extension? GetBaseExtension(Extension ext)
+    public static Extension? GetBaseIntrinsicExtension(Extension ext)
         => ext switch
         {
             Extension.ArmAdvSimd => Extension.ArmArmBase,
@@ -162,6 +167,7 @@ public static class ExtensionHelpers
             Extension.ArmSha1 => Extension.ArmArmBase,
             Extension.ArmSha256 => Extension.ArmArmBase,
             Extension.ArmSve => Extension.ArmAdvSimd,
+            Extension.ArmSve2 => Extension.ArmSve,
             Extension.X86Aes => Extension.X86Sse2,
             Extension.X86Avx => Extension.X86Sse42,
             Extension.X86Avx10v1 => Extension.X86Avx2,

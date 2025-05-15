@@ -83,6 +83,18 @@ internal class CodeGenerator
             yield return numerics;
         }
 
+        if (Options.GenExtensions.Contains(Extension.Async))
+        {
+            UsingDirectiveSyntax threadingTasks =
+                UsingDirective(
+                        QualifiedName(
+                            QualifiedName(
+                                IdentifierName("System"),
+                                IdentifierName("Threading")),
+                            IdentifierName("Tasks")));
+            yield return threadingTasks;
+        }
+
         if (Options.GenExtensions.Count > 0)
         {
             UsingDirectiveSyntax runtimeIntrinsics =
@@ -152,10 +164,23 @@ internal class CodeGenerator
                             IdentifierName("rt")));
             }
 
-            yield return
-                ExpressionStatement(
+            ExpressionSyntax invokeFirstMethod = InvocationExpression(IdentifierName(methods[0].Identifier));
+
+            if (methods[0].Modifiers.Any(SyntaxKind.AsyncKeyword))
+            {
+                invokeFirstMethod =
                     InvocationExpression(
-                        IdentifierName(methods[0].Identifier)));
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            InvocationExpression(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    invokeFirstMethod,
+                                    IdentifierName("GetAwaiter"))),
+                            IdentifierName("GetResult")));
+            }
+
+            yield return ExpressionStatement(invokeFirstMethod);
 
             if (Options.EnableChecksumming)
             {

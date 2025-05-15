@@ -19,6 +19,9 @@ internal class Program
             .ToArray();
 
         List<(string ExtensionName, string? ParentExtensionName, string? CheckSupported, List<Api> APIs)> extensions = new();
+        extensions.Add(("Default", null, null, []));
+        extensions.Add(("Async", null, null, []));
+        extensions.Add(("RuntimeAsync", null, null, []));
         extensions.Add(("VectorT", null, "Vector.IsHardwareAccelerated", []));
         extensions.Add(("Vector64", null, "Vector64.IsHardwareAccelerated", []));
         extensions.Add(("Vector128", null, "Vector128.IsHardwareAccelerated", []));
@@ -27,12 +30,6 @@ internal class Program
 
         string? ToExtensionName(string fullName)
         {
-            // IsSupported is an infinite loop for this ISA, TODO: Fix
-            if (fullName == "System.Runtime.Intrinsics.X86.Avx10v1+V512+X64")
-            {
-                return null;
-            }
-
             foreach (string ns in namespaces)
             {
                 if (fullName.StartsWith(ns))
@@ -267,7 +264,7 @@ internal class Program
 
             sw.WriteLine("public static class ExtensionHelpers");
             sw.WriteLine("{");
-            sw.WriteLine("    public static Extension[] GetSupportedExtensions()");
+            sw.WriteLine("    public static Extension[] GetSupportedIntrinsicExtensions()");
             sw.WriteLine("    {");
             sw.WriteLine("        List<Extension> extensions = [];");
             sw.WriteLine("        Assembly spc = typeof(System.Runtime.Intrinsics.X86.Sse).Assembly;");
@@ -282,7 +279,7 @@ internal class Program
             sw.WriteLine("        return extensions.ToArray();");
             sw.WriteLine("    }");
             sw.WriteLine();
-            sw.WriteLine("    public static Extension? GetBaseExtension(Extension ext)");
+            sw.WriteLine("    public static Extension? GetBaseIntrinsicExtension(Extension ext)");
             sw.WriteLine("        => ext switch");
             sw.WriteLine("        {");
 

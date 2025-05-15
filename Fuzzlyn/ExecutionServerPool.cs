@@ -92,13 +92,13 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
         }
     }
 
-    public Extension[] GetSupportedExtensions()
+    public Extension[] GetSupportedIntrinsicExtensions()
     {
         RunningExecutionServer server = null;
         try
         {
             server = Get(false);
-            return server.GetSupportedExtensions();
+            return server.GetSupportedIntrinsicExtensions();
         }
         finally
         {

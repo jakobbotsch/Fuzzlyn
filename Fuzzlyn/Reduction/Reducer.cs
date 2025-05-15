@@ -10,18 +10,23 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction;
 
-internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
+internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOptions baseCompilerOpts, CompilerOptions diffCompilerOpts, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
 {
+    private CompilerOptions _baseCompilerOpts = baseCompilerOpts;
+    private CompilerOptions _diffCompilerOpts = diffCompilerOpts;
     private readonly ExecutionServerPool _pool = pool;
     private readonly Compiler _compiler = compiler;
     private readonly Rng _rng = Rng.FromSplitMix64Seed(reducerSeed);
     private int _varCounter;
     private readonly string _reduceDebugGitDir = reduceDebugGitDir;
     private readonly Stopwatch _timer = new();
+    private int _serverTimeouts;
+    private int _serverCrashes;
     private TimeSpan _nextUpdate;
 
     public CompilationUnitSyntax Original { get; } = original;
@@ -30,31 +35,31 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
     public CompilationUnitSyntax Reduce()
     {
         _timer.Restart();
-        CompileResult debug = _compiler.Compile(Original, Compiler.DebugOptions);
-        CompileResult release = _compiler.Compile(Original, Compiler.ReleaseOptions);
+
+        CompileResult @base = _compiler.Compile(Original, _baseCompilerOpts);
+        CompileResult diff = _compiler.Compile(Original, _diffCompilerOpts);
 
         Func<CompilationUnitSyntax, bool> isInteresting;
-        if (debug.RoslynException != null || release.RoslynException != null)
+        if (@base.RoslynException != null || diff.RoslynException != null)
         {
-            CSharpCompilationOptions opts = debug.RoslynException != null ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+            CompilerOptions opts = @base.RoslynException != null ? _baseCompilerOpts : _diffCompilerOpts;
             isInteresting = program => _compiler.Compile(program, opts).RoslynException != null;
         }
-        else if (debug.CompileErrors.Length > 0 || release.CompileErrors.Length > 0)
+        else if (@base.CompileErrors.Length > 0 || diff.CompileErrors.Length > 0)
         {
-            CSharpCompilationOptions opts = debug.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+            CompilerOptions opts = @base.CompileErrors.Length > 0 ? _baseCompilerOpts : _diffCompilerOpts;
             isInteresting = program =>
             {
                 CompileResult recompiled = _compiler.Compile(program, opts);
                 if (recompiled.CompileErrors.Length <= 0)
                     return false;
 
-                return recompiled.CompileErrors[0].Id == (debug.CompileErrors.Length > 0 ? debug.CompileErrors[0] : release.CompileErrors[0]).Id;
+                return recompiled.CompileErrors[0].Id == (@base.CompileErrors.Length > 0 ? @base.CompileErrors[0] : diff.CompileErrors[0]).Id;
             };
         }
         else
         {
-
-            var origPair = new ProgramPair(false, debug.Assembly, release.Assembly);
+            var origPair = new ProgramPair(false, @base.Assembly, diff.Assembly);
             RunSeparatelyResults targetResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
 
             if (targetResults.Kind == RunSeparatelyResultsKind.Timeout)
@@ -67,10 +72,10 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
             if (targetResults.Kind == RunSeparatelyResultsKind.Success)
             {
                 ProgramPairResults origResults = targetResults.Results;
-                if (origResults.DebugResult.Kind != ProgramResultKind.HitsJitAssert &&
-                    origResults.ReleaseResult.Kind != ProgramResultKind.HitsJitAssert &&
-                    origResults.DebugResult.Checksum == origResults.ReleaseResult.Checksum &&
-                    origResults.DebugResult.ExceptionType == origResults.ReleaseResult.ExceptionType)
+                if (origResults.BaseResult.Kind != ProgramResultKind.HitsJitAssert &&
+                    origResults.DiffResult.Kind != ProgramResultKind.HitsJitAssert &&
+                    origResults.BaseResult.Checksum == origResults.DiffResult.Checksum &&
+                    origResults.BaseResult.ExceptionType == origResults.DiffResult.ExceptionType)
                 {
                     throw new InvalidOperationException("Program has no errors");
                 }
@@ -79,8 +84,17 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
             isInteresting = prog =>
             {
                 RunSeparatelyResults results = CompileAndRun(prog, trackOutput: false, keepPoolNonEmptyEagerly: targetResults.Kind == RunSeparatelyResultsKind.Crash);
-                if (results == null || results.Kind == RunSeparatelyResultsKind.Timeout)
+                if (results == null)
                     return false;
+
+                if (results.Kind == RunSeparatelyResultsKind.Timeout)
+                {
+                    _serverTimeouts++;
+                    return false;
+                }
+
+                if (results.Kind == RunSeparatelyResultsKind.Crash)
+                    _serverCrashes++;
 
                 if (targetResults.Kind == RunSeparatelyResultsKind.Crash)
                 {
@@ -96,35 +110,37 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
                 }
 
                 // If we are looking for a JIT assert, then ensure we got a JIT assert.
-                if (targetResults.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
+                if (targetResults.Results.DiffResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    return results.Results.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert;
+                    return results.Results.DiffResult.Kind == ProgramResultKind.HitsJitAssert &&
+                           JitAssertsEqual(results.Results.DiffResult.JitAssertError, targetResults.Results.DiffResult.JitAssertError);
                 }
 
-                if (targetResults.Results.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+                if (targetResults.Results.BaseResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    return results.Results.DebugResult.Kind == ProgramResultKind.HitsJitAssert;
+                    return results.Results.BaseResult.Kind == ProgramResultKind.HitsJitAssert &&
+                           JitAssertsEqual(results.Results.BaseResult.JitAssertError, targetResults.Results.BaseResult.JitAssertError);
                 }
 
-                if (targetResults.Results.DebugResult.ExceptionType != targetResults.Results.ReleaseResult.ExceptionType)
+                if (targetResults.Results.BaseResult.ExceptionType != targetResults.Results.DiffResult.ExceptionType)
                 {
                     // Original example throws different exceptions in debug and release.
                     // Make sure that 1) the new results throws/runs successfully in the same situations
                     // (e.g. we do not want to suddenly find an assert here) and 2) that the same or no
                     // exception is thrown.
                     bool hasSameResultKinds =
-                        results.Results.DebugResult.Kind == targetResults.Results.DebugResult.Kind &&
-                        results.Results.ReleaseResult.Kind == targetResults.Results.ReleaseResult.Kind;
+                        results.Results.BaseResult.Kind == targetResults.Results.BaseResult.Kind &&
+                        results.Results.DiffResult.Kind == targetResults.Results.DiffResult.Kind;
 
                     bool throwsSameExceptions =
-                        results.Results.DebugResult.ExceptionType == targetResults.Results.DebugResult.ExceptionType &&
-                        results.Results.ReleaseResult.ExceptionType == targetResults.Results.ReleaseResult.ExceptionType;
+                        results.Results.BaseResult.ExceptionType == targetResults.Results.BaseResult.ExceptionType &&
+                        results.Results.DiffResult.ExceptionType == targetResults.Results.DiffResult.ExceptionType;
 
                     return hasSameResultKinds && throwsSameExceptions;
                 }
 
                 // Original example throws same exception in debug and release, so it is the checksum that differs.
-                return results.Results.DebugResult.Checksum != results.Results.ReleaseResult.Checksum;
+                return results.Results.BaseResult.Checksum != results.Results.DiffResult.Checksum;
             };
         }
 
@@ -172,7 +188,15 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
             {
                 void Update(int index, bool force)
                 {
-                    WriteUpdateToConsole($"\rSimplifying {simplifyType}. Total elapsed: {_timer.Elapsed:hh\\:mm\\:ss}. Iter: {index}/{list.Count}", force);
+                    string crashesString = "";
+                    if (_serverCrashes > 0)
+                        crashesString = $" Server crashes: {_serverCrashes}.";
+
+                    string timeoutsString = "";
+                    if (_serverTimeouts > 0)
+                        timeoutsString = $" Server timeouts: {_serverTimeouts}.";
+
+                    WriteUpdateToConsole($"\rSimplifying {simplifyType}. Total elapsed: {_timer.Elapsed:hh\\:mm\\:ss}.{crashesString}{timeoutsString} Iter: {index}/{list.Count}", force);
                 }
 
                 for (int i = 0; i < list.Count; i++)
@@ -236,7 +260,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
             }
         }
 
-        List<SyntaxTrivia> outputComments = GetOutputComments(debug, release).Select(Comment).ToList();
+        List<SyntaxTrivia> outputComments = GetOutputComments(@base, diff).Select(Comment).ToList();
 
         MakeStandalone();
         double oldSizeKiB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
@@ -250,6 +274,13 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
         UpdateReduced("Add header comments", Reduced.WithLeadingTrivia(newTrivia));
 
         return Reduced;
+    }
+
+    private readonly Regex _numberRegex = new Regex(@"[0-9A-Fa-f]+", RegexOptions.Compiled);
+
+    private bool JitAssertsEqual(string left, string right)
+    {
+        return _numberRegex.Replace(left, "X") == _numberRegex.Replace(right, "X");
     }
 
     private bool _wroteUpdate;
@@ -277,13 +308,13 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
 
     private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, bool keepPoolNonEmptyEagerly)
     {
-        CompileResult progDebug = _compiler.Compile(prog, Compiler.DebugOptions);
-        CompileResult progRelease = _compiler.Compile(prog, Compiler.ReleaseOptions);
+        CompileResult progBase = _compiler.Compile(prog, _baseCompilerOpts);
+        CompileResult progDiff = _compiler.Compile(prog, _diffCompilerOpts);
 
-        if (progDebug.Assembly == null || progRelease.Assembly == null)
+        if (progBase.Assembly == null || progDiff.Assembly == null)
             return null;
 
-        ProgramPair pair = new(trackOutput, progDebug.Assembly, progRelease.Assembly);
+        ProgramPair pair = new(trackOutput, progBase.Assembly, progDiff.Assembly);
         RunSeparatelyResults results = _pool.RunPairOnPool(pair, TimeSpan.FromSeconds(20), keepPoolNonEmptyEagerly);
         return results;
     }
@@ -416,23 +447,23 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
         FinishConsoleUpdates();
     }
 
-    private IEnumerable<string> GetOutputComments(CompileResult ogDebugCompile, CompileResult ogRelCompile)
+    private IEnumerable<string> GetOutputComments(CompileResult ogBaseCompile, CompileResult ogDiffCompile)
     {
-        if (ogDebugCompile.RoslynException != null)
+        if (ogBaseCompile.RoslynException != null)
         {
-            yield return $"// Roslyn throws '{ogDebugCompile.RoslynException.GetType()}' when compiling in debug";
+            yield return $"// Roslyn throws '{ogBaseCompile.RoslynException.GetType()}' when compiling in debug";
             yield break;
         }
-        if (ogRelCompile.RoslynException != null)
+        if (ogDiffCompile.RoslynException != null)
         {
-            yield return $"// Roslyn throws '{ogRelCompile.RoslynException.GetType()}' when compiling in release";
+            yield return $"// Roslyn throws '{ogDiffCompile.RoslynException.GetType()}' when compiling in release";
             yield break;
         }
 
-        if (ogDebugCompile.CompileErrors.Length > 0 || ogRelCompile.CompileErrors.Length > 0)
+        if (ogBaseCompile.CompileErrors.Length > 0 || ogDiffCompile.CompileErrors.Length > 0)
         {
-            CSharpCompilationOptions compileOpts =
-                ogDebugCompile.CompileErrors.Length > 0 ? Compiler.DebugOptions : Compiler.ReleaseOptions;
+            CompilerOptions compileOpts =
+                ogBaseCompile.CompileErrors.Length > 0 ? _baseCompilerOpts : _diffCompilerOpts;
 
             CompileResult result = _compiler.Compile(Reduced.NormalizeWhitespace(), compileOpts);
             yield return $"// Roslyn gives '{result.CompileErrors[0]}'";
@@ -467,31 +498,31 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
                 yield break;
             case RunSeparatelyResultsKind.Success:
                 ProgramPairResults pairResult = results.Results;
-                if (pairResult.ReleaseResult.Kind == ProgramResultKind.HitsJitAssert)
+                if (pairResult.DiffResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    yield return $"// Hits JIT assert in Release:";
-                    foreach (string line in Lines(pairResult.ReleaseResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
+                    yield return $"// Hits JIT assert for {_diffCompilerOpts.Name}:";
+                    foreach (string line in Lines(pairResult.DiffResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
                         yield return $"// {line}";
 
                     yield break;
                 }
 
-                if (pairResult.DebugResult.Kind == ProgramResultKind.HitsJitAssert)
+                if (pairResult.BaseResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    yield return $"// Hits JIT assert in Debug:";
-                    foreach (string line in Lines(pairResult.DebugResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
+                    yield return $"// Hits JIT assert for {_baseCompilerOpts.Name}:";
+                    foreach (string line in Lines(pairResult.BaseResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
                         yield return $"// {line}";
 
                     yield break;
                 }
 
-                yield return $"// Debug: {FormatResult(pairResult.DebugResult, pairResult.DebugFirstUnmatch)}";
-                yield return $"// Release: {FormatResult(pairResult.ReleaseResult, pairResult.ReleaseFirstUnmatch)}";
+                yield return $"// {_baseCompilerOpts.Name}: {FormatResult(pairResult.BaseResult, pairResult.BaseFirstUnmatch)}";
+                yield return $"// {_diffCompilerOpts.Name}: {FormatResult(pairResult.DiffResult, pairResult.DiffFirstUnmatch)}";
                 break;
 
                 string FormatResult(ProgramResult result, ChecksumSite unmatch)
                 {
-                    if (pairResult.DebugResult.ExceptionType != pairResult.ReleaseResult.ExceptionType)
+                    if (pairResult.BaseResult.ExceptionType != pairResult.DiffResult.ExceptionType)
                     {
                         if (result.ExceptionType != null)
                             return $"Throws '{result.ExceptionType}'";
@@ -499,7 +530,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilationU
                         return "Runs successfully";
                     }
 
-                    if (pairResult.DebugResult.NumChecksumCalls != pairResult.ReleaseResult.NumChecksumCalls)
+                    if (pairResult.BaseResult.NumChecksumCalls != pairResult.DiffResult.NumChecksumCalls)
                         return $"Prints {result.NumChecksumCalls} line(s)";
 
                     if (unmatch != null)
@@ -679,8 +710,8 @@ public static void Main()
         string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
         try
         {
-            (string debugStdout, string debugStderr, int debugExitCode) = ExecuteInSubProcess(prog, Compiler.DebugOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
-            (string releaseStdout, string releaseStderr, int releaseExitCode) = ExecuteInSubProcess(prog, Compiler.ReleaseOptions.WithOutputKind(OutputKind.ConsoleApplication), tempAsmPath);
+            (string debugStdout, string debugStderr, int debugExitCode) = ExecuteInSubProcess(prog, _baseCompilerOpts.AsConsoleApp(), tempAsmPath);
+            (string releaseStdout, string releaseStderr, int releaseExitCode) = ExecuteInSubProcess(prog, _diffCompilerOpts.AsConsoleApp(), tempAsmPath);
             if (debugStderr.Contains("Assert failure") || debugStderr.Contains("JIT assert failed"))
             {
                 return true;
@@ -725,7 +756,7 @@ public static void Main()
             }
         }
 
-        (string stdout, string stderr, int exitCode) ExecuteInSubProcess(CompilationUnitSyntax node, CSharpCompilationOptions opts, string tempAsmPath)
+        (string stdout, string stderr, int exitCode) ExecuteInSubProcess(CompilationUnitSyntax node, CompilerOptions opts, string tempAsmPath)
         {
             CompileResult result = _compiler.Compile(node, opts);
             if (result.Assembly == null)
@@ -994,6 +1025,26 @@ public class Runtime : IRuntime
                mem.Name.Identifier.Text is "Checksum" or "ChecksumSingle" or "ChecksumDouble" or "ChecksumSingles" or "ChecksumDoubles";
     }
 
+    private bool IsAwaitOrGetResultOfAwaiterCall(SyntaxNode node)
+    {
+        if (node is AwaitExpressionSyntax)
+            return true;
+
+        if (node is InvocationExpressionSyntax invoc && IsGetResultOfAwaiterCall(invoc))
+            return true;
+
+        return false;
+    }
+
+    private bool IsGetResultOfAwaiterCall(InvocationExpressionSyntax invoc)
+    {
+        return invoc.Expression is MemberAccessExpressionSyntax mem &&
+               mem.Name.Identifier.Text is "GetResult" &&
+               mem.Expression is InvocationExpressionSyntax innerInvoc &&
+               innerInvoc.Expression is MemberAccessExpressionSyntax innerMem &&
+               innerMem.Name.Identifier.Text is "GetAwaiter";
+    }
+
     private readonly List<(string name, SimplifierAttribute info, Func<SyntaxNode, object> simp)> _simplifiers =
         new();
 
@@ -1054,12 +1105,18 @@ public class Runtime : IRuntime
             yield break;
 
         // Take descendant nodes of expression to avoid simplifying M(); to M();
-        List<InvocationExpressionSyntax> calls = stmt.Expression.DescendantNodes().OfType<InvocationExpressionSyntax>().ToList();
+        // Also, do not ascend into awaiter calls to avoid simplifying e.g.
+        // "M().GetAwaiter().GetResult()" or "await M()" into M()
+
+        List<InvocationExpressionSyntax> calls =
+            stmt.Expression.DescendantNodes(node => !IsAwaitOrGetResultOfAwaiterCall(node)).OfType<InvocationExpressionSyntax>().ToList();
         if (calls.Count <= 0)
             yield break;
 
         foreach (InvocationExpressionSyntax invoc in calls)
+        {
             yield return ExpressionStatement(invoc);
+        }
     }
 
     // Simplify "int a = expr;" to "int a;"
@@ -1199,6 +1256,12 @@ public class Runtime : IRuntime
                 .OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault(m => m.Identifier.Text == ((IdentifierNameSyntax)invoc.Expression).Identifier.Text);
 
+            bool isAsync = target.Modifiers.Any(SyntaxKind.AsyncKeyword);
+            if (isAsync)
+            {
+                continue;
+            }
+
             // Cannot yet inline functions that have multiple returns, or returns in different position than last...
             int numReturns = target.DescendantNodes().Count(s => s is ReturnStatementSyntax);
             if (numReturns > 1 || (numReturns == 1 && !(target.Body.Statements.Last() is ReturnStatementSyntax)))
@@ -1246,22 +1309,31 @@ public class Runtime : IRuntime
                     if (ret.Expression == null)
                         continue;
 
-                    (newStmt, valueName) = MakeLocalDecl(ret.Expression, target.ReturnType);
+                    (newStmt, valueName) = MakeLocalDecl(ret.Expression, isAsync ? UnwrapTaskType(target.ReturnType) : target.ReturnType);
                 }
 
                 finalStatements.Add(newStmt);
             }
 
-            bool replaceUsage = !(invoc.Parent is ExpressionStatementSyntax);
-            Debug.Assert(!replaceUsage || valueName != null, "We need to replace usage but no return statement was found");
-
-            StatementSyntax containingInvoc = invoc.FirstAncestorOrSelf<StatementSyntax>();
-            if (replaceUsage)
+            ExpressionSyntax replaceExpr = invoc;
+            if (isAsync)
             {
-                finalStatements.Add(containingInvoc.ReplaceNode(invoc, IdentifierName(valueName)));
+                replaceExpr =
+                    replaceExpr.FirstAncestorOrSelf<AwaitExpressionSyntax>() ??
+                    replaceExpr.FirstAncestorOrSelf<InvocationExpressionSyntax>(IsGetResultOfAwaiterCall) ??
+                    replaceExpr;
             }
 
-            BlockSyntax containingBlock = invoc.FirstAncestorOrSelf<BlockSyntax>();
+            bool replaceUsage = !(replaceExpr.Parent is ExpressionStatementSyntax);
+            Debug.Assert(!replaceUsage || valueName != null, "We need to replace usage but no return statement was found");
+
+            StatementSyntax containingInvoc = replaceExpr.FirstAncestorOrSelf<StatementSyntax>();
+            if (replaceUsage)
+            {
+                finalStatements.Add(containingInvoc.ReplaceNode(replaceExpr, IdentifierName(valueName)));
+            }
+
+            BlockSyntax containingBlock = replaceExpr.FirstAncestorOrSelf<BlockSyntax>();
             SyntaxNode newNode =
                 node.ReplaceNode(
                     containingBlock,
@@ -1610,6 +1682,48 @@ public class Runtime : IRuntime
         }
     }
 
+    [Simplifier]
+    private IEnumerable<SyntaxNode> RemoveAsync(SyntaxNode node)
+    {
+        if (node is not CompilationUnitSyntax unit)
+            yield break;
+
+        IEnumerable<MethodDeclarationSyntax> asyncMethods =
+            unit.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .Where(m => m is MethodDeclarationSyntax method && method.Modifiers.Any(SyntaxKind.AsyncKeyword));
+
+        foreach (MethodDeclarationSyntax asyncMethod in asyncMethods)
+        {
+            Func<SyntaxNode, bool> isInvoc =
+                n => n is InvocationExpressionSyntax invoc &&
+                invoc.Expression is IdentifierNameSyntax id &&
+                id.Identifier.Text == asyncMethod.Identifier.Text;
+
+            Func<SyntaxNode, SyntaxNode> taskResultAncestor =
+                n => (SyntaxNode)n.FirstAncestorOrSelf<AwaitExpressionSyntax>() ??
+                n.FirstAncestorOrSelf<InvocationExpressionSyntax>(IsGetResultOfAwaiterCall);
+
+            MethodDeclarationSyntax methodWithoutAsync = asyncMethod.WithModifiers(asyncMethod.Modifiers.RemoveAt(asyncMethod.Modifiers.IndexOf(SyntaxKind.AsyncKeyword)));
+            methodWithoutAsync = methodWithoutAsync.WithReturnType(UnwrapTaskType(methodWithoutAsync.ReturnType));
+
+            SyntaxNode newNode = unit.ReplaceNode(asyncMethod, methodWithoutAsync);
+            while (true)
+            {
+                SyntaxNode invoc = newNode.DescendantNodes().FirstOrDefault(i => isInvoc(i) && taskResultAncestor(i) != null);
+
+                if (invoc == null)
+                    break;
+
+                newNode = newNode.ReplaceNode(taskResultAncestor(invoc), invoc);
+            }
+
+            yield return newNode;
+        }
+    }
+
+    private static TypeSyntax UnwrapTaskType(TypeSyntax taskType)
+        => taskType is GenericNameSyntax generic ? generic.TypeArgumentList.Arguments[0] : PredefinedType(Token(SyntaxKind.VoidKeyword));
+
     // Combine code like "ulong var0; var0 = 123" to "ulong var0 = 123"
     [Simplifier]
     private IEnumerable<SyntaxNode> CombineLocalAssignmentsInBlock(SyntaxNode node)
@@ -1712,6 +1826,10 @@ public class Runtime : IRuntime
             yield break;
 
         if (literal.Token.Text == "0" || literal.Token.Text == "1" || literal.Token.Text == "-1")
+            yield break;
+
+        // Do not change constants in conditions of loops
+        if (literal.FirstAncestorOrSelf<StatementSyntax>() is ForStatementSyntax or WhileStatementSyntax or DoStatementSyntax)
             yield break;
 
         yield return LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0));

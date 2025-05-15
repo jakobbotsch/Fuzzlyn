@@ -1,4 +1,5 @@
-﻿using Fuzzlyn.Statics;
+﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -21,6 +22,7 @@ internal class FuncBodyGenerator(
     Func<string> genChecksumSiteId,
     int funcIndex,
     FuzzType returnType,
+    bool isAsync,
     bool isInPrimaryClass)
 {
     private readonly List<FuncGenerator> _funcs = funcs;
@@ -31,6 +33,7 @@ internal class FuncBodyGenerator(
     private readonly Func<string> _genChecksumSiteId = genChecksumSiteId;
     private readonly int _funcIndex = funcIndex;
     private readonly FuzzType _returnType = returnType;
+    private readonly bool _isAsync = isAsync;
     private readonly bool _isInPrimaryClass = isInPrimaryClass;
 
     private readonly List<ScopeFrame> _scope = new();
@@ -38,6 +41,7 @@ internal class FuncBodyGenerator(
     private int _finallyCount;
     private int _varCounter;
     private int _statementLevel = -1;
+    private int _awaitDisallowed;
 
     private FuzzlynOptions Options => _random.Options;
 
@@ -75,6 +79,12 @@ internal class FuncBodyGenerator(
 
             if (kind == StatementKind.Throw && (_tryCatchCount == 0))
                 continue;
+
+            if (_isAsync && kind is StatementKind.TryCatch or StatementKind.TryFinally && Options.GenExtensions.Contains(Extension.RuntimeAsync))
+            {
+                // All the EH transformations are not yet fully supported by Roslyn
+                continue;
+            }
 
             switch (kind)
             {
@@ -206,7 +216,7 @@ internal class FuncBodyGenerator(
 
         if (lvalue == null)
         {
-            FuzzType newType = _types.PickType(Options.LocalIsByRefProb);
+            FuzzType newType = _types.PickType(_isAsync ? 0 : Options.LocalIsByRefProb);
             // Determine if we should create a new local. We do this with a certain probabilty,
             // or always if the new type is a by-ref type (we cannot have static by-refs).
             if (newType is RefType || _random.FlipCoin(Options.NewVarIsLocalProb))
@@ -241,7 +251,15 @@ internal class FuncBodyGenerator(
             }
 
             StaticField newStatic = _statics.GenerateNewField(newType);
-            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false, null);
+            bool isAsyncHoistable = !Options.GenExtensions.Contains(Extension.RuntimeAsync);
+            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false, asyncHoistable: isAsyncHoistable, null);
+        }
+
+        using var genAwaits = new GenerateAwaitsScope(this);
+
+        if (!lvalue.AsyncHoistable)
+        {
+            genAwaits.Disallow();
         }
 
         // Determine if we should generate a ref-reassignment. In that case we cannot do anything
@@ -421,12 +439,18 @@ internal class FuncBodyGenerator(
 
             int catchStatements = Options.CatchBlockStatementCountDist.Sample(_random.Rng);
             BlockSyntax catchBody = GenBlock(numStatements: catchStatements);
-            ExpressionSyntax whenExpression = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            ExpressionSyntax whenExpression;
+            using (var genAwaits = new GenerateAwaitsScope(this))
+            {
+                genAwaits.Disallow();
+
+                whenExpression = GenExpression(new PrimitiveType(SyntaxKind.BoolKeyword));
+            }
 
             return
                 TryStatement(
                     body,
-                    SingletonList<CatchClauseSyntax>(
+                    SingletonList(
                         CatchClause()
                         .WithDeclaration(
                             CatchDeclaration(
@@ -681,7 +705,8 @@ internal class FuncBodyGenerator(
         if (lv == null)
         {
             StaticField newStatic = _statics.GenerateNewField(type);
-            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false, null);
+            bool isAsyncHoistable = !Options.GenExtensions.Contains(Extension.RuntimeAsync);
+            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false, asyncHoistable: isAsyncHoistable, null);
         }
 
         return lv;
@@ -716,21 +741,29 @@ internal class FuncBodyGenerator(
 
             FuncGenerator funcToCall = _random.NextElement(refReturningFuncs);
 
-            ExpressionSyntax invocExpr = GenInvocFuncExpr(funcToCall);
-            // When calling a func that returns a by-ref, we need to take into account that the C# compiler
-            // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
-            // allowed to pass non-local by-refs. The following example illustrates the analysis performed
-            // by the compiler:
-            // ref int M(ref int b, ref int c) {
-            //   int a = 2;
-            //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
-            //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
-            // }
-            // ref int Max(ref int a, ref int b) { ... }
-            // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
-            // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
-            // and the result of that call would not be valid to return.
-            ArgumentSyntax[] args = GenArgs(funcToCall.Parameters.Select(p => p.Type).ToArray(), null, minRefEscapeScope, out int argsMinRefEscapeScope);
+            ExpressionSyntax invocExpr;
+            ArgumentSyntax[] args;
+            int argsMinRefEscapeScope;
+
+            using (var genAwaits = new GenerateAwaitsScope(this))
+            {
+                invocExpr = GenInvocFuncExpr(funcToCall, genAwaits);
+                // When calling a func that returns a by-ref, we need to take into account that the C# compiler
+                // performs 'escape-analysis' on by-refs. If we want to produce a non-local by-ref we are only
+                // allowed to pass non-local by-refs. The following example illustrates the analysis performed
+                // by the compiler:
+                // ref int M(ref int b, ref int c) {
+                //   int a = 2;
+                //   return ref Max(ref a, ref b); // compiler error, returned by-ref could point to 'a' and escape
+                //   return ref Max(ref b, ref c); // ok, returned ref cannot point to local
+                // }
+                // ref int Max(ref int a, ref int b) { ... }
+                // This is the reason for the second arg passed to GenArgs. For example, if we want a call to return
+                // a ref that may escape, we need a minimum ref escape scope of 1, since 0 could pass refs to locals,
+                // and the result of that call would not be valid to return.
+                args = GenArgs(funcToCall.Parameters.Select(p => p.Type).ToArray(), null, minRefEscapeScope, out argsMinRefEscapeScope, genAwaits);
+            }
+
             InvocationExpressionSyntax invoc =
                 InvocationExpression(
                     invocExpr,
@@ -738,7 +771,7 @@ internal class FuncBodyGenerator(
                         SeparatedList(
                             args)));
 
-            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false, null);
+            return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false, asyncHoistable: false, null);
         }
 
         List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, requireAssignable: true);
@@ -792,7 +825,7 @@ internal class FuncBodyGenerator(
             {
                 foreach (ScopeValue variable in sf.Values)
                 {
-                    AppendVariablePaths(paths, variable);
+                    AppendVariablePaths(paths, variable, asyncHoistable: !Options.GenExtensions.Contains(Extension.RuntimeAsync));
                 }
             }
         }
@@ -801,7 +834,7 @@ internal class FuncBodyGenerator(
         {
             foreach (StaticField stat in _statics.Fields)
             {
-                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false));
+                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false), asyncHoistable: !Options.GenExtensions.Contains(Extension.RuntimeAsync));
             }
         }
 
@@ -1027,7 +1060,7 @@ internal class FuncBodyGenerator(
             type ??= _types.PickType(Options.ReturnTypeIsByRefProb);
 
             func = new FuncGenerator(_funcs, _random, _types, _statics, _apis, _genChecksumSiteId);
-            func.Generate(type, true);
+            func.Generate(returnType: type, randomizeParams: true);
         }
         else
         {
@@ -1081,25 +1114,30 @@ internal class FuncBodyGenerator(
             }
         }
 
-        // Update transitive call counts before generating args, so we decrease chance of
-        // calling the same methods in the arg expressions.
-        if (func != null)
-        {
-            CallCounts.TryGetValue(func.FuncIndex, out long numCalls);
-            CallCounts[func.FuncIndex] = numCalls + 1;
+        ArgumentSyntax[] args;
 
-            foreach (var (transFunc, transNumCalls) in func.CallCounts)
+        using (var genAwaits = new GenerateAwaitsScope(this))
+        {
+            // Update transitive call counts before generating args, so we decrease chance of
+            // calling the same methods in the arg expressions.
+            if (func != null)
             {
-                CallCounts.TryGetValue(transFunc, out long curNumCalls);
-                CallCounts[transFunc] = curNumCalls + transNumCalls;
+                CallCounts.TryGetValue(func.FuncIndex, out long numCalls);
+                CallCounts[func.FuncIndex] = numCalls + 1;
+
+                foreach (var (transFunc, transNumCalls) in func.CallCounts)
+                {
+                    CallCounts.TryGetValue(transFunc, out long curNumCalls);
+                    CallCounts[transFunc] = curNumCalls + transNumCalls;
+                }
+
+                returnType = func.ReturnType;
+                parameterTypes = func.Parameters.Select(p => p.Type).ToArray();
+                invocFuncExpr = GenInvocFuncExpr(func, genAwaits);
             }
 
-            returnType = func.ReturnType;
-            parameterTypes = func.Parameters.Select(p => p.Type).ToArray();
-            invocFuncExpr = GenInvocFuncExpr(func);
+            args = GenArgs(parameterTypes, parameterMetadata, 0, out _, genAwaits);
         }
-
-        ArgumentSyntax[] args = GenArgs(parameterTypes, parameterMetadata, 0, out _);
 
         if (addCastsOnArgs)
         {
@@ -1109,11 +1147,32 @@ internal class FuncBodyGenerator(
             }
         }
 
-        InvocationExpressionSyntax invoc =
+        ExpressionSyntax invoc =
             InvocationExpression(
                 invocFuncExpr,
                 ArgumentList(
                     SeparatedList(args)));
+
+        if (func != null && func.IsAsync)
+        {
+            if (_isAsync && _awaitDisallowed == 0)
+            {
+                invoc = AwaitExpression(invoc);
+            }
+            else
+            {
+                invoc =
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            InvocationExpression(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    invoc,
+                                    IdentifierName("GetAwaiter"))),
+                            IdentifierName("GetResult")));
+            }
+        }
 
         if (returnType == type || (returnType is AggregateType agg && type is InterfaceType it && agg.Implements(it)) || (returnType is RefType retRt && retRt.InnerType == type))
             return invoc;
@@ -1122,7 +1181,7 @@ internal class FuncBodyGenerator(
     }
 
     // Generates the expression that comes before the parentheses of the call.
-    private ExpressionSyntax GenInvocFuncExpr(FuncGenerator func)
+    private ExpressionSyntax GenInvocFuncExpr(FuncGenerator func, GenerateAwaitsScope genAwaitsForArgs)
     {
         FuzzType funcThisType = (FuzzType)func.InstanceType ?? func.InterfaceType;
         if (_isInPrimaryClass && funcThisType == null)
@@ -1143,14 +1202,24 @@ internal class FuncBodyGenerator(
 
         // Instance method, generate receiver
         ExpressionSyntax receiver = GenExpression(funcThisType);
+
+        if (funcThisType is AggregateType { IsClass: false })
+        {
+            // If the receive is a struct then we may be calling this on an
+            // unhoistable lvalue. In that case disallow awaits for the
+            // remaining arguments, to avoid generating e.g. "GetS().Foo(await
+            // Something())".
+            genAwaitsForArgs.Disallow();
+        }
+
         return
             MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                receiver,
+                ParenthesizeIfNecessary(receiver),
                 IdentifierName(func.Name));
     }
 
-    private ArgumentSyntax[] GenArgs(FuzzType[] parameterTypes, ParameterMetadata[] parameterMetadata, int minRefEscapeScope, out int argsMinRefEscapeScope)
+    private ArgumentSyntax[] GenArgs(FuzzType[] parameterTypes, ParameterMetadata[] parameterMetadata, int minRefEscapeScope, out int argsMinRefEscapeScope, GenerateAwaitsScope genAwaitsForArgs)
     {
         ArgumentSyntax[] args = new ArgumentSyntax[parameterTypes.Length];
         argsMinRefEscapeScope = int.MaxValue;
@@ -1163,6 +1232,11 @@ internal class FuncBodyGenerator(
                 LValueInfo lv = GenLValue(rt.InnerType, minRefEscapeScope);
                 argsMinRefEscapeScope = Math.Min(argsMinRefEscapeScope, lv.RefEscapeScope);
                 args[i] = Argument(lv.Expression).WithRefKindKeyword(Token(SyntaxKind.RefKeyword));
+
+                if (!lv.AsyncHoistable)
+                {
+                    genAwaitsForArgs.Disallow();
+                }
                 continue;
             }
 
@@ -1305,7 +1379,7 @@ internal class FuncBodyGenerator(
     {
         List<LValueInfo> paths = new();
         foreach (ScopeValue variable in variables)
-            AppendVariablePaths(paths, variable);
+            AppendVariablePaths(paths, variable, asyncHoistable: true);
 
         paths.RemoveAll(lv =>
         {
@@ -1368,13 +1442,13 @@ internal class FuncBodyGenerator(
         }
     }
 
-    private static void AppendVariablePaths(List<LValueInfo> paths, ScopeValue var)
+    private static void AppendVariablePaths(List<LValueInfo> paths, ScopeValue var, bool asyncHoistable)
     {
         AddPathsRecursive(var.Expression, var.Type, var.RefEscapeScope, var.ReadOnly);
 
         void AddPathsRecursive(ExpressionSyntax curAccess, FuzzType curType, int curRefEscapeScope, bool readOnly)
         {
-            LValueInfo info = new(curAccess, curType, curRefEscapeScope, readOnly, var);
+            LValueInfo info = new(curAccess, curType, curRefEscapeScope, readOnly, asyncHoistable: asyncHoistable, var);
             paths.Add(info);
 
             if (curType is RefType rt)
@@ -1409,6 +1483,29 @@ internal class FuncBodyGenerator(
                     }
                     break;
             }
+        }
+    }
+
+    private class GenerateAwaitsScope : IDisposable
+    {
+        public FuncBodyGenerator _gen;
+        private int _numDisallowed;
+
+        public GenerateAwaitsScope(FuncBodyGenerator gen)
+        {
+            _gen = gen;
+        }
+
+        public void Disallow()
+        {
+            _numDisallowed++;
+            _gen._awaitDisallowed++;
+        }
+
+        public void Dispose()
+        {
+            _gen._awaitDisallowed -= -_numDisallowed;
+            _numDisallowed = 0;
         }
     }
 }

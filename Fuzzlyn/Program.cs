@@ -27,7 +27,7 @@ internal class Program
         int? numPrograms = null;
         TimeSpan? timeToRun = null;
         string genExtensionsString = null;
-        bool? supportedExtensions = null;
+        bool? supportedIntrinsicExtensions = null;
         string outputEventsTo = null;
         string host = null;
         int? parallelism = null;
@@ -58,8 +58,12 @@ internal class Program
                 "cases were generated and the time that was run for.",
                 v => outputEventsTo = v
             },
-            { "gen-extensions=", "Extensions to use when generating new programs, in format <extension1>,<extension2>,... Specify 'allsupported' for all supported extensions by the host.", v => genExtensionsString = v },
-            { "supported-extensions", "Query the specified host for supported extensions", v => supportedExtensions = v != null },
+            { "gen-extensions=",
+               "Extensions to use when generating new programs, in format <extension1>,<extension2>,... " +
+               "Specify 'default' for the default set of intrinsics that would be used for the host." +
+               "Specify 'async' to allow generating async code." +
+               "Specify 'runtimeasync' to compare release against release + runtime async.", v => genExtensionsString = v },
+            { "supported-intrinsic-extensions", "Query the specified host for supported intrinsic extensions", v => supportedIntrinsicExtensions = v != null },
             { "host=", "Host to use when executing programs. Required to point to dotnet or corerun", v => host = v },
             { "output-source", "Output program source instead of feeding them directly to Roslyn and execution", v => output = v != null },
             { "checksum", "Enable or disable checksumming in the generated code", v => enableChecksumming = v != null },
@@ -127,8 +131,8 @@ internal class Program
             options.TimeToRun = timeToRun;
         if (genExtensionsString != null)
             options.GenExtensions = genExtensions;
-        if (supportedExtensions != null)
-            options.SupportedExtensions = supportedExtensions.Value;
+        if (supportedIntrinsicExtensions != null)
+            options.SupportedIntrinsicExtensions = supportedIntrinsicExtensions.Value;
         if (outputEventsTo != null)
             options.OutputEventsTo = outputEventsTo;
         if (host != null)
@@ -172,8 +176,13 @@ internal class Program
         {
             if (options.GenExtensions == null)
             {
-                Console.Error.WriteLine("Warning: no extensions specified. Consider using `--supported-extensions` followed by `--output-source --gen-extensions <value>`.");
+                Console.WriteLine("Warning: no extensions specified. Consider using `--supported-extensions` followed by `--output-source --gen-extensions <value>`.");
                 options.GenExtensions = []; // No extension by default with --output
+            }
+            else if (options.GenExtensions.Contains(Extension.Default))
+            {
+                Console.WriteLine($"Error: {Extension.Default} is not a valid extension when --output is specified");
+                return;
             }
 
             GenerateProgramsAndOutput(options);
@@ -185,18 +194,18 @@ internal class Program
 
             ReduceProgram(options, outputPath, reduceDebugGitDir);
         }
-        else if (options.SupportedExtensions)
+        else if (options.SupportedIntrinsicExtensions)
         {
             if (!CreateExecutionServerPool(options))
                 return;
 
-            SupportedExtensions(options);
+            SupportedIntrinsicExtensions(options);
         }
         else if (options.Stats)
         {
             if (options.GenExtensions == null)
             {
-                Console.Error.WriteLine("Warning: no extensions specified. Consider using `--supported-extensions` followed by `--stats --gen-extensions <value>`.");
+                Console.Error.WriteLine("Warning: no extensions specified. Consider using `--supported-intrinsic-extensions` followed by `--stats --gen-extensions <value>`.");
                 options.GenExtensions = []; // No extension by default with --stats
             }
 
@@ -283,13 +292,17 @@ internal class Program
 
     private static bool ExpandExtensions(FuzzlynOptions options)
     {
-        if (options.GenExtensions != null)
+        if (options.GenExtensions == null)
         {
-            return true;
+            options.GenExtensions = [Extension.Default];
         }
 
-        // All supported extensions by default when running them.
-        options.GenExtensions = [.. s_executionServerPool.GetSupportedExtensions()];
+        if (options.GenExtensions.Contains(Extension.Default))
+        {
+            options.GenExtensions.Remove(Extension.Default);
+            options.GenExtensions.UnionWith(s_executionServerPool.GetSupportedIntrinsicExtensions());
+        }
+
         return true;
     }
 
@@ -299,7 +312,8 @@ internal class Program
         var cg = new CodeGenerator(options);
         CompilationUnitSyntax original = cg.GenerateProgram();
 
-        Reducer reducer = new(s_executionServerPool, compiler, original, options.Seed.Value, reduceDebugGitDir);
+        (CompilerOptions baseOpts, CompilerOptions diffOpts) = GetBaseDiffCompilerOptions(options);
+        Reducer reducer = new(s_executionServerPool, compiler, baseOpts, diffOpts, original, options.Seed.Value, reduceDebugGitDir);
         CompilationUnitSyntax reduced = reducer.Reduce();
         string source = reduced.NormalizeWhitespace().ToFullString();
         if (outputPath != null)
@@ -308,9 +322,9 @@ internal class Program
             Console.WriteLine(source);
     }
 
-    private static void SupportedExtensions(FuzzlynOptions options)
+    private static void SupportedIntrinsicExtensions(FuzzlynOptions options)
     {
-        Extension[] extensions = s_executionServerPool.GetSupportedExtensions();
+        Extension[] extensions = s_executionServerPool.GetSupportedIntrinsicExtensions();
         Console.WriteLine(string.Join(",", extensions.Select(e => e.ToString().ToLowerInvariant())));
     }
 
@@ -428,13 +442,22 @@ internal class Program
 
     private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
 
+    private static (CompilerOptions, CompilerOptions) GetBaseDiffCompilerOptions(FuzzlynOptions options)
+        => (options.GenExtensions.Contains(Extension.Async) && options.GenExtensions.Contains(Extension.RuntimeAsync)) switch
+        {
+            false => (CompilerOptions.DebugOptions, CompilerOptions.ReleaseOptions),
+            true => (CompilerOptions.ReleaseOptions, CompilerOptions.RuntimeAsyncReleaseOptions),
+        };
+
     private static readonly object s_fileLock = new();
     private static void CompileAndCheck(FuzzlynOptions options, Compiler compiler, CompilationUnitSyntax program, SeedSpecification seed, ref int numProgramsWithKnownErrors)
     {
-        byte[] debug = Compile(Compiler.DebugOptions);
-        byte[] release = Compile(Compiler.ReleaseOptions);
+        (CompilerOptions baseOpts, CompilerOptions diffOpts) = GetBaseDiffCompilerOptions(options);
 
-        if (debug == null || release == null)
+        byte[] @base = Compile(baseOpts);
+        byte[] diff = Compile(diffOpts);
+
+        if (@base == null || diff == null)
         {
             return;
         }
@@ -444,7 +467,7 @@ internal class Program
             return;
         }
 
-        RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, debug, release), TimeSpan.FromSeconds(20), false);
+        RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, @base, diff), TimeSpan.FromSeconds(20), false);
 
         switch (results.Kind)
         {
@@ -452,14 +475,14 @@ internal class Program
                 if (options.KnownErrors.Contains(results.CrashError))
                     Interlocked.Increment(ref numProgramsWithKnownErrors);
                 else
-                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.Crash, results.CrashError));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.Crash, results.CrashError, diff.Length));
                 break;
             case RunSeparatelyResultsKind.Success:
                 CheckExample(seed, results.Results, ref numProgramsWithKnownErrors);
                 break;
         }
 
-        byte[] Compile(CSharpCompilationOptions opts)
+        byte[] Compile(CompilerOptions opts)
         {
             CompileResult comp = compiler.Compile(program, opts);
             if (comp.RoslynException != null)
@@ -472,6 +495,8 @@ internal class Program
 
             if (comp.CompileErrors.Length > 0)
             {
+                // Normalize whitespace to get better error messages
+                comp = compiler.Compile(program.NormalizeWhitespace(), opts);
                 IEnumerable<Diagnostic> errors = comp.CompileErrors.Where(d => d.Severity == DiagnosticSeverity.Error);
                 string logEntry =
                     "seed: " + seed + Environment.NewLine +
@@ -488,21 +513,21 @@ internal class Program
         void CheckExample(SeedSpecification seed, ProgramPairResults result, ref int numProgramsWithKnownErrors)
         {
             ProgramResult assertRes;
-            if ((assertRes = result.DebugResult).Kind == ProgramResultKind.HitsJitAssert ||
-                (assertRes = result.ReleaseResult).Kind == ProgramResultKind.HitsJitAssert)
+            if ((assertRes = result.BaseResult).Kind == ProgramResultKind.HitsJitAssert ||
+                (assertRes = result.DiffResult).Kind == ProgramResultKind.HitsJitAssert)
             {
                 if (options.KnownErrors.Contains(assertRes.JitAssertError))
                     Interlocked.Increment(ref numProgramsWithKnownErrors);
                 else
-                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.HitsJitAssert, assertRes.JitAssertError));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.HitsJitAssert, assertRes.JitAssertError, diff.Length));
             }
             else
             {
-                bool checksumMismatch = result.DebugResult.Checksum != result.ReleaseResult.Checksum;
-                bool exceptionMismatch = result.DebugResult.ExceptionType != result.ReleaseResult.ExceptionType;
+                bool checksumMismatch = result.BaseResult.Checksum != result.DiffResult.Checksum;
+                bool exceptionMismatch = result.BaseResult.ExceptionType != result.DiffResult.ExceptionType;
 
                 if (checksumMismatch || exceptionMismatch)
-                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.BadResult, null));
+                    AddExample(new ExampleEvent(seed.ToString(), ExampleKind.BadResult, null, diff.Length));
             }
         }
 
@@ -510,11 +535,11 @@ internal class Program
         {
             switch (example)
             {
-                case { Seed: string seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error }:
-                    Console.WriteLine("Found example with seed {0} that hits error{1}{2}", seed, Environment.NewLine, error);
+                case { Seed: string seed, Kind: ExampleKind.Crash or ExampleKind.HitsJitAssert, Message: string error, Size: int size }:
+                    Console.WriteLine("Found {0:F1} KiB example with seed {1} that hits error{2}{3}", size / 1024.0, seed, Environment.NewLine, error);
                     break;
-                case { Seed: string seed, Kind: ExampleKind.BadResult }:
-                    Console.WriteLine("Found example with seed {0}", seed);
+                case { Seed: string seed, Kind: ExampleKind.BadResult, Size: int size }:
+                    Console.WriteLine("Found {0:F1} KiB example with seed {1}", size / 1024.0, seed);
                     break;
             }
 
@@ -551,6 +576,6 @@ internal class Program
         Crash,
     }
 
-    private record class ExampleEvent(string Seed, ExampleKind Kind, string Message);
+    private record class ExampleEvent(string Seed, ExampleKind Kind, string Message, int Size);
     private record class RunSummaryEvent(int DegreeOfParallelism, int TotalProgramsGenerated, int TotalProgramsWithKnownErrors, TimeSpan TotalRunTime);
 }

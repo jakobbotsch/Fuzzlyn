@@ -64,15 +64,21 @@ internal class SeedSpecification(ulong seed, HashSet<Extension> extensions)
         {
             seedSpan = value.AsSpan()[..dash];
             ReadOnlySpan<char> extensionsSpan = value.AsSpan()[(dash + 1)..];
+
             if (!TryParseExtensions(extensionsSpan.ToString(), extensions, out error))
             {
+                return false;
+            }
+
+            if (extensions.Contains(Extension.Default))
+            {
+                error = $"'{Extension.Default}' is not a valid extension when specifying a seed";
                 return false;
             }
         }
 
         if (!ulong.TryParse(seedSpan, out ulong seed))
         {
-            seedSpec = null;
             error = $"Could not parse '{value}' to a UInt64 seed";
             return false;
         }
