@@ -166,13 +166,12 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(int serverIndex, string host, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
+    public static RunningExecutionServer Create(int serverIndex, string host, string executorPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
     {
-        string executorPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Fuzzlyn.ExecutionServer.dll");
         ProcessStartInfo info = new()
         {
             FileName = host,
-            WorkingDirectory = Environment.CurrentDirectory,
+            WorkingDirectory = Path.GetDirectoryName(executorPath),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,

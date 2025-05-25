@@ -261,7 +261,14 @@ internal class Program
             }
         }
 
-        s_executionServerPool = new ExecutionServerPool(options.Host, spmiOptions, logExecServerRequestsOptions);
+        string fuzzlynDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        string executionServerPath = Path.Combine(fuzzlynDir, "Fuzzlyn.ExecutionServer.dll");
+        string newExecutionServerDir = Path.Combine(fuzzlynDir, "ExecutionServer");
+        string newExecutionServerPath = Path.Combine(newExecutionServerDir, "Fuzzlyn.ExecutionServer.dll");
+        Directory.CreateDirectory(newExecutionServerDir);
+        File.Copy(executionServerPath, newExecutionServerPath, true);
+
+        s_executionServerPool = new ExecutionServerPool(options.Host, newExecutionServerPath, spmiOptions, logExecServerRequestsOptions);
         return true;
     }
 

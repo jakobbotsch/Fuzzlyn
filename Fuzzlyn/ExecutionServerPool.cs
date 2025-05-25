@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Fuzzlyn;
 
-internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
+internal class ExecutionServerPool(string host, string executorPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
 {
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
@@ -44,7 +44,7 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, SpmiOptions, LogExceutionServerRequestsOptions);
+            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executorPath, SpmiOptions, LogExceutionServerRequestsOptions);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -54,7 +54,7 @@ internal class ExecutionServerPool(string host, SpmiSetupOptions spmiOptions, Lo
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(_serverIndex++, Host, SpmiOptions, LogExceutionServerRequestsOptions);
+        return RunningExecutionServer.Create(_serverIndex++, Host, executorPath, SpmiOptions, LogExceutionServerRequestsOptions);
     }
 
     private void Return(RunningExecutionServer server)
