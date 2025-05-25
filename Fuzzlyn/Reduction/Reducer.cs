@@ -711,38 +711,38 @@ public static void Main()
         string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
         try
         {
-            (string debugStdout, string debugStderr, int debugExitCode) = ExecuteInSubProcess(prog, _baseCompilerOpts.AsConsoleApp(), tempAsmPath);
-            (string releaseStdout, string releaseStderr, int releaseExitCode) = ExecuteInSubProcess(prog, _diffCompilerOpts.AsConsoleApp(), tempAsmPath);
-            if (debugStderr.Contains("Assert failure") || debugStderr.Contains("JIT assert failed"))
+            (string baseStdout, string baseStderr, int baseExitCode) = ExecuteInSubProcess(prog, _baseCompilerOpts.AsConsoleApp(), tempAsmPath);
+            (string diffStdout, string diffStderr, int diffExitCode) = ExecuteInSubProcess(prog, _diffCompilerOpts.AsConsoleApp(), tempAsmPath);
+            if (baseStderr.Contains("Assert failure") || baseStderr.Contains("JIT assert failed"))
             {
                 return true;
             }
 
-            if (releaseStderr.Contains("Assert failure") || releaseStderr.Contains("JIT assert failed"))
+            if (diffStderr.Contains("Assert failure") || diffStderr.Contains("JIT assert failed"))
             {
                 return true;
             }
 
             if (targetResults.Kind == RunSeparatelyResultsKind.Crash)
             {
-                if (debugExitCode == unchecked((int)0xc0000005) || releaseExitCode == unchecked((int)0xc0000005))
+                if (baseExitCode == unchecked((int)0xc0000005) || diffExitCode == unchecked((int)0xc0000005))
                 {
                     return true;
                 }
             }
 
-            string[] debugStderrLines = debugStderr.ReplaceLineEndings().Split(Environment.NewLine);
-            string[] releaseStderrLines = releaseStderr.ReplaceLineEndings().Split(Environment.NewLine);
+            string[] baseStderrLines = baseStderr.ReplaceLineEndings().Split(Environment.NewLine);
+            string[] diffStderrLines = diffStderr.ReplaceLineEndings().Split(Environment.NewLine);
 
             // Look for exception type
-            string debugExceptionLine = debugStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
-            string releaseExceptionLine = releaseStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
-            if (debugExceptionLine != releaseExceptionLine)
+            string baseExceptionLine = baseStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
+            string diffExceptionLine = diffStderrLines.FirstOrDefault(l => l.Contains("Unhandled exception."));
+            if (baseExceptionLine != diffExceptionLine)
             {
                 return true;
             }
 
-            if (debugStdout != releaseStdout)
+            if (baseStdout != diffStdout)
             {
                 return true;
             }
