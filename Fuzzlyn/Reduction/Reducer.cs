@@ -40,6 +40,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         CompileResult diff = _compiler.Compile(Original, _diffCompilerOpts);
 
         Func<CompilationUnitSyntax, bool> isInteresting;
+        RunSeparatelyResults targetResults = null;
         if (@base.RoslynException != null || diff.RoslynException != null)
         {
             CompilerOptions opts = @base.RoslynException != null ? _baseCompilerOpts : _diffCompilerOpts;
@@ -60,7 +61,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         else
         {
             var origPair = new ProgramPair(false, @base.Assembly, diff.Assembly);
-            RunSeparatelyResults targetResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
+            targetResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
 
             if (targetResults.Kind == RunSeparatelyResultsKind.Timeout)
             {
@@ -262,7 +263,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
 
         List<SyntaxTrivia> outputComments = GetOutputComments(@base, diff).Select(Comment).ToList();
 
-        MakeStandalone();
+        MakeStandalone(targetResults);
         double oldSizeKiB = Original.NormalizeWhitespace().ToString().Length / 1024.0;
         double newSizeKiB = Reduced.NormalizeWhitespace().ToString().Length / 1024.0;
         string sizeComment =
@@ -541,7 +542,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         }
     }
 
-    private void MakeStandalone()
+    private void MakeStandalone(RunSeparatelyResults targetResults)
     {
         // At this point we have a program like the following:
         // public class Program
@@ -682,7 +683,7 @@ public static void Main()
         bool TryReplacement(string update, Func<CompilationUnitSyntax, CompilationUnitSyntax> reducer)
         {
             CompilationUnitSyntax newNode = reducer(Reduced);
-            if (IsStandaloneProgramInteresting(newNode))
+            if (IsStandaloneProgramInteresting(newNode, targetResults))
             {
                 UpdateReduced(update, newNode);
                 return true;
@@ -705,7 +706,7 @@ public static void Main()
         }
     }
 
-    private bool IsStandaloneProgramInteresting(CompilationUnitSyntax prog)
+    private bool IsStandaloneProgramInteresting(CompilationUnitSyntax prog, RunSeparatelyResults targetResults)
     {
         string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
         try
@@ -722,9 +723,12 @@ public static void Main()
                 return true;
             }
 
-            if (debugExitCode == unchecked((int)0xc0000005) || releaseExitCode == unchecked((int)0xc0000005))
+            if (targetResults.Kind == RunSeparatelyResultsKind.Crash)
             {
-                return true;
+                if (debugExitCode == unchecked((int)0xc0000005) || releaseExitCode == unchecked((int)0xc0000005))
+                {
+                    return true;
+                }
             }
 
             string[] debugStderrLines = debugStderr.ReplaceLineEndings().Split(Environment.NewLine);
