@@ -166,19 +166,19 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(int serverIndex, string host, string executorPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
+    public static RunningExecutionServer Create(int serverIndex, string host, string executionServerPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
     {
         ProcessStartInfo info = new()
         {
             FileName = host,
-            WorkingDirectory = Path.GetDirectoryName(executorPath),
+            WorkingDirectory = Path.GetDirectoryName(executionServerPath),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
             UseShellExecute = false,
         };
 
-        info.ArgumentList.Add(executorPath);
+        info.ArgumentList.Add(executionServerPath);
 
         Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
 

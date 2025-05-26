@@ -5,14 +5,14 @@ using System.Linq;
 
 namespace Fuzzlyn;
 
-internal class ExecutionServerPool(string host, string executorPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
+internal class ExecutionServerPool(string host, string executionServerPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
 {
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
 
     public string Host { get; } = host;
     public SpmiSetupOptions SpmiOptions { get; } = spmiOptions;
-    public LogExecutionServerRequestsOptions LogExceutionServerRequestsOptions { get; } = logRequestsOptions;
+    public LogExecutionServerRequestsOptions LogExecutionServerRequestsOptions { get; } = logRequestsOptions;
 
     private int _serverIndex;
     private List<RunningExecutionServer> _pool = new();
@@ -44,7 +44,7 @@ internal class ExecutionServerPool(string host, string executorPath, SpmiSetupOp
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executorPath, SpmiOptions, LogExceutionServerRequestsOptions);
+            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, SpmiOptions, LogExecutionServerRequestsOptions);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -54,7 +54,7 @@ internal class ExecutionServerPool(string host, string executorPath, SpmiSetupOp
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(_serverIndex++, Host, executorPath, SpmiOptions, LogExceutionServerRequestsOptions);
+        return RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, SpmiOptions, LogExecutionServerRequestsOptions);
     }
 
     private void Return(RunningExecutionServer server)

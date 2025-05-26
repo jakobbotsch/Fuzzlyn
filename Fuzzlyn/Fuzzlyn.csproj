@@ -25,4 +25,13 @@
     <ProjectReference Include="..\Fuzzlyn.ExecutionServer\Fuzzlyn.ExecutionServer.csproj" />
   </ItemGroup>
 
+  <Target Name="CreateFuzzlynExecutionServerBuild" AfterTargets="AfterBuild">
+    <MakeDir Directories="$(OutDir)ExecutionServer" />
+    <Copy SourceFiles="$(OutDir)Fuzzlyn.ExecutionServer.dll" DestinationFolder="$(OutDir)ExecutionServer" />
+  </Target>
+
+  <Target Name="CreateFuzzlynExecutionServerPublish" AfterTargets="Publish">
+    <MakeDir Directories="$(PublishDir)ExecutionServer" />
+    <Copy SourceFiles="$(OutDir)Fuzzlyn.ExecutionServer.dll" DestinationFolder="$(PublishDir)ExecutionServer" />
+  </Target>
 </Project>
