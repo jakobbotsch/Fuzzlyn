@@ -44,4 +44,19 @@ internal class TableDistribution : ProbabilityDistribution
 
         throw new Exception("Unreachable");
     }
+
+    public TableDistribution WithAdditionalEntry(int value, double probability)
+    {
+        if (Pairs.ContainsKey(value))
+            throw new ArgumentException("Value already exists in the distribution.", nameof(value));
+
+        Dictionary<int, double> newPairs = new Dictionary<int, double>();
+        foreach ((int existingValue, double existingProbability) in Pairs)
+        {
+            newPairs.Add(existingValue, existingProbability * (1 - probability));
+        }
+
+        newPairs.Add(value, probability);
+        return new TableDistribution(newPairs);
+    }
 }

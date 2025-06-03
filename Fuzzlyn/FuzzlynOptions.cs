@@ -60,8 +60,9 @@ internal class FuzzlynOptions
     public double MakeVectorProb { get; set; } = 0.3;
     public ProbabilityDistribution BlockStatementCountDist { get; set; } = new GeometricDistribution(0.30, 1);
     public ProbabilityDistribution CatchBlockStatementCountDist { get; set; } = new GeometricDistribution(0.25);
-    public ProbabilityDistribution StatementTypeDist { get; set; }
-        = new TableDistribution(new Dictionary<int, double>
+
+    private static readonly TableDistribution s_statementTypeDist
+        = new(new Dictionary<int, double>
         {
             [(int)StatementKind.Assignment] = 0.57,
             [(int)StatementKind.If] = 0.135,
@@ -74,6 +75,12 @@ internal class FuzzlynOptions
             [(int)StatementKind.Loop] = 0.03,
             [(int)StatementKind.Return] = 0.01,
         });
+
+    private static readonly TableDistribution s_statementTypeAsyncDist =
+        s_statementTypeDist.WithAdditionalEntry((int)StatementKind.Yield, 0.1);
+
+    public ProbabilityDistribution StatementTypeDist { get; set; } = s_statementTypeDist;
+    public ProbabilityDistribution StatementTypeAsyncDist { get; set; } = s_statementTypeAsyncDist;
     public ProbabilityDistribution ExpressionTypeDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>
         {

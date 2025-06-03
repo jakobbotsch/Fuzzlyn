@@ -181,7 +181,7 @@ internal class Program
             }
             else if (options.GenExtensions.Contains(Extension.Default))
             {
-                Console.WriteLine($"Error: {Extension.Default} is not a valid extension when --output is specified");
+                Console.WriteLine($"Error: {Extension.Default} is not a valid extension when --output-source is specified");
                 return;
             }
 

@@ -1,4 +1,5 @@
 ﻿using Fuzzlyn.ExecutionServer;
+using Fuzzlyn.ProbabilityDistributions;
 using Fuzzlyn.Statics;
 using Fuzzlyn.Types;
 using Microsoft.CodeAnalysis;
@@ -62,8 +63,10 @@ internal class FuncBodyGenerator(
 
         while (true)
         {
-            StatementKind kind =
-                (StatementKind)Options.StatementTypeDist.Sample(_random.Rng);
+            ProbabilityDistribution statementTypeDist =
+                (_isAsync && _awaitDisallowed == 0) ? Options.StatementTypeAsyncDist : Options.StatementTypeDist;
+
+            StatementKind kind = (StatementKind)statementTypeDist.Sample(_random.Rng);
 
             if ((kind == StatementKind.Block ||
                  kind == StatementKind.If ||
@@ -108,6 +111,8 @@ internal class FuncBodyGenerator(
                     return GenReturn();
                 case StatementKind.Loop:
                     return GenLoop();
+                case StatementKind.Yield:
+                    return GenYield();
                 default:
                     throw new Exception("Unreachable");
             }
@@ -326,6 +331,18 @@ internal class FuncBodyGenerator(
         }
 
         return ExpressionStatement(call);
+    }
+
+    private StatementSyntax GenYield()
+    {
+        return
+            ExpressionStatement(
+                AwaitExpression(
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("Task"),
+                            IdentifierName("Yield")))));
     }
 
     private StatementSyntax GenIf()
@@ -1507,6 +1524,7 @@ internal enum StatementKind
     TryCatch,
     TryFinally,
     Loop,
+    Yield,
 }
 
 internal enum ExpressionKind
