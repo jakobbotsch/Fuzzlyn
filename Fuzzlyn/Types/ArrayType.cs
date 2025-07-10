@@ -23,6 +23,8 @@ public class ArrayType : FuzzType, IEquatable<ArrayType>
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = [];
 
+    public override bool IsReferenceType => true;
+
     public override TypeSyntax GenReferenceTo() => GenReferenceToArrayType();
 
     private ArrayTypeSyntax _type;

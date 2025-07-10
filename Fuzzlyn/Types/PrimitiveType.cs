@@ -17,6 +17,8 @@ public class PrimitiveType(SyntaxKind keyword) : FuzzType, IEquatable<PrimitiveT
     public override TypeSyntax GenReferenceTo() => PredefinedType(Token(Keyword));
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Info.AllowedAdditionalAssignments;
 
+    public override bool IsReferenceType => false;
+
     public bool Equals(PrimitiveType other)
     {
         return other != null &&

@@ -18,6 +18,8 @@ internal class RefType : FuzzType
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds
         => InnerType.AllowedAdditionalAssignmentKinds;
 
+    public override bool IsReferenceType => throw new NotSupportedException();
+
     public override TypeSyntax GenReferenceTo()
         => SyntaxFactory.RefType(InnerType.GenReferenceTo());
 

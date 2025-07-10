@@ -85,6 +85,13 @@ internal class CodeGenerator
 
         if (Options.GenExtensions.Contains(Extension.Async))
         {
+            UsingDirectiveSyntax threading =
+                UsingDirective(
+                        QualifiedName(
+                            IdentifierName("System"),
+                            IdentifierName("Threading")));
+            yield return threading;
+
             UsingDirectiveSyntax threadingTasks =
                 UsingDirective(
                         QualifiedName(
@@ -127,7 +134,7 @@ internal class CodeGenerator
                 .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)));
         }
 
-        foreach (FieldDeclarationSyntax stat in Statics.OutputStatics())
+        foreach (MemberDeclarationSyntax stat in Statics.OutputMembers())
             yield return stat;
 
         ParameterListSyntax parameters = ParameterList();
@@ -188,6 +195,12 @@ internal class CodeGenerator
                     FuncBodyGenerator.GenChecksumming(false, Statics.Fields.Select(s => new ScopeValue(s.Type, s.CreateAccessor(false), int.MaxValue, false)), GenerateChecksumSiteId);
 
                 foreach (StatementSyntax checksumStatement in staticChecksums)
+                    yield return checksumStatement;
+
+                IEnumerable<StatementSyntax> asyncLocalChecksums =
+                    FuncBodyGenerator.GenChecksumming(false, Statics.AsyncLocalFields.Select(s => new ScopeValue(s.InnerType, s.CreateGetAccess(false), int.MaxValue, false)), GenerateChecksumSiteId);
+
+                foreach (StatementSyntax checksumStatement in asyncLocalChecksums)
                     yield return checksumStatement;
             }
         }

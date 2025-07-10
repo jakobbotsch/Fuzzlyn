@@ -20,6 +20,8 @@ public class VectorType(VectorTypeWidth width, PrimitiveType elementType) : Fuzz
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds { get; } = [];
 
+    public override bool IsReferenceType => false;
+
     private TypeSyntax _type;
     public override TypeSyntax GenReferenceTo()
     {

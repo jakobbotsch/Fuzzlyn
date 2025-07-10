@@ -5,6 +5,7 @@ namespace Fuzzlyn.Types;
 
 public abstract class FuzzType
 {
+    public abstract bool IsReferenceType { get; }
     public abstract SyntaxKind[] AllowedAdditionalAssignmentKinds { get; }
     public abstract TypeSyntax GenReferenceTo();
 

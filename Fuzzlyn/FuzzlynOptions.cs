@@ -77,12 +77,16 @@ internal class FuzzlynOptions
         });
 
     private static readonly TableDistribution s_statementTypeAsyncDist =
-        s_statementTypeDist.WithAdditionalEntry((int)StatementKind.Yield, 0.1);
+        s_statementTypeDist
+        .WithAdditionalEntries(
+            ((int)StatementKind.Yield, 0.1),
+            ((int)StatementKind.AsyncLocalAssignment, 0.05));
 
     public ProbabilityDistribution StatementTypeDist { get; set; } = s_statementTypeDist;
     public ProbabilityDistribution StatementTypeAsyncDist { get; set; } = s_statementTypeAsyncDist;
-    public ProbabilityDistribution ExpressionTypeDist { get; set; }
-        = new TableDistribution(new Dictionary<int, double>
+
+    private static readonly TableDistribution s_expressionTypeDist
+        = new(new Dictionary<int, double>
         {
             [(int)ExpressionKind.MemberAccess] = 0.46,
             [(int)ExpressionKind.Literal] = 0.21,
@@ -94,7 +98,10 @@ internal class FuzzlynOptions
             [(int)ExpressionKind.Decrement] = 0.05,
         });
 
-    public ProbabilityDistribution VectorExpressionTypeDist { get; set; }
+    private static readonly TableDistribution s_expressionTypeAsyncDist
+        = s_expressionTypeDist.WithAdditionalEntries(((int)ExpressionKind.AsyncLocalMemberAccess, 0.1));
+
+    private static readonly TableDistribution s_vectorExpressionTypeDist
         = new TableDistribution(new Dictionary<int, double>
         {
             [(int)ExpressionKind.MemberAccess] = 0.5,
@@ -102,6 +109,14 @@ internal class FuzzlynOptions
             [(int)ExpressionKind.Literal] = 0.18,
             [(int)ExpressionKind.Call] = 0.14,
         });
+
+    private static readonly TableDistribution s_vectorExpressionTypeAsyncDist
+        = s_vectorExpressionTypeDist.WithAdditionalEntries(((int)ExpressionKind.AsyncLocalMemberAccess, 0.1));
+
+    public ProbabilityDistribution ExpressionTypeDist { get; set; } = s_expressionTypeDist;
+    public ProbabilityDistribution ExpressionTypeAsyncDist { get; set; } = s_expressionTypeAsyncDist;
+    public ProbabilityDistribution VectorExpressionTypeDist { get; set; } = s_vectorExpressionTypeDist;
+    public ProbabilityDistribution VectorExpressionTypeAsyncDist { get; set; } = s_vectorExpressionTypeAsyncDist;
 
     public ProbabilityDistribution CatchCountDist { get; set; }
         = new TableDistribution(new Dictionary<int, double>

@@ -175,7 +175,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
             while (true)
             {
                 List<SyntaxNode> members =
-                    Reduced.DescendantNodesAndSelf().Where(n => n is MemberDeclarationSyntax || n is CompilationUnitSyntax).ToList();
+                    Reduced.DescendantNodesAndSelf().Where(n => n is MemberDeclarationSyntax || n is CompilationUnitSyntax || n is UsingDirectiveSyntax).ToList();
 
                 if (!SimplifyFromList("Members", members))
                     break;
@@ -1455,6 +1455,25 @@ public class Runtime : IRuntime
     }
 
     [Simplifier]
+    private IEnumerable<SyntaxNode> SimplifyCoalesceAssignmentExpression(SyntaxNode node)
+    {
+        if (node is not AssignmentExpressionSyntax asgn ||
+            !asgn.IsKind(SyntaxKind.CoalesceAssignmentExpression) ||
+            asgn.Parent is ExpressionStatementSyntax)
+        {
+            yield break;
+        }
+
+        yield return asgn.Right;
+        yield return asgn.Left;
+        yield return
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                ParenthesizedExpression(asgn.Left),
+                IdentifierName("Value"));
+    }
+
+    [Simplifier]
     private SyntaxNode SimplifyCast(SyntaxNode node)
     {
         if (node is not CastExpressionSyntax cast)
@@ -1522,6 +1541,15 @@ public class Runtime : IRuntime
     private SyntaxNode RemoveMethodDeclaration(SyntaxNode node)
     {
         if (node is not MethodDeclarationSyntax method || method.Identifier.Text == "Main")
+            return node;
+
+        return null;
+    }
+
+    [Simplifier]
+    private SyntaxNode RemoveUsingDirective(SyntaxNode node)
+    {
+        if (node is not UsingDirectiveSyntax method)
             return node;
 
         return null;

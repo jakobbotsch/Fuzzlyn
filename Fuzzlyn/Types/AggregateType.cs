@@ -28,6 +28,8 @@ public class AggregateType : FuzzType
 
     public override SyntaxKind[] AllowedAdditionalAssignmentKinds => Array.Empty<SyntaxKind>();
 
+    public override bool IsReferenceType => IsClass;
+
     public override TypeSyntax GenReferenceTo()
         => IdentifierName(Name);
 

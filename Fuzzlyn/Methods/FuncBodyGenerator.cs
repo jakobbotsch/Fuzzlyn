@@ -64,7 +64,7 @@ internal class FuncBodyGenerator(
         while (true)
         {
             ProbabilityDistribution statementTypeDist =
-                (_isAsync && _awaitDisallowed == 0) ? Options.StatementTypeAsyncDist : Options.StatementTypeDist;
+                _isAsync ? Options.StatementTypeAsyncDist : Options.StatementTypeDist;
 
             StatementKind kind = (StatementKind)statementTypeDist.Sample(_random.Rng);
 
@@ -81,6 +81,9 @@ internal class FuncBodyGenerator(
                 continue;
 
             if (kind == StatementKind.Throw && (_tryCatchCount == 0))
+                continue;
+
+            if (kind == StatementKind.Yield && (_awaitDisallowed != 0))
                 continue;
 
             if (_isAsync && kind is StatementKind.TryCatch or StatementKind.TryFinally && Options.GenExtensions.Contains(Extension.RuntimeAsync))
@@ -113,6 +116,8 @@ internal class FuncBodyGenerator(
                     return GenLoop();
                 case StatementKind.Yield:
                     return GenYield();
+                case StatementKind.AsyncLocalAssignment:
+                    return GenAsyncLocalAssignmentStatement();
                 default:
                     throw new Exception("Unreachable");
             }
@@ -317,6 +322,63 @@ internal class FuncBodyGenerator(
         }
 
         return ExpressionStatement(AssignmentExpression(assignmentKind, lvalue.Expression, right));
+    }
+
+    private StatementSyntax GenAsyncLocalAssignmentStatement()
+    {
+        AsyncLocalField asyncLocal = null;
+        if (_statics.AsyncLocalFields.Count > 0 && !_random.FlipCoin(Options.AssignToNewVarProb))
+            asyncLocal = _random.NextElement(_statics.AsyncLocalFields);
+
+        if (asyncLocal == null)
+        {
+            FuzzType newType = _types.PickType();
+            asyncLocal  = _statics.GenerateNewAsyncLocal(newType);
+        }
+
+        FuzzType rhsType = asyncLocal.InnerType;
+        SyntaxKind assignmentKind = SyntaxKind.SimpleAssignmentExpression;
+        // Determine if we should generate compound assignment.
+        if (rhsType.AllowedAdditionalAssignmentKinds.Length > 0 && _random.FlipCoin(Options.CompoundAssignmentProb))
+            assignmentKind = _random.NextElement(rhsType.AllowedAdditionalAssignmentKinds);
+
+        // Early our for simple cases.
+        if (assignmentKind == SyntaxKind.PreIncrementExpression ||
+            assignmentKind == SyntaxKind.PreDecrementExpression)
+        {
+            return ExpressionStatement(PrefixUnaryExpression(assignmentKind, asyncLocal.CreateLhsAccess(prefixWithClass: !_isInPrimaryClass)));
+        }
+
+        if (assignmentKind == SyntaxKind.PostIncrementExpression ||
+            assignmentKind == SyntaxKind.PostDecrementExpression)
+        {
+            return ExpressionStatement(PostfixUnaryExpression(assignmentKind, asyncLocal.CreateLhsAccess(prefixWithClass: !_isInPrimaryClass)));
+        }
+
+        // Right operand of shifts are always ints.
+        if (assignmentKind == SyntaxKind.LeftShiftAssignmentExpression ||
+            assignmentKind == SyntaxKind.RightShiftAssignmentExpression)
+        {
+            rhsType = _types.GetPrimitiveType(SyntaxKind.IntKeyword);
+        }
+
+        ExpressionSyntax right = GenExpression(rhsType);
+        // For modulo and division we don't want to throw divide-by-zero exceptions,
+        // so always or right-hand-side with 1.
+        if ((assignmentKind is SyntaxKind.ModuloAssignmentExpression or SyntaxKind.DivideAssignmentExpression) &&
+            (rhsType is not PrimitiveType { Info: { IsFloat: true } }))
+        {
+            right =
+                CastExpression(
+                    rhsType.GenReferenceTo(),
+                    ParenthesizedExpression(
+                        BinaryExpression(
+                            SyntaxKind.BitwiseOrExpression,
+                            ParenthesizeIfNecessary(right),
+                            LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(1)))));
+        }
+
+        return ExpressionStatement(AssignmentExpression(assignmentKind, asyncLocal.CreateLhsAccess(prefixWithClass: !_isInPrimaryClass), right));
     }
 
     private StatementSyntax GenCallStatement(bool tryExisting)
@@ -641,15 +703,18 @@ internal class FuncBodyGenerator(
         ExpressionSyntax gen = null;
         do
         {
+            ProbabilityDistribution dist;
             ExpressionKind kind;
             if (type is VectorType)
             {
-                kind = (ExpressionKind)Options.VectorExpressionTypeDist.Sample(_random.Rng);
+                dist = _isAsync ? Options.VectorExpressionTypeAsyncDist : Options.VectorExpressionTypeDist;
             }
             else
             {
-                kind = (ExpressionKind)Options.ExpressionTypeDist.Sample(_random.Rng);
+                dist = _isAsync ? Options.ExpressionTypeAsyncDist : Options.ExpressionTypeDist;
             }
+
+            kind = (ExpressionKind)dist.Sample(_random.Rng);
 
             switch (kind)
             {
@@ -682,6 +747,9 @@ internal class FuncBodyGenerator(
                 case ExpressionKind.NewObject:
                     if (AllowRecursion())
                         gen = GenNewObject(type);
+                    break;
+                case ExpressionKind.AsyncLocalMemberAccess:
+                    gen = GenAsyncLocalMemberAccess(type);
                     break;
                 default:
                     throw new Exception("Unreachable");
@@ -776,14 +844,14 @@ internal class FuncBodyGenerator(
             return new LValueInfo(invoc, ((RefType)funcToCall.ReturnType).InnerType, argsMinRefEscapeScope, readOnly: false, asyncHoistable: false, null);
         }
 
-        List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, requireAssignable: true);
+        List<LValueInfo> lvalues = CollectVariablePaths(type, minRefEscapeScope, kind == LValueKind.Local, kind == LValueKind.Static, false, requireAssignable: true);
         if (lvalues.Count == 0)
         {
             // We typically fall back to generating a static, so just try to find a static if we found no local.
             if (kind != LValueKind.Local)
                 return null;
 
-            lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true, requireAssignable: true);
+            lvalues = CollectVariablePaths(type, minRefEscapeScope, false, true, false, requireAssignable: true);
             if (lvalues.Count == 0)
                 return null;
         }
@@ -803,9 +871,18 @@ internal class FuncBodyGenerator(
     {
         List<LValueInfo> paths =
             _random.FlipCoin(Options.MemberAccessSelectLocalProb)
-            ? CollectVariablePaths(ft, int.MinValue, true, false, requireAssignable: false)
-            : CollectVariablePaths(ft, int.MinValue, false, true, requireAssignable: false);
+            ? CollectVariablePaths(ft, int.MinValue, true, false, false, requireAssignable: false)
+            : CollectVariablePaths(ft, int.MinValue, false, true, false, requireAssignable: false);
 
+        return paths.Count > 0 ? _random.NextElement(paths).Expression : null;
+    }
+
+    private ExpressionSyntax GenAsyncLocalMemberAccess(FuzzType ft)
+    {
+        if (_statics.AsyncLocalFields.Count <= 0)
+            return null;
+
+        List<LValueInfo> paths = CollectVariablePaths(ft, int.MinValue, false, false, true, requireAssignable: false);
         return paths.Count > 0 ? _random.NextElement(paths).Expression : null;
     }
 
@@ -817,7 +894,7 @@ internal class FuncBodyGenerator(
     /// <param name="collectLocals">Whether to collect locals.</param>
     /// <param name="collectStatics">Whether to collect statics.</param>
     /// <param name="requireAssignable">Whether the collected lvalues must be able to appear as the LHS of an assignment with an RHS of type <paramref name="type"/>.</param>
-    private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics, bool requireAssignable)
+    private List<LValueInfo> CollectVariablePaths(FuzzType type, int minRefEscapeScope, bool collectLocals, bool collectStatics, bool collectAsyncLocals, bool requireAssignable)
     {
         List<LValueInfo> paths = new();
 
@@ -837,6 +914,14 @@ internal class FuncBodyGenerator(
             foreach (StaticField stat in _statics.Fields)
             {
                 AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false), asyncHoistable: !Options.GenExtensions.Contains(Extension.RuntimeAsync));
+            }
+        }
+
+        if (collectAsyncLocals)
+        {
+            foreach (AsyncLocalField asyncLocal in _statics.AsyncLocalFields)
+            {
+                AppendVariablePaths(paths, new ScopeValue(asyncLocal.InnerType, asyncLocal.CreateGetAccess(prefixWithClass: !_isInPrimaryClass), int.MaxValue, true), true);
             }
         }
 
@@ -1525,6 +1610,7 @@ internal enum StatementKind
     TryFinally,
     Loop,
     Yield,
+    AsyncLocalAssignment,
 }
 
 internal enum ExpressionKind
@@ -1538,4 +1624,5 @@ internal enum ExpressionKind
     Increment,
     Decrement,
     NewObject,
+    AsyncLocalMemberAccess,
 }

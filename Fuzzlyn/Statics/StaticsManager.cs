@@ -11,11 +11,13 @@ namespace Fuzzlyn.Statics;
 internal class StaticsManager(Randomizer random, TypeManager types)
 {
     private readonly List<StaticField> _fields = new();
+    private readonly List<AsyncLocalField> _asyncLocals = new();
     private int _counter;
 
     public Randomizer Random { get; } = random;
     public TypeManager Types { get; } = types;
     public IReadOnlyList<StaticField> Fields => _fields;
+    public IReadOnlyList<AsyncLocalField> AsyncLocalFields => _asyncLocals;
 
     public StaticField PickStatic(FuzzType type = null)
     {
@@ -39,6 +41,35 @@ internal class StaticsManager(Randomizer random, TypeManager types)
         return field;
     }
 
-    public IEnumerable<FieldDeclarationSyntax> OutputStatics()
-        => _fields.Select(f => f.Output());
+    public IEnumerable<MemberDeclarationSyntax> OutputMembers()
+    {
+        foreach (StaticField stat in _fields)
+        {
+            yield return stat.Output();
+        }
+
+        List<MethodDeclarationSyntax> asyncLocalGetters = new();
+        foreach (AsyncLocalField asyncLocal in _asyncLocals)
+        {
+            (FieldDeclarationSyntax field, MethodDeclarationSyntax getter) = asyncLocal.Output();
+            asyncLocalGetters.Add(getter);
+            yield return field;
+        }
+
+        foreach (MethodDeclarationSyntax getter in asyncLocalGetters)
+        {
+            yield return getter;
+        }
+    }
+
+    public AsyncLocalField GenerateNewAsyncLocal(FuzzType type)
+    {
+        type = type ?? Types.PickType();
+
+        string name = "s_asyncLocal" + (++_counter);
+        string getterName = "GetAsyncLocal" + _counter;
+        AsyncLocalField field = new(type, name, getterName, LiteralGenerator.GenLiteral(Types, Random, type));
+        _asyncLocals.Add(field);
+        return field;
+    }
 }
