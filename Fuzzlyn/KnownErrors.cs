@@ -20,5 +20,6 @@ internal class KnownErrors(IEnumerable<string> errors)
 
     public static KnownErrors DotnetRuntime { get; } = new KnownErrors(
         [
+            "FitsIn(tree->TypeGet(), value)"
         ]);
 }
