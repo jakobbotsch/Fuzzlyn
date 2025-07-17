@@ -1299,6 +1299,13 @@ internal class FuncBodyGenerator(
             genAwaitsForArgs.Disallow();
         }
 
+        if (funcThisType is InterfaceType)
+        {
+            // If trying to invoke on an interface then insert a cast to ensure structs are boxed.
+            // (Necessary since we might later generate an arg that contains an await)
+            receiver = ParenthesizedExpression(CastExpression(funcThisType.GenReferenceTo(), receiver));
+        }
+
         return
             MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
