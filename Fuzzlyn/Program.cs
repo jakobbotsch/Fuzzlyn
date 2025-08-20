@@ -264,7 +264,7 @@ internal class Program
         string fuzzlynDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         string executionServerPath = Path.Combine(fuzzlynDir, "ExecutionServer", "Fuzzlyn.ExecutionServer.dll");
 
-        bool enableRuntimeAsync = options.GenExtensions.Contains(Extension.RuntimeAsync);
+        bool enableRuntimeAsync = options.GenExtensions?.Contains(Extension.RuntimeAsync) ?? false;
         s_executionServerPool = new ExecutionServerPool(options.Host, executionServerPath, enableRuntimeAsync, spmiOptions, logExecServerRequestsOptions);;
         return true;
     }
