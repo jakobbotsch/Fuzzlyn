@@ -785,7 +785,7 @@ public static void Main()
 
             info.ArgumentList.Add(tempAsmPath);
 
-            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
+            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, _pool.EnableRuntimeAsync);
 
             if (_pool.SpmiOptions != null)
                 Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, _pool.SpmiOptions);

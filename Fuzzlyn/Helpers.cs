@@ -68,10 +68,13 @@ internal static class Helpers
         return true;
     }
 
-    public static void SetExecutionEnvironmentVariables(StringDictionary envVars)
+    public static void SetExecutionEnvironmentVariables(StringDictionary envVars, bool enableRuntimeAsync)
     {
         envVars["DOTNET_TieredCompilation"] = "0";
         envVars["DOTNET_JitThrowOnAssertionFailure"] = "1";
+
+        if (enableRuntimeAsync)
+            envVars["DOTNET_RuntimeAsync"] = "1";
     }
 
     public static void SetSpmiCollectionEnvironmentVariables(StringDictionary envVars, SpmiSetupOptions options)

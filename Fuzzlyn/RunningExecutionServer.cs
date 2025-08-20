@@ -166,7 +166,7 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(int serverIndex, string host, string executionServerPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
+    public static RunningExecutionServer Create(int serverIndex, string host, string executionServerPath, bool enableRuntimeAsync, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
     {
         ProcessStartInfo info = new()
         {
@@ -180,7 +180,7 @@ internal class RunningExecutionServer
 
         info.ArgumentList.Add(executionServerPath);
 
-        Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables);
+        Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, enableRuntimeAsync);
 
         if (spmiOptions != null)
         {

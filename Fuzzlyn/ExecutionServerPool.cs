@@ -5,14 +5,15 @@ using System.Linq;
 
 namespace Fuzzlyn;
 
-internal class ExecutionServerPool(string host, string executionServerPath, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
+internal class ExecutionServerPool(string host, string executionServerPath, bool enableRuntimeAsync, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
 {
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
 
-    public string Host { get; } = host;
-    public SpmiSetupOptions SpmiOptions { get; } = spmiOptions;
-    public LogExecutionServerRequestsOptions LogExecutionServerRequestsOptions { get; } = logRequestsOptions;
+    public string Host => host;
+    public bool EnableRuntimeAsync => enableRuntimeAsync;
+    public SpmiSetupOptions SpmiOptions => spmiOptions;
+    public LogExecutionServerRequestsOptions LogExecutionServerRequestsOptions => logRequestsOptions;
 
     private int _serverIndex;
     private List<RunningExecutionServer> _pool = new();
@@ -44,7 +45,7 @@ internal class ExecutionServerPool(string host, string executionServerPath, Spmi
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, SpmiOptions, LogExecutionServerRequestsOptions);
+            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, enableRuntimeAsync, SpmiOptions, LogExecutionServerRequestsOptions);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -54,7 +55,7 @@ internal class ExecutionServerPool(string host, string executionServerPath, Spmi
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, SpmiOptions, LogExecutionServerRequestsOptions);
+        return RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, enableRuntimeAsync, SpmiOptions, LogExecutionServerRequestsOptions);
     }
 
     private void Return(RunningExecutionServer server)
