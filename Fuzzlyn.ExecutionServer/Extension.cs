@@ -37,6 +37,7 @@ public enum Extension
     X86Avx10v2,
     X86Avx10v2V512,
     X86Avx2,
+    X86Avx512Bmm,
     X86Avx512BW,
     X86Avx512BWVL,
     X86Avx512CD,
@@ -48,7 +49,13 @@ public enum Extension
     X86Avx512FX64,
     X86Avx512Vbmi,
     X86Avx512VbmiVL,
+    X86Avx512Vbmi2,
+    X86Avx512Vbmi2VL,
     X86AvxVnni,
+    X86AvxVnniInt16,
+    X86AvxVnniInt16V512,
+    X86AvxVnniInt8,
+    X86AvxVnniInt8V512,
     X86Bmi1,
     X86Bmi1X64,
     X86Bmi2,
@@ -111,6 +118,7 @@ public static class ExtensionHelpers
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v2);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx10v2+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx10v2V512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx2);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512Bmm")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512Bmm);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512BW")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512BW);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512BW+VL")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512BWVL);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512CD")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512CD);
@@ -122,7 +130,13 @@ public static class ExtensionHelpers
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512F+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512FX64);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512Vbmi")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512Vbmi);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512Vbmi+VL")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512VbmiVL);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512Vbmi2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512Vbmi2);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Avx512Vbmi2+VL")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Avx512Vbmi2VL);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.AvxVnni")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86AvxVnni);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.AvxVnniInt16")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86AvxVnniInt16);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.AvxVnniInt16+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86AvxVnniInt16V512);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.AvxVnniInt8")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86AvxVnniInt8);
+        if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.AvxVnniInt8+V512")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86AvxVnniInt8V512);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Bmi1")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Bmi1);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Bmi1+X64")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Bmi1X64);
         if ((bool?)spc.GetType("System.Runtime.Intrinsics.X86.Bmi2")?.GetProperty("IsSupported", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) ?? false) extensions.Add(Extension.X86Bmi2);
@@ -175,6 +189,7 @@ public static class ExtensionHelpers
             Extension.X86Avx10v2 => Extension.X86Avx10v1,
             Extension.X86Avx10v2V512 => Extension.X86Avx10v1V512,
             Extension.X86Avx2 => Extension.X86Avx,
+            Extension.X86Avx512Bmm => Extension.X86Avx512F,
             Extension.X86Avx512BW => Extension.X86Avx512F,
             Extension.X86Avx512BWVL => Extension.X86Avx512FVL,
             Extension.X86Avx512CD => Extension.X86Avx512F,
@@ -184,7 +199,11 @@ public static class ExtensionHelpers
             Extension.X86Avx512F => Extension.X86Avx2,
             Extension.X86Avx512Vbmi => Extension.X86Avx512BW,
             Extension.X86Avx512VbmiVL => Extension.X86Avx512BWVL,
+            Extension.X86Avx512Vbmi2 => Extension.X86Avx512Vbmi,
+            Extension.X86Avx512Vbmi2VL => Extension.X86Avx512VbmiVL,
             Extension.X86AvxVnni => Extension.X86Avx2,
+            Extension.X86AvxVnniInt16 => Extension.X86Avx2,
+            Extension.X86AvxVnniInt8 => Extension.X86Avx2,
             Extension.X86Bmi1 => Extension.X86X86Base,
             Extension.X86Bmi2 => Extension.X86X86Base,
             Extension.X86Fma => Extension.X86Avx,

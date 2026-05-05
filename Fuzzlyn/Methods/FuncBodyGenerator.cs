@@ -86,12 +86,6 @@ internal class FuncBodyGenerator(
             if (kind == StatementKind.Yield && (_awaitDisallowed != 0))
                 continue;
 
-            if (_isAsync && kind is StatementKind.TryCatch or StatementKind.TryFinally && Options.GenExtensions.Contains(Extension.RuntimeAsync))
-            {
-                // All the EH transformations are not yet fully supported by Roslyn
-                continue;
-            }
-
             switch (kind)
             {
                 case StatementKind.Block:
@@ -249,8 +243,7 @@ internal class FuncBodyGenerator(
             }
 
             StaticField newStatic = _statics.GenerateNewField(newType);
-            bool isAsyncHoistable = !Options.GenExtensions.Contains(Extension.RuntimeAsync);
-            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false, asyncHoistable: isAsyncHoistable, null);
+            lvalue = new LValueInfo(AccessStatic(newStatic), newType, int.MaxValue, readOnly: false, asyncHoistable: true, null);
         }
 
         using var genAwaits = new GenerateAwaitsScope(this);
@@ -775,8 +768,7 @@ internal class FuncBodyGenerator(
         if (lv == null)
         {
             StaticField newStatic = _statics.GenerateNewField(type);
-            bool isAsyncHoistable = !Options.GenExtensions.Contains(Extension.RuntimeAsync);
-            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false, asyncHoistable: isAsyncHoistable, null);
+            lv = new LValueInfo(AccessStatic(newStatic), type, int.MaxValue, readOnly: false, asyncHoistable: true, null);
         }
 
         return lv;
@@ -904,7 +896,7 @@ internal class FuncBodyGenerator(
             {
                 foreach (ScopeValue variable in sf.Values)
                 {
-                    AppendVariablePaths(paths, variable, asyncHoistable: !Options.GenExtensions.Contains(Extension.RuntimeAsync));
+                    AppendVariablePaths(paths, variable, asyncHoistable: true);
                 }
             }
         }
@@ -913,7 +905,7 @@ internal class FuncBodyGenerator(
         {
             foreach (StaticField stat in _statics.Fields)
             {
-                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false), asyncHoistable: !Options.GenExtensions.Contains(Extension.RuntimeAsync));
+                AppendVariablePaths(paths, new ScopeValue(stat.Type, AccessStatic(stat), int.MaxValue, false), asyncHoistable: true);
             }
         }
 

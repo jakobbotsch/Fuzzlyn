@@ -81,17 +81,21 @@ internal class CompilerOptions(string name, CSharpCompilationOptions csCompilerO
     public CSharpCompilationOptions CSCompilerOptions { get; } = csCompilerOptions;
     public CSharpParseOptions CSParseOptions { get; } = csParseOptions;
 
+    private static KeyValuePair<string, ReportDiagnostic>[] s_diags =
+        [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress),  // SVE APIs are experimental
+         KeyValuePair.Create("SYSLIB5007", ReportDiagnostic.Suppress)]; // Runtime async is experimental
+
     private static readonly CSharpCompilationOptions s_debugCompilationOptions =
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
             concurrentBuild: false,
             optimizationLevel: OptimizationLevel.Debug,
-            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
+            specificDiagnosticOptions: s_diags);
 
     private static readonly CSharpCompilationOptions s_releaseCompilationOptions =
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
             concurrentBuild: false,
             optimizationLevel: OptimizationLevel.Release,
-            specificDiagnosticOptions: [KeyValuePair.Create("SYSLIB5003", ReportDiagnostic.Suppress)]); // Suppress experimental APIs error
+            specificDiagnosticOptions: s_diags);
 
     private static readonly CSharpParseOptions s_parseOptions = new(LanguageVersion.Latest);
     private static readonly CSharpParseOptions s_runtimeAsyncParseOptions = s_parseOptions.WithFeatures([KeyValuePair.Create("runtime-async", "on")]);

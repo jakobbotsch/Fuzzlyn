@@ -503,8 +503,10 @@ internal class Program
                 comp = compiler.Compile(program.NormalizeWhitespace(), opts);
                 IEnumerable<Diagnostic> errors = comp.CompileErrors.Where(d => d.Severity == DiagnosticSeverity.Error);
                 string logEntry =
-                    "seed: " + seed + Environment.NewLine +
+                    $"Size: {program.NormalizeWhitespace().ToFullString().Length / 1024.0:F1} KiB " +
+                    $"Seed: {seed}{Environment.NewLine}" +
                     string.Join(Environment.NewLine, errors.Select(d => "  " + d));
+
                 lock (s_fileLock)
                     File.AppendAllText("Errors.txt", logEntry + Environment.NewLine);
 
