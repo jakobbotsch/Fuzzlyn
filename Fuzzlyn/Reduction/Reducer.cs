@@ -15,12 +15,21 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Fuzzlyn.Reduction;
 
-internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOptions baseCompilerOpts, CompilerOptions diffCompilerOpts, CompilationUnitSyntax original, ulong reducerSeed, string reduceDebugGitDir)
+internal class Reducer(
+    ExecutionManager executionManager,
+    Compiler compiler,
+    CompilerOptions baseCompilerOpts,
+    CompilerOptions diffCompilerOpts,
+    bool useSameAssembly,
+    CompilationUnitSyntax original,
+    ulong reducerSeed,
+    string reduceDebugGitDir)
 {
     private CompilerOptions _baseCompilerOpts = baseCompilerOpts;
     private CompilerOptions _diffCompilerOpts = diffCompilerOpts;
-    private readonly ExecutionServerPool _pool = pool;
+    private readonly ExecutionManager _executionManager = executionManager;
     private readonly Compiler _compiler = compiler;
+    private readonly bool _useSameAssembly = useSameAssembly;
     private readonly Rng _rng = Rng.FromSplitMix64Seed(reducerSeed);
     private int _varCounter;
     private readonly string _reduceDebugGitDir = reduceDebugGitDir;
@@ -37,7 +46,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         _timer.Restart();
 
         CompileResult @base = _compiler.Compile(Original, _baseCompilerOpts);
-        CompileResult diff = _compiler.Compile(Original, _diffCompilerOpts);
+        CompileResult diff = _useSameAssembly ? @base : _compiler.Compile(Original, _diffCompilerOpts);
 
         Func<CompilationUnitSyntax, bool> isInteresting;
         RunSeparatelyResults targetResults = null;
@@ -61,7 +70,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         else
         {
             var origPair = new ProgramPair(false, @base.Assembly, diff.Assembly);
-            targetResults = _pool.RunPairOnPool(origPair, TimeSpan.FromSeconds(20), false);
+            targetResults = _executionManager.RunPair(origPair, TimeSpan.FromSeconds(20), false);
 
             if (targetResults.Kind == RunSeparatelyResultsKind.Timeout)
             {
@@ -310,13 +319,13 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
     private RunSeparatelyResults CompileAndRun(CompilationUnitSyntax prog, bool trackOutput, bool keepPoolNonEmptyEagerly)
     {
         CompileResult progBase = _compiler.Compile(prog, _baseCompilerOpts);
-        CompileResult progDiff = _compiler.Compile(prog, _diffCompilerOpts);
+        CompileResult progDiff = _useSameAssembly ? progBase : _compiler.Compile(prog, _diffCompilerOpts);
 
         if (progBase.Assembly == null || progDiff.Assembly == null)
             return null;
 
         ProgramPair pair = new(trackOutput, progBase.Assembly, progDiff.Assembly);
-        RunSeparatelyResults results = _pool.RunPairOnPool(pair, TimeSpan.FromSeconds(20), keepPoolNonEmptyEagerly);
+        RunSeparatelyResults results = _executionManager.RunPair(pair, TimeSpan.FromSeconds(20), keepPoolNonEmptyEagerly);
         return results;
     }
 
@@ -479,6 +488,8 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
         }
 
         IEnumerable<string> Lines(string message) => message.Replace("\r", "").Split('\n');
+        string baseExecutionName = _useSameAssembly ? "Interpreter" : _baseCompilerOpts.Name;
+        string diffExecutionName = _useSameAssembly ? "JIT" : _diffCompilerOpts.Name;
 
         switch (results.Kind)
         {
@@ -501,7 +512,7 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
                 ProgramPairResults pairResult = results.Results;
                 if (pairResult.DiffResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    yield return $"// Hits JIT assert for {_diffCompilerOpts.Name}:";
+                    yield return $"// Hits JIT assert for {diffExecutionName}:";
                     foreach (string line in Lines(pairResult.DiffResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
                         yield return $"// {line}";
 
@@ -510,15 +521,15 @@ internal class Reducer(ExecutionServerPool pool, Compiler compiler, CompilerOpti
 
                 if (pairResult.BaseResult.Kind == ProgramResultKind.HitsJitAssert)
                 {
-                    yield return $"// Hits JIT assert for {_baseCompilerOpts.Name}:";
+                    yield return $"// Hits JIT assert for {baseExecutionName}:";
                     foreach (string line in Lines(pairResult.BaseResult.JitAssertError).SkipWhile(l => l == "JIT assert failed:"))
                         yield return $"// {line}";
 
                     yield break;
                 }
 
-                yield return $"// {_baseCompilerOpts.Name}: {FormatResult(pairResult.BaseResult, pairResult.BaseFirstUnmatch)}";
-                yield return $"// {_diffCompilerOpts.Name}: {FormatResult(pairResult.DiffResult, pairResult.DiffFirstUnmatch)}";
+                yield return $"// {baseExecutionName}: {FormatResult(pairResult.BaseResult, pairResult.BaseFirstUnmatch)}";
+                yield return $"// {diffExecutionName}: {FormatResult(pairResult.DiffResult, pairResult.DiffFirstUnmatch)}";
                 break;
 
                 string FormatResult(ProgramResult result, ChecksumSite unmatch)
@@ -711,8 +722,16 @@ public static void Main()
         string tempAsmPath = Path.Combine(Path.GetTempPath(), "fuzzlyn-" + Guid.NewGuid().ToString("N") + ".dll");
         try
         {
-            (string baseStdout, string baseStderr, int baseExitCode) = ExecuteInSubProcess(prog, _baseCompilerOpts.AsConsoleApp(), tempAsmPath);
-            (string diffStdout, string diffStderr, int diffExitCode) = ExecuteInSubProcess(prog, _diffCompilerOpts.AsConsoleApp(), tempAsmPath);
+            (string baseStdout, string baseStderr, int baseExitCode) = ExecuteInSubProcess(
+                prog,
+                _baseCompilerOpts.AsConsoleApp(),
+                _executionManager.BaseConfiguration,
+                tempAsmPath);
+            (string diffStdout, string diffStderr, int diffExitCode) = ExecuteInSubProcess(
+                prog,
+                _diffCompilerOpts.AsConsoleApp(),
+                _executionManager.DiffConfiguration,
+                tempAsmPath);
             if (baseStderr.Contains("Assert failure") || baseStderr.Contains("JIT assert failed"))
             {
                 return true;
@@ -760,7 +779,11 @@ public static void Main()
             }
         }
 
-        (string stdout, string stderr, int exitCode) ExecuteInSubProcess(CompilationUnitSyntax node, CompilerOptions opts, string tempAsmPath)
+        (string stdout, string stderr, int exitCode) ExecuteInSubProcess(
+            CompilationUnitSyntax node,
+            CompilerOptions opts,
+            ExecutionServerConfiguration configuration,
+            string tempAsmPath)
         {
             CompileResult result = _compiler.Compile(node, opts);
             if (result.Assembly == null)
@@ -777,7 +800,7 @@ public static void Main()
 
             ProcessStartInfo info = new()
             {
-                FileName = _pool.Host,
+                FileName = configuration.Host,
                 WorkingDirectory = Environment.CurrentDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -785,10 +808,10 @@ public static void Main()
 
             info.ArgumentList.Add(tempAsmPath);
 
-            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, _pool.EnableRuntimeAsync);
+            Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, configuration.EnvironmentVariables);
 
-            if (_pool.SpmiOptions != null)
-                Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, _pool.SpmiOptions);
+            if (configuration.SpmiOptions != null)
+                Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, configuration.SpmiOptions);
 
             // WER mode is inherited by child, so if this is a crash we can
             // make sure no WER dialog opens by disabling it for our own

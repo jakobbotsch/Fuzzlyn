@@ -8,7 +8,7 @@ public class ProgramResult
     public ProgramResultKind Kind { get; init; }
     // Always valid
     public string Checksum { get; init; }
-    [JsonIgnore]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<ChecksumSite> ChecksumSites { get; init; }
     public long NumChecksumCalls { get; init; }
     // Next fields are valid for ThrowsException

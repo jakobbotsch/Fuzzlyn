@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 
@@ -68,13 +69,15 @@ internal static class Helpers
         return true;
     }
 
-    public static void SetExecutionEnvironmentVariables(StringDictionary envVars, bool enableRuntimeAsync)
+    public static void SetExecutionEnvironmentVariables(
+        StringDictionary envVars,
+        IReadOnlyDictionary<string, string> configuredVariables)
     {
         envVars["DOTNET_TieredCompilation"] = "0";
         envVars["DOTNET_JitThrowOnAssertionFailure"] = "1";
 
-        if (enableRuntimeAsync)
-            envVars["DOTNET_RuntimeAsync"] = "1";
+        foreach ((string name, string value) in configuredVariables)
+            envVars[name] = value;
     }
 
     public static void SetSpmiCollectionEnvironmentVariables(StringDictionary envVars, SpmiSetupOptions options)

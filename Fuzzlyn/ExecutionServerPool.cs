@@ -5,15 +5,19 @@ using System.Linq;
 
 namespace Fuzzlyn;
 
-internal class ExecutionServerPool(string host, string executionServerPath, bool enableRuntimeAsync, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logRequestsOptions)
+internal interface IExecutionServerPool
+{
+    ExecutionServerConfiguration Configuration { get; }
+    RunSingleResults RunOnPool(ProgramSingle program, TimeSpan timeout, bool keepPoolNonEmptyEagerly);
+    Extension[] GetSupportedIntrinsicExtensions();
+}
+
+internal class ExecutionServerPool(ExecutionServerConfiguration configuration) : IExecutionServerPool
 {
     // Stop a server once it has not been used for this duration
     private static readonly TimeSpan s_inactivityPeriod = TimeSpan.FromMinutes(3);
 
-    public string Host => host;
-    public bool EnableRuntimeAsync => enableRuntimeAsync;
-    public SpmiSetupOptions SpmiOptions => spmiOptions;
-    public LogExecutionServerRequestsOptions LogExecutionServerRequestsOptions => logRequestsOptions;
+    public ExecutionServerConfiguration Configuration { get; } = configuration;
 
     private int _serverIndex;
     private List<RunningExecutionServer> _pool = new();
@@ -45,7 +49,7 @@ internal class ExecutionServerPool(string host, string executionServerPath, bool
 
         if (startNew)
         {
-            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, enableRuntimeAsync, SpmiOptions, LogExecutionServerRequestsOptions);
+            RunningExecutionServer created = RunningExecutionServer.Create(_serverIndex++, Configuration);
             lock (_pool)
             {
                 _pool.Add(created);
@@ -55,7 +59,7 @@ internal class ExecutionServerPool(string host, string executionServerPath, bool
         if (bestServer != null)
             return bestServer;
 
-        return RunningExecutionServer.Create(_serverIndex++, Host, executionServerPath, enableRuntimeAsync, SpmiOptions, LogExecutionServerRequestsOptions);
+        return RunningExecutionServer.Create(_serverIndex++, Configuration);
     }
 
     private void Return(RunningExecutionServer server)
@@ -72,16 +76,16 @@ internal class ExecutionServerPool(string host, string executionServerPath, bool
             otherServer.Shutdown();
     }
 
-    public RunSeparatelyResults RunPairOnPool(ProgramPair pair, TimeSpan timeout, bool keepPoolNonEmptyEagerly)
+    public RunSingleResults RunOnPool(ProgramSingle program, TimeSpan timeout, bool keepPoolNonEmptyEagerly)
     {
         RunningExecutionServer server = null;
         try
         {
             server = Get(keepPoolNonEmptyEagerly);
-            RunSeparatelyResults results = server.RunPair(pair, timeout);
-            if (results.Kind != RunSeparatelyResultsKind.Success)
+            RunSingleResults results = server.Run(program, timeout);
+            if (results.Kind != RunSingleResultsKind.Success)
             {
-                server = null; // Do not return, create a new one. The process has already been killed by RunPair.
+                server = null; // Do not return it. The process has already been killed by Run.
             }
 
             return results;

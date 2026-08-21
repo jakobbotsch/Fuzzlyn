@@ -24,6 +24,7 @@ internal class FuzzlynOptions
     public string LogExecutionServerRequestsTo { get; set; }
     public bool Execute { get; set; } = true;
     public bool Stats { get; set; } = false;
+    public bool InterpreterVsJit { get; set; } = false;
     public KnownErrors KnownErrors { get; set; }
     // Probability that we pick a class when generating a new type. Otherwise we make a struct.
     public double MakeClassProb { get; set; } = 0.5;
