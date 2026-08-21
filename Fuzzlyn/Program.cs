@@ -284,7 +284,6 @@ internal class Program
         if (options.InterpreterVsJit)
         {
             baseEnvironment["DOTNET_InterpMode"] = "1";
-            baseEnvironment["DOTNET_InterpList"] = "1";
         }
 
         Dictionary<string, string> diffEnvironment = new(commonEnvironment);
