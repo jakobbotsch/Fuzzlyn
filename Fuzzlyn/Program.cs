@@ -283,11 +283,10 @@ internal class Program
         Dictionary<string, string> baseEnvironment = new(commonEnvironment);
         if (options.InterpreterVsJit)
         {
-            baseEnvironment["DOTNET_InterpMode"] = "1";
+            baseEnvironment["DOTNET_InterpMode"] = "3";
         }
 
         Dictionary<string, string> diffEnvironment = new(commonEnvironment);
-        diffEnvironment["DOTNET_JitDump"] = "M0";
 
         ExecutionServerConfiguration baseConfiguration = new(
             "base",
