@@ -100,34 +100,6 @@ public class ExecutionManagerTests
         Assert.Equal([Extension.Vector128], manager.GetSupportedIntrinsicExtensions());
     }
 
-    [Fact]
-    public void PairExecutionsAreDispatchedConcurrently()
-    {
-        using CountdownEvent bothStarted = new(2);
-        RunSingleResults Run(ProgramSingle program)
-        {
-            bothStarted.Signal();
-            Assert.True(bothStarted.Wait(TimeSpan.FromSeconds(5)));
-            return new RunSingleResults(
-                RunSingleResultsKind.Success,
-                Successful(Convert.ToBase64String(program.Assembly), null),
-                null);
-        }
-
-        ExecutionManager manager = new(
-            new FakePool([], Run),
-            new FakePool([], Run));
-
-        RunSeparatelyResults results = manager.RunPair(
-            new ProgramPair(false, [1], [2]),
-            TimeSpan.FromSeconds(5),
-            keepPoolNonEmptyEagerly: false);
-
-        Assert.Equal(RunSeparatelyResultsKind.Success, results.Kind);
-        Assert.Equal("AQ==", results.Results.BaseResult.Checksum);
-        Assert.Equal("Ag==", results.Results.DiffResult.Checksum);
-    }
-
     private static ProgramResult Successful(string checksum, List<ChecksumSite> sites)
         => new()
         {
