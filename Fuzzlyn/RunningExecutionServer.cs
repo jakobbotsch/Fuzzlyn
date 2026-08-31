@@ -15,8 +15,15 @@ internal class RunningExecutionServer
     private LogExecutionServerRequestsOptions _logExecServerRequestOptions;
     private int _numRequestsSent;
 
-    private RunningExecutionServer(int serverIndex, Process process, LogExecutionServerRequestsOptions logExecServerRequestOptions)
+    private readonly string _poolName;
+
+    private RunningExecutionServer(
+        string poolName,
+        int serverIndex,
+        Process process,
+        LogExecutionServerRequestsOptions logExecServerRequestOptions)
     {
+        _poolName = poolName;
         _serverIndex = serverIndex;
         _process = process;
         _logExecServerRequestOptions = logExecServerRequestOptions;
@@ -29,7 +36,9 @@ internal class RunningExecutionServer
         string serialized = JsonSerializer.Serialize(req);
         if (_logExecServerRequestOptions != null)
         {
-            File.WriteAllText(Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_serverIndex:00}-{_numRequestsSent:0000}.json"), serialized);
+            File.WriteAllText(
+                Path.Combine(_logExecServerRequestOptions.LogDirectory, $"{_poolName}-{_serverIndex:00}-{_numRequestsSent:0000}.json"),
+                serialized);
         }
 
         try
@@ -103,26 +112,26 @@ internal class RunningExecutionServer
 
     }
 
-    public RunSeparatelyResults RunPair(ProgramPair pair, TimeSpan timeout)
+    public RunSingleResults Run(ProgramSingle program, TimeSpan timeout)
     {
         ReceiveResult result =
             RequestAndReceive(new Request
             {
-                Kind = RequestKind.RunPair,
-                Pair = pair,
+                Kind = RequestKind.RunSingle,
+                Program = program,
             }, timeout);
 
         if (result.Ended)
         {
-            return new RunSeparatelyResults(RunSeparatelyResultsKind.Crash, null, result.Stderr);
+            return new RunSingleResults(RunSingleResultsKind.Crash, null, result.Stderr);
         }
 
         if (result.Timeout)
         {
-            return new RunSeparatelyResults(RunSeparatelyResultsKind.Timeout, null, null);
+            return new RunSingleResults(RunSingleResultsKind.Timeout, null, null);
         }
 
-        return new RunSeparatelyResults(RunSeparatelyResultsKind.Success, result.Response.RunPairResult, null);
+        return new RunSingleResults(RunSingleResultsKind.Success, result.Response.RunResult, null);
     }
 
     public Extension[] GetSupportedIntrinsicExtensions()
@@ -166,29 +175,33 @@ internal class RunningExecutionServer
         }
     }
 
-    public static RunningExecutionServer Create(int serverIndex, string host, string executionServerPath, bool enableRuntimeAsync, SpmiSetupOptions spmiOptions, LogExecutionServerRequestsOptions logExecServerRequestsOptions)
+    public static RunningExecutionServer Create(int serverIndex, ExecutionServerConfiguration configuration)
     {
         ProcessStartInfo info = new()
         {
-            FileName = host,
-            WorkingDirectory = Path.GetDirectoryName(executionServerPath),
+            FileName = configuration.Host,
+            WorkingDirectory = Path.GetDirectoryName(configuration.ExecutionServerPath),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
             UseShellExecute = false,
         };
 
-        info.ArgumentList.Add(executionServerPath);
+        info.ArgumentList.Add(configuration.ExecutionServerPath);
 
-        Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, enableRuntimeAsync);
+        Helpers.SetExecutionEnvironmentVariables(info.EnvironmentVariables, configuration.EnvironmentVariables);
 
-        if (spmiOptions != null)
+        if (configuration.SpmiOptions != null)
         {
-            Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, spmiOptions);
+            Helpers.SetSpmiCollectionEnvironmentVariables(info.EnvironmentVariables, configuration.SpmiOptions);
         }
 
         Process proc = Process.Start(info);
-        return new RunningExecutionServer(serverIndex, proc, logExecServerRequestsOptions);
+        return new RunningExecutionServer(
+            configuration.Name,
+            serverIndex,
+            proc,
+            configuration.LogExecutionServerRequestsOptions);
     }
 
     private struct ReceiveResult
@@ -198,6 +211,20 @@ internal class RunningExecutionServer
         public string Stderr { get; init; }
         public Response Response { get; init; }
     }
+}
+
+internal enum RunSingleResultsKind
+{
+    Crash,
+    Timeout,
+    Success
+}
+
+internal class RunSingleResults(RunSingleResultsKind kind, ProgramResult result, string crashError)
+{
+    public RunSingleResultsKind Kind { get; } = kind;
+    public ProgramResult Result { get; } = result;
+    public string CrashError { get; } = crashError;
 }
 
 internal enum RunSeparatelyResultsKind

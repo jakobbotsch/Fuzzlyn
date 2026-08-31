@@ -2,7 +2,7 @@
 
 public enum RequestKind
 {
-    RunPair,
+    RunSingle,
     GetSupportedIntrinsicExtensions,
     Shutdown,
 }
@@ -10,12 +10,11 @@ public enum RequestKind
 public class Request
 {
     public RequestKind Kind { get; set; }
-    public ProgramPair Pair { get; set; }
+    public ProgramSingle Program { get; set; }
 }
 
 public class Response
 {
-    public ProgramPairResults RunPairResult { get; set; }
+    public ProgramResult RunResult { get; set; }
     public Extension[] Extensions { get; set; }
 }
-

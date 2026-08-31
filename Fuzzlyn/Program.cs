@@ -41,6 +41,7 @@ internal class Program
         string outputPath = null;
         bool? stats = null;
         bool? execute = null;
+        bool? interpreterVsJit = null;
         string knownErrors = null;
         OptionSet optionSet = new()
         {
@@ -74,6 +75,7 @@ internal class Program
             { "log-execution-server-requests-to=", "Log execution server requests to specified directory", v => logExecutionServerRequestsTo = v },
             { "stats", "Generate a bunch of programs and record their sizes", v => stats = v != null },
             { "execute", "Whether or not to execute the generated and compiled programs (enabled by default, disable with --execute-) ", v => execute = v != null },
+            { "interpreter-vs-jit", "Compare the same Release assembly under the interpreter and JIT", v => interpreterVsJit = v != null },
             { "known-errors=", "A JSON file of known error strings that will be ignored, or the string \"dotnet/runtime\" to use a built-in list for the tip of dotnet/runtime.", v => knownErrors = v },
             { "help|h", v => help = v != null }
         };
@@ -153,6 +155,16 @@ internal class Program
             options.Stats = stats.Value;
         if (execute.HasValue)
             options.Execute = execute.Value;
+        if (interpreterVsJit.HasValue)
+            options.InterpreterVsJit = interpreterVsJit.Value;
+
+        if (options.InterpreterVsJit &&
+            options.GenExtensions?.Contains(Extension.Async) == true &&
+            options.GenExtensions.Contains(Extension.RuntimeAsync))
+        {
+            Console.WriteLine("Error: --interpreter-vs-jit cannot be combined with the runtime-async comparison mode.");
+            return;
+        }
 
         if (options.NumPrograms != 1 && options.Seed != null)
         {
@@ -189,14 +201,14 @@ internal class Program
         }
         else if (options.Reduce)
         {
-            if (!CreateExecutionServerPool(options))
+            if (!CreateExecutionManager(options))
                 return;
 
             ReduceProgram(options, outputPath, reduceDebugGitDir);
         }
         else if (options.SupportedIntrinsicExtensions)
         {
-            if (!CreateExecutionServerPool(options))
+            if (!CreateExecutionManager(options))
                 return;
 
             SupportedIntrinsicExtensions(options);
@@ -215,7 +227,7 @@ internal class Program
         {
             if (options.Execute)
             {
-                if (!CreateExecutionServerPool(options))
+                if (!CreateExecutionManager(options))
                     return;
 
                 if (!LoadKnownErrors(options, knownErrors))
@@ -229,9 +241,9 @@ internal class Program
         }
     }
 
-    private static ExecutionServerPool s_executionServerPool;
+    private static ExecutionManager s_executionManager;
 
-    private static bool CreateExecutionServerPool(FuzzlynOptions options)
+    private static bool CreateExecutionManager(FuzzlynOptions options)
     {
         if (!File.Exists(options.Host))
         {
@@ -264,8 +276,34 @@ internal class Program
         string fuzzlynDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         string executionServerPath = Path.Combine(fuzzlynDir, "ExecutionServer", "Fuzzlyn.ExecutionServer.dll");
 
-        bool enableRuntimeAsync = options.GenExtensions?.Contains(Extension.RuntimeAsync) ?? false;
-        s_executionServerPool = new ExecutionServerPool(options.Host, executionServerPath, enableRuntimeAsync, spmiOptions, logExecServerRequestsOptions);;
+        Dictionary<string, string> commonEnvironment = new();
+        if (options.GenExtensions?.Contains(Extension.RuntimeAsync) == true)
+            commonEnvironment["DOTNET_RuntimeAsync"] = "1";
+
+        Dictionary<string, string> baseEnvironment = new(commonEnvironment);
+        if (options.InterpreterVsJit)
+        {
+            baseEnvironment["DOTNET_InterpMode"] = "3";
+        }
+
+        Dictionary<string, string> diffEnvironment = new(commonEnvironment);
+
+        ExecutionServerConfiguration baseConfiguration = new(
+            "base",
+            options.Host,
+            executionServerPath,
+            baseEnvironment,
+            options.InterpreterVsJit ? null : spmiOptions,
+            logExecServerRequestsOptions);
+        ExecutionServerConfiguration diffConfiguration = new(
+            "diff",
+            options.Host,
+            executionServerPath,
+            diffEnvironment,
+            spmiOptions,
+            logExecServerRequestsOptions);
+
+        s_executionManager = new ExecutionManager(baseConfiguration, diffConfiguration);
         return true;
     }
 
@@ -304,7 +342,7 @@ internal class Program
         if (options.GenExtensions.Contains(Extension.Default))
         {
             options.GenExtensions.Remove(Extension.Default);
-            options.GenExtensions.UnionWith(s_executionServerPool.GetSupportedIntrinsicExtensions());
+            options.GenExtensions.UnionWith(s_executionManager.GetSupportedIntrinsicExtensions());
         }
 
         return true;
@@ -317,7 +355,15 @@ internal class Program
         CompilationUnitSyntax original = cg.GenerateProgram();
 
         (CompilerOptions baseOpts, CompilerOptions diffOpts) = GetBaseDiffCompilerOptions(options);
-        Reducer reducer = new(s_executionServerPool, compiler, baseOpts, diffOpts, original, options.Seed.Value, reduceDebugGitDir);
+        Reducer reducer = new(
+            s_executionManager,
+            compiler,
+            baseOpts,
+            diffOpts,
+            options.InterpreterVsJit,
+            original,
+            options.Seed.Value,
+            reduceDebugGitDir);
         CompilationUnitSyntax reduced = reducer.Reduce();
         string source = reduced.NormalizeWhitespace().ToFullString();
         if (outputPath != null)
@@ -328,7 +374,7 @@ internal class Program
 
     private static void SupportedIntrinsicExtensions(FuzzlynOptions options)
     {
-        Extension[] extensions = s_executionServerPool.GetSupportedIntrinsicExtensions();
+        Extension[] extensions = s_executionManager.GetSupportedIntrinsicExtensions();
         Console.WriteLine(string.Join(",", extensions.Select(e => e.ToString().ToLowerInvariant())));
     }
 
@@ -447,7 +493,9 @@ internal class Program
     private record class GenerateProgramsResult(int DegreeOfParallelism, int TotalGenerated, TimeSpan TimeTaken);
 
     private static (CompilerOptions, CompilerOptions) GetBaseDiffCompilerOptions(FuzzlynOptions options)
-        => (options.GenExtensions.Contains(Extension.Async) && options.GenExtensions.Contains(Extension.RuntimeAsync)) switch
+        => options.InterpreterVsJit
+        ? (CompilerOptions.ReleaseOptions, CompilerOptions.ReleaseOptions)
+        : (options.GenExtensions.Contains(Extension.Async) && options.GenExtensions.Contains(Extension.RuntimeAsync)) switch
         {
             false => (CompilerOptions.DebugOptions, CompilerOptions.ReleaseOptions),
             true => (CompilerOptions.ReleaseOptions, CompilerOptions.RuntimeAsyncReleaseOptions),
@@ -459,7 +507,7 @@ internal class Program
         (CompilerOptions baseOpts, CompilerOptions diffOpts) = GetBaseDiffCompilerOptions(options);
 
         byte[] @base = Compile(baseOpts);
-        byte[] diff = Compile(diffOpts);
+        byte[] diff = ReferenceEquals(baseOpts, diffOpts) ? @base : Compile(diffOpts);
 
         if (@base == null || diff == null)
         {
@@ -471,7 +519,7 @@ internal class Program
             return;
         }
 
-        RunSeparatelyResults results = s_executionServerPool.RunPairOnPool(new ProgramPair(false, @base, diff), TimeSpan.FromSeconds(20), false);
+        RunSeparatelyResults results = s_executionManager.RunPair(new ProgramPair(false, @base, diff), TimeSpan.FromSeconds(20), false);
 
         switch (results.Kind)
         {
